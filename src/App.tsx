@@ -13,7 +13,8 @@ function App() {
   }
 
   return (
-    <div>
+    <div className="bg-slate-600">
+      <h1>Foo...</h1>
     </div>
   );
 }
