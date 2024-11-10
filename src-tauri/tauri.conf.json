@@ -14,11 +14,11 @@
       {
         "label": "main",
         "title": "CosmoSecure",
-        "width": 800,
+        "width": 1200,
         "height": 800,
         "decorations": false,
+        "minWidth": 900,
         "minHeight": 600,
-        "minWidth": 800,
         "transparent": true,
         "center": true,
         "shadow": false,
