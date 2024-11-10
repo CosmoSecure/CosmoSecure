@@ -12,9 +12,17 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "CosmoSecure",
         "width": 800,
-        "height": 600
+        "height": 800,
+        "decorations": false,
+        "minHeight": 600,
+        "minWidth": 800,
+        "transparent": true,
+        "center": true,
+        "shadow": false,
+        "contentProtected": true
       }
     ],
     "security": {
