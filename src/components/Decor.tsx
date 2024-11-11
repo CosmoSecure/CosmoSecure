@@ -18,7 +18,7 @@ const Decor: React.FC = () => {
 
     return (
         <div data-tauri-drag-region className="bg-gray-800 text-white p-4 h-12 w-full text-center rounded-md flex items-center justify-between">
-            <div>
+            <div data-tauri-drag-region>
                 win-name
             </div>
             <div>
