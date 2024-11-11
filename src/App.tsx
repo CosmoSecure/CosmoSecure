@@ -4,6 +4,7 @@
 import "./App.css";
 import { BrowserRouter as Router, Routes } from 'react-router-dom'
 import RoutesConf from "./routes/RoutesConf";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 function App() {
   // const [greetMsg, setGreetMsg] = useState("");
@@ -15,6 +16,7 @@ function App() {
   // }
 
   return (
+    getCurrentWindow().setContentProtected(true),
     <Router>
       <Routes>
         {RoutesConf}
