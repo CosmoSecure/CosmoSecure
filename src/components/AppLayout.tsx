@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import Decor from '../components/Decor';
+import Decor from './Decor';
 import Navigate from './Navigate';
 
 const AppLayout: React.FC = () => {
