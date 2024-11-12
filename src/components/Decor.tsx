@@ -25,9 +25,9 @@ const Decor: React.FC = () => {
                 search
             </div>
             <div className='flex justify-end text-sm'>
-                <button className="py-1 rounded-full ml-2 items-center hover:scale-110" onClick={minimizeWebview}>🟡</button>
-                <button className="py-1 rounded-full ml-2 items-center hover:scale-110" onClick={maximizeWebview}>🟣</button>
-                <button className="py-1 rounded-full ml-2 items-center hover:scale-110" onClick={closeWebview}>🔴</button>
+                <button className="py-1 ml-2 transition-all duration-300 ease-in-out hover:scale-110" onClick={minimizeWebview}>🟡</button>
+                <button className="py-1 ml-2 transition-all duration-300 ease-in-out hover:scale-110" onClick={maximizeWebview}>🟣</button>
+                <button className="py-1 ml-2 transition-all duration-300 ease-in-out hover:scale-110" onClick={closeWebview}>🔴</button>
             </div>
         </div>
     );
