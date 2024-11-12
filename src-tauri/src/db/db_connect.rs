@@ -8,7 +8,7 @@ use mongodb::{
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct User {
     pub user_id: i32,
     pub username: String,
@@ -50,12 +50,12 @@ pub async fn connect_rust_db() -> Result<(), Box<dyn Error>> {
     };
 
     // Insert the user into the collection with error handling for unique constraint
-    match user_collection.insert_one(new_user).await {
+    match user_collection.insert_one(new_user.clone()).await {
         Ok(_) => println!("User inserted successfully into test database!"),
         Err(e) => {
             if let mongodb::error::ErrorKind::Write(_write_error) = *e.kind {
                     let existing_user: Option<User> = user_collection
-                        .find_one(doc! { "user_id": 1 })
+                        .find_one(doc! { "user_id": new_user.user_id })
                         .await
                         .unwrap_or(None);
                     if let Some(user) = existing_user {
@@ -71,3 +71,29 @@ pub async fn connect_rust_db() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+
+// use mongodb::bson::doc;
+// use mongodb::options::ClientOptions;
+// use mongodb::Client;
+// use crate::models::{User, create_user};
+
+// #[tokio::main]
+// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//     let client = connect_to_mongo().await?;
+//     let database = client.database("password_manager");
+//     let user_collection = database.collection::<User>("users");
+
+//     let new_user = User {
+//         user_id: 1,
+//         username: "encrypted_username".to_string(),
+//         hashed_password: "encrypted_password".to_string(),
+//         two_factor_secret: None,
+//         two_factor_enabled: false,
+//         created_at: chrono::Utc::now().naive_utc(),
+//         last_login: None,
+//     };
+
+//     create_user(&user_collection, new_user).await?;
+//     Ok(())
+// }
