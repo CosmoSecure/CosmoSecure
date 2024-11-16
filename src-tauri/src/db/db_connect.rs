@@ -1,99 +1,246 @@
-use bson::doc;
-use chrono::NaiveDateTime;
-use mongodb::{
-    error::Error as MongoError,
-    options::{ClientOptions, IndexOptions},
-    Client, Collection, IndexModel,
+use crate::db::schema::db_schema::{
+    AuditLog, PasswordEntry, SecurityDashboardData, User, UserSettings,
 };
-use serde::{Deserialize, Serialize};
-use std::error::Error;
+use dotenv::dotenv;
+use mongodb::bson::DateTime;
+use mongodb::bson::{doc, oid::ObjectId};
+use mongodb::options::ClientOptions;
+use mongodb::{Client, Collection, Database};
+use std::env;
+use tauri::State;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct User {
-    pub user_id: i32,
-    pub username: String,
-    pub hashed_password: String,
-    pub two_factor_secret: Option<String>,
-    pub two_factor_enabled: bool,
-    pub created_at: NaiveDateTime,
-    pub last_login: Option<NaiveDateTime>,
+pub struct MongoClientState {
+    pub database: Database,
 }
 
-pub async fn connect_rust_db() -> Result<(), Box<dyn Error>> {
-    // MongoDB URI for local server
-    let mongo_uri = "mongodb://localhost:27017";
-    let client_options = ClientOptions::parse(mongo_uri).await?;
+impl MongoClientState {
+    pub fn new(client: Client) -> Self {
+        let database = client.database("password_manager");
+        MongoClientState { database }
+    }
+}
+#[tauri::command]
+pub async fn tauri_add_user(
+    state: State<'_, MongoClientState>,
+    username: String,
+    hashed_password: String,
+    two_factor_secret: Option<String>,
+    two_factor_enabled: bool,
+) -> Result<String, String> {
+    let users_collection = state.database.collection::<User>("users");
+    add_user(
+        &users_collection,
+        &username,
+        &hashed_password,
+        two_factor_secret,
+        two_factor_enabled,
+    )
+    .await
+    .map_err(|e| e.to_string())
+}
 
-    // Connect to the MongoDB client
-    let client = Client::with_options(client_options)?;
+#[tauri::command]
+pub async fn tauri_add_password_entry(
+    state: State<'_, MongoClientState>,
+    user_id: String,
+    account_name: String,
+    username: String,
+    password: String,
+    url: Option<String>,
+    notes: Option<String>,
+    custom_fields: Option<Vec<(String, String)>>,
+) -> Result<String, String> {
+    let passwords_collection = state.database.collection::<PasswordEntry>("password_vault");
+    add_password_entry(
+        &passwords_collection,
+        &user_id,
+        &account_name,
+        &username,
+        &password,
+        url,
+        notes,
+        custom_fields,
+    )
+    .await
+    .map_err(|e| e.to_string())
+}
 
-    // Specify the test database and collection
-    let database = client.database("test_database");
-    let user_collection: Collection<User> = database.collection("test_users");
+#[tauri::command]
+pub async fn tauri_add_audit_log(
+    state: State<'_, MongoClientState>,
+    user_id: String,
+    action: String,
+    ip_address: Option<String>,
+) -> Result<String, String> {
+    let audit_logs_collection = state.database.collection::<AuditLog>("audit_logs");
+    add_audit_log(&audit_logs_collection, &user_id, &action, ip_address)
+        .await
+        .map_err(|e| e.to_string())
+}
 
-    // Create a unique index on the user_id field
-    let index_model = IndexModel::builder()
-        .keys(doc! { "user_id": 1 })
-        .options(IndexOptions::builder().unique(true).build())
-        .build();
-    user_collection.create_index(index_model).await?;
+#[tauri::command]
+pub async fn tauri_add_dashboard_data(
+    state: State<'_, MongoClientState>,
+    user_id: String,
+    total_passwords: u32,
+    weak_passwords: u32,
+    last_health_scan: Option<DateTime>,
+    alerts: Option<Vec<String>>,
+) -> Result<String, String> {
+    let dashboard_collection = state
+        .database
+        .collection::<SecurityDashboardData>("security_dashboard");
+    add_dashboard_data(
+        &dashboard_collection,
+        &user_id,
+        total_passwords,
+        weak_passwords,
+        last_health_scan,
+        alerts,
+    )
+    .await
+    .map_err(|e| e.to_string())
+}
 
-    // Create a new user document
+#[tauri::command]
+pub async fn tauri_add_user_settings(
+    state: State<'_, MongoClientState>,
+    user_id: String,
+    auto_lock_timeout: u32,
+    backup_preference: String,
+    dark_web_monitoring: bool,
+    in_app_notifications: bool,
+) -> Result<String, String> {
+    let settings_collection = state.database.collection::<UserSettings>("settings");
+    add_user_settings(
+        &settings_collection,
+        &user_id,
+        auto_lock_timeout,
+        &backup_preference,
+        dark_web_monitoring,
+        in_app_notifications,
+    )
+    .await
+    .map_err(|e| e.to_string())
+}
+
+pub async fn add_user(
+    collection: &Collection<User>,
+    username: &str,
+    hashed_password: &str,
+    two_factor_secret: Option<String>,
+    two_factor_enabled: bool,
+) -> mongodb::error::Result<String> {
     let new_user = User {
-        user_id: 1,
-        username: "test_username".to_string(),
-        hashed_password: "test_password".to_string(),
-        two_factor_secret: None,
-        two_factor_enabled: false,
-        created_at: chrono::Utc::now().naive_utc(),
+        user_id: ObjectId::new().to_hex(),
+        username: username.to_string(),
+        hashed_password: hashed_password.to_string(),
+        two_factor_secret,
+        two_factor_enabled,
+        created_at: DateTime::now(),
         last_login: None,
     };
-
-    // Insert the user into the collection with error handling for unique constraint
-    match user_collection.insert_one(new_user.clone()).await {
-        Ok(_) => println!("User inserted successfully into test database!"),
-        Err(e) => {
-            if let mongodb::error::ErrorKind::Write(_write_error) = *e.kind {
-                    let existing_user: Option<User> = user_collection
-                        .find_one(doc! { "user_id": new_user.user_id })
-                        .await
-                        .unwrap_or(None);
-                    if let Some(user) = existing_user {
-                        eprintln!("Error: Duplicate user_id detected for user: {:?}", user);
-                    } else {
-                        eprintln!("Error: Duplicate user_id detected.");
-                    }
-            } else {
-                eprintln!("Failed to insert user: {}", e);
-            }
-        }
-    }
-
-    Ok(())
+    let result = collection.insert_one(new_user).await?;
+    Ok(result.inserted_id.as_object_id().unwrap().to_hex())
 }
 
+/// Function to add a new password entry
+pub async fn add_password_entry(
+    collection: &Collection<PasswordEntry>,
+    user_id: &str,
+    account_name: &str,
+    username: &str,
+    password: &str,
+    url: Option<String>,
+    notes: Option<String>,
+    custom_fields: Option<Vec<(String, String)>>,
+) -> mongodb::error::Result<String> {
+    let new_password_entry = PasswordEntry {
+        entry_id: ObjectId::new().to_hex(),
+        user_id: user_id.to_string(),
+        account_name: account_name.to_string(),
+        username: username.to_string(),
+        password: password.to_string(),
+        url,
+        notes,
+        custom_fields,
+        created_at: DateTime::now(),
+        updated_at: None,
+        password_strength: None,
+        last_health_check: None,
+    };
+    let result = collection.insert_one(new_password_entry).await?;
+    Ok(result.inserted_id.as_object_id().unwrap().to_hex())
+}
 
-// use mongodb::bson::doc;
-// use mongodb::options::ClientOptions;
-// use mongodb::Client;
-// use crate::models::{User, create_user};
+/// Function to add a new audit log
+pub async fn add_audit_log(
+    collection: &Collection<AuditLog>,
+    user_id: &str,
+    action: &str,
+    ip_address: Option<String>,
+) -> mongodb::error::Result<String> {
+    let new_audit_log = AuditLog {
+        log_id: ObjectId::new().to_hex(),
+        user_id: user_id.to_string(),
+        action: action.to_string(),
+        timestamp: DateTime::now(),
+        ip_address,
+    };
+    let result = collection.insert_one(new_audit_log).await?;
+    Ok(result.inserted_id.as_object_id().unwrap().to_hex())
+}
 
-// #[tokio::main]
-// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//     let client = connect_to_mongo().await?;
-//     let database = client.database("password_manager");
-//     let user_collection = database.collection::<User>("users");
+/// Function to add dashboard data
+pub async fn add_dashboard_data(
+    collection: &Collection<SecurityDashboardData>,
+    user_id: &str,
+    total_passwords: u32,
+    weak_passwords: u32,
+    last_health_scan: Option<DateTime>,
+    alerts: Option<Vec<String>>,
+) -> mongodb::error::Result<String> {
+    let dashboard_data = SecurityDashboardData {
+        user_id: user_id.to_string(),
+        total_passwords,
+        weak_passwords,
+        last_health_scan,
+        alerts,
+    };
+    let result = collection.insert_one(dashboard_data).await?;
+    Ok(result.inserted_id.as_object_id().unwrap().to_hex())
+}
 
-//     let new_user = User {
-//         user_id: 1,
-//         username: "encrypted_username".to_string(),
-//         hashed_password: "encrypted_password".to_string(),
-//         two_factor_secret: None,
-//         two_factor_enabled: false,
-//         created_at: chrono::Utc::now().naive_utc(),
-//         last_login: None,
-//     };
+/// Function to add user settings
+pub async fn add_user_settings(
+    collection: &Collection<UserSettings>,
+    user_id: &str,
+    auto_lock_timeout: u32,
+    backup_preference: &str,
+    dark_web_monitoring: bool,
+    in_app_notifications: bool,
+) -> mongodb::error::Result<String> {
+    let settings = UserSettings {
+        user_id: user_id.to_string(),
+        auto_lock_timeout,
+        backup_preference: backup_preference.to_string(),
+        dark_web_monitoring,
+        in_app_notifications,
+        created_at: DateTime::now(),
+    };
+    let result = collection.insert_one(settings).await?;
+    Ok(result.inserted_id.as_object_id().unwrap().to_hex())
+}
 
-//     create_user(&user_collection, new_user).await?;
-//     Ok(())
-// }
+pub(crate) async fn connect_rust_db() -> mongodb::error::Result<MongoClientState> {
+    // MongoDB connection string
+    dotenv().ok();
+
+    let mongo_uri = env::var("MONGO_URI").expect("MONGO_URI must be set");
+    let client_options = ClientOptions::parse(mongo_uri).await?;
+    let client = Client::with_options(client_options)?;
+
+    println!("Connected to MongoDB securely!");
+
+    Ok(MongoClientState::new(client))
+}

@@ -1,8 +1,8 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
+use crate::db::db_connect::{
+    tauri_add_audit_log, tauri_add_dashboard_data, tauri_add_password_entry, tauri_add_user,
+    tauri_add_user_settings,
+};
 
 mod db;
 
@@ -11,7 +11,13 @@ pub fn run() {
     // Initialize the Tauri application
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![
+            tauri_add_user,
+            tauri_add_password_entry,
+            tauri_add_audit_log,
+            tauri_add_dashboard_data,
+            tauri_add_user_settings
+        ])
         .setup(|_app| {
             // Use an asynchronous runtime to run the database connection
             tauri::async_runtime::spawn(async {
