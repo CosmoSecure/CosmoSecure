@@ -9,7 +9,7 @@ pub struct User {
     pub username: String,                  // Encrypted username
     pub hashed_password: String,           // Hashed password for authentication
     pub two_factor_secret: Option<String>, // Secret for TOTP 2FA
-    pub two_factor_enabled: bool,          // Is 2FA enabled
+    // pub two_factor_enabled: bool,          // Is 2FA enabled
     pub created_at: DateTime,              // Account creation timestamp
     pub last_login: Option<DateTime>,      // Last login timestamp
 }
