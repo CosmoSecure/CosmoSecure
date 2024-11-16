@@ -3,7 +3,7 @@ import { Outlet, Route } from 'react-router-dom';
 import { AppLayout, Dashboard, Home, About } from '../components';
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
 import HomeIcon from '@mui/icons-material/Home'; // Adjust the import path as necessary
-import SettingsSuggestTwoToneIcon from '@mui/icons-material/SettingsSuggestTwoTone';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
 
 const RoutesConf = (
@@ -18,11 +18,11 @@ const RoutesConf = (
 export default RoutesConf;
 
 export const routes = [
-    { path: '/', label: 'Dashboard', icon: <DashboardRoundedIcon /> },
-    { path: '/home', label: 'Home', icon: <HomeIcon /> },
-    { path: '/about', label: 'About', icon: <InfoRoundedIcon /> },
+    { path: '/', label: 'Dashboard', icon: <DashboardRoundedIcon fontSize="inherit" /> },
+    { path: '/home', label: 'Home', icon: <HomeIcon fontSize="inherit" /> },
+    { path: '/about', label: 'About', icon: <InfoRoundedIcon fontSize="inherit" /> },
 ];
 
 export const bottomRoutes = [
-    { path: '/setting', label: 'Setting', icon: <SettingsSuggestTwoToneIcon /> },
+    { path: '/setting', label: 'Setting', icon: <SettingsOutlinedIcon fontSize="inherit" /> },
 ];

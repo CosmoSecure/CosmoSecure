@@ -6,31 +6,33 @@ const Navigate: React.FC = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="transition-all duration-300 ease-in-out bg-[azure] group hover:w-64 w-16 h-full rounded-md flex flex-col justify-between">
+        <div className="transition-all duration-300 ease-in-out bg-blue-100/50 group hover:w-64 w-14 h-full rounded-md flex flex-col justify-between">
+            {/* <div className='bg-slate-300/50 rounded-2xl py-2 '> */}
             <div>
-                <nav className="p-4 space-y-4">
+                <nav className="p-2 space-y-4">
                     {routes.map((route) => (
-                        <button key={route.path} onClick={() => navigate(route.path)} className="flex items-center justify-start space-x-4 text-sky-900 h-full w-full rounded-md p-[2px] bg-slate-100 hover:bg-slate-300">
+                        <button key={route.path} onClick={() => navigate(route.path)} className="flex items-center justify-normal space-x-4 text-indigo-900 h-[40px] w-full rounded-md pl-[3px] bg-blue-100/80 hover:bg-[azure]">
                             {/* Icon - Always visible */}
-                            <div className="text-3xl mr-4 pl-[2px]">
+                            <div className="text-3xl pl-[2px]">
                                 {route.icon ? route.icon : <span>🔗</span>} {/* Replace with actual icon */}
                             </div>
                             {/* Label - Visible on expand */}
-                            <span className="hidden font-bold group-hover:inline-block">{route.label}</span>
+                            <div className="hidden font-bold w-full pr-6 justify-center text-lg group-hover:inline-block">{route.label}</div>
                         </button>
                     ))}
                 </nav>
             </div>
+            {/* <div className='bg-blue-100/50 rounded-2xl py-2 '> */}
             <div>
-                <nav className="p-4 space-y-4">
+                <nav className="p-2 space-y-4">
                     {bottomRoutes.map((route) => (
-                        <button key={route.path} onClick={() => navigate(route.path)} className="flex items-center justify-start space-x-4 text-sky-900 h-full w-full rounded-md p-[2px] bg-slate-100 hover:bg-slate-300">
+                        <button key={route.path} onClick={() => navigate(route.path)} className="flex items-center justify-normal space-x-4 text-indigo-900 h-[40px] w-full rounded-md pl-[3px] bg-blue-100/80 hover:bg-[azure]">
                             {/* Icon - Always visible */}
-                            <div className="text-3xl mr-4 pl-[2px]">
+                            <div className="text-3xl pl-[2px]">
                                 {route.icon ? route.icon : <span>🔗</span>} {/* Replace with actual icon */}
                             </div>
                             {/* Label - Visible on expand */}
-                            <span className="hidden font-bold group-hover:inline-block">{route.label}</span>
+                            <div className="hidden font-bold w-full pr-6 justify-center text-lg group-hover:inline-block">{route.label}</div>
                         </button>
                     ))}
                 </nav>
