@@ -4,6 +4,7 @@ import Dashboard from './Dashboard';
 import Home from './Home';
 import Decor from './Decor';
 import Navigate from './Navigate';
+import { Login } from './auth';
 
 export {
     About,
@@ -11,5 +12,6 @@ export {
     Dashboard,
     Home,
     Decor,
-    Navigate
+    Navigate,
+    Login
 };
