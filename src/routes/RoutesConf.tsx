@@ -1,10 +1,11 @@
 // src/routes/index.tsx
 import { Outlet, Route } from 'react-router-dom';
-import { AppLayout, Dashboard, Home, About } from '../components';
+import { AppLayout, Dashboard, Home, About, Login } from '../components';
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
 import HomeIcon from '@mui/icons-material/Home'; // Adjust the import path as necessary
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
+import LoginIcon from '@mui/icons-material/Login';
 
 const RoutesConf = (
     <Route path="/" element={<AppLayout />}>
@@ -12,6 +13,7 @@ const RoutesConf = (
         <Route path="home" element={<Home />} />
         <Route path="about" element={<About />} />
         <Route path="setting" element={<Outlet />} />
+        <Route path="login" element={<Login />} />
     </Route>
 );
 
@@ -24,5 +26,6 @@ export const routes = [
 ];
 
 export const bottomRoutes = [
+    { path: '/login', label: 'Login', icon: <LoginIcon fontSize="inherit" /> },
     { path: '/setting', label: 'Setting', icon: <SettingsOutlinedIcon fontSize="inherit" /> },
 ];
