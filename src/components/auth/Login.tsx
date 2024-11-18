@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useNavigate } from "react-router-dom";
 
 interface User {
     id: number;
@@ -11,23 +12,43 @@ interface User {
 const Login = () => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const navigate = useNavigate();
 
     const handleLogin = async () => {
         try {
             // Send the login request to your backend
-            const response = await invoke<{ token: string, data: User }>("authenticate_user", { username, password });
+            const response = await invoke<{ token: string; data: User }>("authenticate_user", { username, password });
 
-            // Assuming the response contains the token and user data
             if (response) {
-                // Store the token in localStorage
-                localStorage.setItem("token", response.token);
+                // Store the token in sessionStorage
+                sessionStorage.setItem("token", response.token);
 
                 // Optionally, store user data
-                localStorage.setItem("user", JSON.stringify(response.data));
+                sessionStorage.setItem("user", JSON.stringify(response.data));
 
                 alert("Login successful!");
-                // Redirect or update UI accordingly
-                window.location.href = "/";
+
+                // Navigate to the home page
+                navigate("/");
+
+                // Set a timeout for session expiration (example: 10 seconds)
+                const sessionTimeout = 10000; // 10 seconds
+                const timeoutId = setTimeout(() => {
+                    // Remove session on expiration
+                    sessionStorage.removeItem("token");
+                    sessionStorage.removeItem("user");
+                    alert("Session expired. Please log in again.");
+                    const timeoutId = localStorage.getItem("sessionTimeoutId");
+                    if (timeoutId) {
+                        clearTimeout(parseInt(timeoutId, 10));
+                    }
+
+                    localStorage.removeItem("sessionTimeoutId");
+                    navigate("/login");
+                }, sessionTimeout);
+
+                // Store the timeout ID for cleanup on logout/re-login
+                sessionStorage.setItem("sessionTimeoutId", timeoutId.toString());
             } else {
                 alert("Invalid credentials. Please try again.");
             }
