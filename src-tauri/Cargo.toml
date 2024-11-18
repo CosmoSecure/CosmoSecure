@@ -29,4 +29,6 @@ tokio = "1.41.1"
 chrono = { version = "0.4.38", features = ["serde"] }
 dotenv = "0.15.0"
 # Incripting
-bcrypt = "0.15.1"
+bcrypt = "0.16.0"
+jsonwebtoken = "9.3.0"
+warp = "0.3"
