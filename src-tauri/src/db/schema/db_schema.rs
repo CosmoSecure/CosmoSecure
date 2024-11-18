@@ -10,24 +10,22 @@ pub struct User {
     pub hashed_password: String,           // Hashed password for authentication
     pub two_factor_secret: Option<String>, // Secret for TOTP 2FA
     // pub two_factor_enabled: bool,          // Is 2FA enabled
-    pub created_at: DateTime,              // Account creation timestamp
-    pub last_login: Option<DateTime>,      // Last login timestamp
+    pub created_at: DateTime,         // Account creation timestamp
+    pub last_login: Option<DateTime>, // Last login timestamp
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PasswordEntry {
-    pub entry_id: String,      // Unique identifier for the entry
-    pub user_id: String,       // Reference to the user
-    pub account_name: String,  // Encrypted account name
-    pub username: String,      // Encrypted username for the account
-    pub password: String,      // Encrypted password
-    pub url: Option<String>,   // Optional URL field
-    pub notes: Option<String>, // Optional notes field
+    pub entry_id: String,     // Unique identifier for the entry
+    pub user_id: String,      // Reference to the user
+    pub account_name: String, // Encrypted account name
+    pub username: String,     // Encrypted username for the account
+    pub password: String,     // Encrypted password
     pub custom_fields: Option<Vec<(String, String)>>, // Encrypted key-value pairs
-    pub created_at: DateTime,  // Entry creation timestamp
-    pub updated_at: Option<DateTime>, // Last update timestamp
+    pub created_at: DateTime, // Entry creation timestamp
     pub password_strength: Option<u8>, // Password strength rating
-    pub last_health_check: Option<DateTime>, // Last password health check timestamp
+                              // Last update timestamp
+                              // Add ZKP [Zero Knowledge Proof]
 }
 
 // ! Futore Feature
