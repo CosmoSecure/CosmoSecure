@@ -10,16 +10,17 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@emotion/styled": "^11.13.0",
     "@mui/icons-material": "^6.1.6",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-shell": "^2",
+    "crypto-js": "^4.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.28.0"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",
+    "@types/crypto-js": "^4.2.2",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@vitejs/plugin-react": "^4.2.1",
