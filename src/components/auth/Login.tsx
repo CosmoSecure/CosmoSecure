@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router-dom";
+import { token_secure } from "./token_secure";
+import { timeOut } from "./timeout";
 
 interface User {
     id: number;
@@ -20,35 +22,10 @@ const Login = () => {
             const response = await invoke<{ token: string; data: User }>("authenticate_user", { username, password });
 
             if (response) {
-                // Store the token in sessionStorage
-                sessionStorage.setItem("token", response.token);
-
-                // Optionally, store user data
-                sessionStorage.setItem("user", JSON.stringify(response.data));
-
+                token_secure(response);
                 alert("Login successful!");
-
-                // Navigate to the home page
                 navigate("/");
-
-                // Set a timeout for session expiration (example: 10 seconds)
-                const sessionTimeout = 10000; // 10 seconds
-                const timeoutId = setTimeout(() => {
-                    // Remove session on expiration
-                    sessionStorage.removeItem("token");
-                    sessionStorage.removeItem("user");
-                    alert("Session expired. Please log in again.");
-                    const timeoutId = localStorage.getItem("sessionTimeoutId");
-                    if (timeoutId) {
-                        clearTimeout(parseInt(timeoutId, 10));
-                    }
-
-                    localStorage.removeItem("sessionTimeoutId");
-                    navigate("/login");
-                }, sessionTimeout);
-
-                // Store the timeout ID for cleanup on logout/re-login
-                sessionStorage.setItem("sessionTimeoutId", timeoutId.toString());
+                timeOut(navigate);
             } else {
                 alert("Invalid credentials. Please try again.");
             }

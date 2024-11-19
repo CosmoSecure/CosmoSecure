@@ -16,11 +16,10 @@ pub fn generate_token(user_id: &str) -> Result<String, String> {
     dotenv().ok();
 
     let token_secret = env::var("TOKEN_SECRET").map_err(|e| e.to_string())?;
-    // Calculate expiration time (current time + 1 hour)
     let expiration = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .map_err(|e| e.to_string())? // Handle potential errors
-        + Duration::new(25, 0); // Token expires in 1 hour
+        + Duration::new(3 * 24 * 3600, 0); // Token expires in 3 days
 
     let claims = Claims {
         sub: user_id.to_string(),
