@@ -32,6 +32,25 @@ impl MongoClientState {
     }
 }
 
+#[tauri::command]
+pub async fn check_username_availability(
+    state: State<'_, MongoClientState>,
+    username: String,
+) -> Result<bool, String> {
+    let users_collection = state
+        .get_database("password_manager")
+        .collection::<User>("users");
+
+    match users_collection
+        .find_one(doc! { "username": &username })
+        .await
+    {
+        Ok(Some(_)) => Ok(false), // Username exists
+        Ok(None) => Ok(true),     // Username is available
+        Err(e) => Err(format!("Error checking username: {}", e)),
+    }
+}
+
 pub async fn get_user_by_username(
     username: &str,
     collection: &Collection<User>,

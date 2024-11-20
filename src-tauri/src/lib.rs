@@ -1,6 +1,5 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-
-use crate::db::db_connect::{authenticate_user, tauri_add_user};
+use crate::db::db_connect::{authenticate_user, check_username_availability, tauri_add_user};
 
 mod db;
 
@@ -18,7 +17,11 @@ pub async fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .manage(client_state)
-        .invoke_handler(tauri::generate_handler![tauri_add_user, authenticate_user])
+        .invoke_handler(tauri::generate_handler![
+            tauri_add_user,
+            authenticate_user,
+            check_username_availability
+        ])
         .setup(|_app| {
             // Use an asynchronous runtime to run the database connection
             tauri::async_runtime::spawn(async {
