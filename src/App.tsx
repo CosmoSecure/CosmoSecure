@@ -23,19 +23,18 @@ function App() {
   }, []);
 
   if (isAuthenticated === null) {
-    return <div>Loading...</div>; // Show a loading indicator while checking authentication
+    return <div>Loading...</div>;
   }
 
   return (
-    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <Router>
       <Routes>
         {isAuthenticated ? (
-          <RoutesConf setIsAuthenticated={setIsAuthenticated} />
+          <Route path="/*" element={<RoutesConf setIsAuthenticated={setIsAuthenticated} />} />
         ) : (
-          <Route path="*" element={<Auth_page />}>
+          <Route path="/" element={<Auth_page />}>
             <Route index element={<Login setIsAuthenticated={setIsAuthenticated} />} />
             <Route path="signup" element={<Signup />} />
-            <Route path="login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
           </Route>
         )}
       </Routes>

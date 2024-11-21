@@ -1,15 +1,13 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router-dom";
-import { token_secure } from "./token_secure";
-import { timeOut } from "./timeout";
 import { VisibilityOffTwoToneIcon, VisibilityTwoToneIcon } from './passCSS';
+import { token_secure } from "./token_secure";
 
 interface User {
     id: number;
     name: string;
     email: string;
-    // Add other fields as necessary
 }
 
 interface LoginProps {
@@ -22,33 +20,19 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
     const [passwordVisible, setPasswordVisible] = useState(false);
     const navigate = useNavigate();
 
-    const handleSignupClick = () => {
-        navigate("/signup");// This triggers navigation to the signup page
-    };
-
     const handleLogin = async () => {
         if (username.length < 3 || username.length > 15) {
             alert('Username must be between 3 and 15 characters long.');
             return;
         }
 
-        // if (password.length < 6) {
-        //     alert('Password must be at least 6 characters long.');
-        //     return;
-        // }
-
         try {
-            // Send the login request to your backend
             const response = await invoke<{ token: string; data: User }>("authenticate_user", { username, password });
-
             if (response) {
-                // Store the token in sessionStorage
-                sessionStorage.setItem('token', response.token);
                 token_secure(response);
                 alert("Login successful!");
-                setIsAuthenticated(true); // Update the authentication state
-                navigate("/"); // Navigate to the main application
-                timeOut(navigate);
+                setIsAuthenticated(true);
+                navigate("/");
             } else {
                 alert("Invalid credentials. Please try again.");
             }
@@ -58,14 +42,10 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
         }
     };
 
-    const togglePasswordVisibility = () => {
-        setPasswordVisible(!passwordVisible);
-    };
+    const togglePasswordVisibility = () => setPasswordVisible(!passwordVisible);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === ' ') {
-            e.preventDefault();
-        }
+        if (e.key === ' ') e.preventDefault();
     };
 
     return (
@@ -90,7 +70,6 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
                         className="w-full p-3 border border-gray-300 rounded-lg pr-10"
                     />
                     <button
-                        type="button"
                         onClick={togglePasswordVisibility}
                         className="absolute inset-y-0 right-0 px-3 py-2 text-gray-600"
                     >
@@ -103,16 +82,16 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
                 >
                     Login
                 </button>
-                <div className="mt-4 text-center"></div>
-                <span>Don't have an account? </span>
-                <button
-                    onClick={handleSignupClick}
-                    className="text-blue-500 hover:underline"
-                >
-                    Signup
-                </button>
+                <div className="mt-4 text-center">
+                    Don't have an account?{" "}
+                    <button
+                        onClick={() => navigate("/signup")}
+                        className="text-blue-500 hover:underline"
+                    >
+                        Signup
+                    </button>
+                </div>
             </div>
-
         </div>
     );
 };

@@ -1,26 +1,26 @@
-// src/routes/index.tsx
-import { Outlet, Route } from 'react-router-dom';
+// import SensorOccupiedIcon from '@mui/icons-material/SensorOccupied';
+import { Outlet, Route, Routes } from 'react-router-dom';
 import { AppLayout, Dashboard, Home, About } from '../components';
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
-import HomeIcon from '@mui/icons-material/Home'; // Adjust the import path as necessary
+import HomeIcon from '@mui/icons-material/Home';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
-
-// import LoginIcon from '@mui/icons-material/Login';
-import SensorOccupiedIcon from '@mui/icons-material/SensorOccupied';
 
 interface RoutesConfProps {
     setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean | null>>;
 }
-
-const RoutesConf: React.FC<RoutesConfProps> = () => (
-    <Route path="/" element={<AppLayout />}>
-        <Route index element={<Dashboard />} />   {/* This is the default route */}
-        <Route path="home" element={<Home />} />
-        <Route path="about" element={<About />} />
-        <Route path="setting" element={<Outlet />} />
-    </Route>
-);
+const RoutesConf: React.FC<RoutesConfProps> = ({ }) => {
+    return (
+        <Routes>
+            <Route path="/" element={<AppLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="home" element={<Home />} />
+                <Route path="about" element={<About />} />
+                <Route path="setting" element={<Outlet />} />
+            </Route>
+        </Routes>
+    );
+};
 
 export default RoutesConf;
 
@@ -31,6 +31,5 @@ export const routes = [
 ];
 
 export const bottomRoutes = [
-    { path: '/auth/signup', label: 'Signup', icon: <SensorOccupiedIcon fontSize="inherit" /> },
     { path: '/setting', label: 'Setting', icon: <SettingsOutlinedIcon fontSize="inherit" /> },
 ];

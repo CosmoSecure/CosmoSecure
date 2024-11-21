@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { useNavigate } from 'react-router-dom';
 import { VisibilityOffTwoToneIcon, VisibilityTwoToneIcon } from './passCSS';
+import { signup_token_secure } from './token_secure';
 
 function debounce(func: (...args: any[]) => void, wait: number) {
     let timeout: ReturnType<typeof setTimeout>;
@@ -17,9 +19,10 @@ const Signup: React.FC = () => {
     const [message, setMessage] = useState('');
     const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
     const [passwordVisible, setPasswordVisible] = useState(false);
+    const navigate = useNavigate();
 
     const checkUsernameAvailability = async (username: string) => {
-        if (username === '') {
+        if (username === '' || username === null) {
             setUsernameAvailable(null);
             return;
         }
@@ -55,20 +58,16 @@ const Signup: React.FC = () => {
         }
 
         try {
-            const response = await invoke<string>('tauri_add_user', {
+            const response = await invoke<{ token: string }>('tauri_add_user', {
                 username,
                 password,
                 twoFactorSecret: twoFactorSecret || null,
             });
-            setMessage(`User added successfully: ${response}`);
+            signup_token_secure(response);
+            sessionStorage.setItem('username', username);   // Save username
+            navigate('/'); // Navigate to the main app
         } catch (error) {
             setMessage(`Error adding user: ${error}`);
-        }
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === ' ') {
-            e.preventDefault();
         }
     };
 
@@ -76,8 +75,12 @@ const Signup: React.FC = () => {
         setPasswordVisible(!passwordVisible);
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === ' ') e.preventDefault();
+    };
+
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+        <div className="flex flex-col items-center justify-center min-h-full bg-gray-100">
             <h2 className="text-2xl font-bold mb-4">Signup</h2>
             <form onSubmit={handleSignup} className="bg-white p-6 rounded shadow-md w-full max-w-sm">
                 <div className="mb-4">
@@ -111,7 +114,7 @@ const Signup: React.FC = () => {
                     <button
                         type="button"
                         onClick={togglePasswordVisibility}
-                        className="absolute flex items-end inset-y-0 right-0 px-3 py-2 text-gray-600"
+                        className="absolute inset-y-0 right-0 px-3 py-2 text-gray-600"
                     >
                         {passwordVisible ? <VisibilityOffTwoToneIcon /> : <VisibilityTwoToneIcon />}
                     </button>
@@ -128,6 +131,17 @@ const Signup: React.FC = () => {
                 </div>
                 <button type="submit" className="bg-blue-500 text-white p-2 rounded w-full">Signup</button>
             </form>
+            <div className="mt-4 text-center">
+                <p>
+                    Already have an account?{' '}
+                    <button
+                        onClick={() => navigate('/')}
+                        className="text-blue-500 hover:underline"
+                    >
+                        Login
+                    </button>
+                </p>
+            </div>
             {message && <p className="mt-4 text-center text-red-500">{message}</p>}
         </div>
     );

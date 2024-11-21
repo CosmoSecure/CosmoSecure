@@ -28,6 +28,12 @@ export function token_secure(response: Response) {
     sessionStorage.setItem("user", encryptedData);
 }
 
+export function signup_token_secure(response: { token: string }) {
+    // Encrypt the token using AES encryption
+    const encryptedToken = CryptoJS.AES.encrypt(response.token, SECRET_KEY).toString();
+    sessionStorage.setItem("token", encryptedToken);
+}
+
 //! Decrypt the token and user data for use in the application [Display On Profile Page]
 
 export function decryptToken() {
