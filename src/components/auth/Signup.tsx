@@ -44,6 +44,16 @@ const Signup: React.FC = () => {
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (username.length < 3 || username.length > 15) {
+            setMessage('Username must be between 3 and 15 characters long.');
+            return;
+        }
+
+        if (password.length < 6) {
+            setMessage('Password must be at least 6 characters long.');
+            return;
+        }
+
         try {
             const response = await invoke<string>('tauri_add_user', {
                 username,
