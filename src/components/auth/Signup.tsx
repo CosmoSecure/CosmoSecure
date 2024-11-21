@@ -114,7 +114,7 @@ const Signup: React.FC = () => {
                     <button
                         type="button"
                         onClick={togglePasswordVisibility}
-                        className="absolute inset-y-0 right-0 px-3 py-2 text-gray-600"
+                        className="absolute flex items-end inset-y-0 right-0 px-3 py-2 text-gray-600"
                     >
                         {passwordVisible ? <VisibilityOffTwoToneIcon /> : <VisibilityTwoToneIcon />}
                     </button>
