@@ -5,8 +5,8 @@ use dotenv::dotenv;
 use mongodb::bson::DateTime;
 use mongodb::bson::{doc, oid::ObjectId};
 use mongodb::error::Error;
-use mongodb::options::ClientOptions;
-use mongodb::{Client, Collection, Database};
+use mongodb::options::{ClientOptions, IndexOptions};
+use mongodb::{Client, Collection, Database, IndexModel};
 use serde_json::json;
 use std::env;
 use tauri::State;
@@ -134,8 +134,9 @@ pub async fn authenticate_user(
 pub async fn tauri_add_user(
     state: State<'_, MongoClientState>,
     username: String,
+    name: String,
     password: String, // Receive plain password here
-    two_factor_secret: Option<String>,
+    email: String,
 ) -> Result<String, String> {
     // Hash the password using bcrypt
     let hashed_password = match hash(password, DEFAULT_COST) {
@@ -151,8 +152,9 @@ pub async fn tauri_add_user(
     add_user(
         &users_collection,
         &username,
+        &name,
         &hashed_password, // Use the hashed password
-        two_factor_secret,
+        &email,
     )
     .await
     .map_err(|e| e.to_string())
@@ -161,14 +163,16 @@ pub async fn tauri_add_user(
 pub async fn add_user(
     collection: &Collection<User>,
     username: &str,
+    name: &str,
     hashed_password: &str,
-    two_factor_secret: Option<String>,
+    email: &str,
 ) -> mongodb::error::Result<String> {
     let new_user = User {
         user_id: ObjectId::new().to_hex(),
         username: username.to_string(),
+        name: name.to_string(),
         hashed_password: hashed_password.to_string(),
-        two_factor_secret,
+        email: email.to_string(),
         created_at: DateTime::now(),
         last_login: None,
     };
@@ -180,6 +184,24 @@ pub async fn add_user(
             Err(e)
         }
     }
+}
+
+async fn create_unique_indexes(collection: &Collection<User>) -> mongodb::error::Result<()> {
+    // Create unique index for username
+    let username_index = IndexModel::builder()
+        .keys(doc! { "username": 1 })
+        .options(IndexOptions::builder().unique(true).build())
+        .build();
+    collection.create_index(username_index).await?;
+
+    // Create unique index for email
+    let email_index = IndexModel::builder()
+        .keys(doc! { "email": 1 })
+        .options(IndexOptions::builder().unique(true).build())
+        .build();
+    collection.create_index(email_index).await?;
+
+    Ok(())
 }
 
 pub(crate) async fn connect_rust_db() -> mongodb::error::Result<MongoClientState> {
@@ -201,6 +223,10 @@ pub(crate) async fn connect_rust_db() -> mongodb::error::Result<MongoClientState
     }
 
     println!("Connected to MongoDB securely!");
+
+    let db = client.database("password_manager");
+    let users_collection = db.collection::<User>("users");
+    create_unique_indexes(&users_collection).await?;
 
     Ok(MongoClientState::new(client).await)
 }

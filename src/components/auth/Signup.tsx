@@ -14,6 +14,8 @@ function debounce(func: (...args: any[]) => void, wait: number) {
 
 const Signup: React.FC = () => {
     const [username, setUsername] = useState('');
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [twoFactorSecret, setTwoFactorSecret] = useState('');
     const [message, setMessage] = useState('');
@@ -60,6 +62,8 @@ const Signup: React.FC = () => {
         try {
             const response = await invoke<{ token: string }>('tauri_add_user', {
                 username,
+                name,
+                email,
                 password,
                 twoFactorSecret: twoFactorSecret || null,
             });
@@ -99,6 +103,28 @@ const Signup: React.FC = () => {
                     ) : (
                         <p className="text-red-500">Username is already taken</p>
                     )}
+                </div>
+                <div className="mb-4">
+                    <label htmlFor="name" className="block text-gray-700">Name:</label>
+                    <input
+                        type="text"
+                        id="name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                        className="mt-1 p-2 w-full border rounded"
+                    />
+                </div>
+                <div className="mb-4">
+                    <label htmlFor="email" className="block text-gray-700">Email:</label>
+                    <input
+                        type="email"
+                        id="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="mt-1 p-2 w-full border rounded"
+                    />
                 </div>
                 <div className="mb-4 relative">
                     <label htmlFor="password" className="block text-gray-700">Password:</label>
