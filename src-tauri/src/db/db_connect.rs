@@ -51,42 +51,37 @@ pub async fn check_username_availability(
     }
 }
 
-pub async fn get_user_by_username(
-    username: &str,
+pub async fn get_user_by_username_or_email(
+    identifier: &str,
     collection: &Collection<User>,
 ) -> Result<User, Error> {
-    let filter = doc! { "username": username };
+    let filter = doc! {
+        "$or": [
+            { "username": identifier },
+            { "email": identifier }
+        ]
+    };
     collection.find_one(filter).await?.ok_or_else(|| {
         Error::from(std::io::Error::new(
             std::io::ErrorKind::NotFound,
-            format!("User with username '{}' not found.", username),
+            format!("User with identifier '{}' not found.", identifier),
         ))
     })
 }
 
 #[tauri::command]
 pub async fn authenticate_user(
-    username: String,
+    identifier: String,
     password: String,
     state: State<'_, MongoClientState>,
 ) -> Result<serde_json::Value, String> {
-    // Change return type to Json
-    // Retrieve the users collection
     let users_collection = state
         .get_database("password_manager")
         .collection::<User>("users");
 
-    // Debug: Check the username
-    println!("Attempting to authenticate user: {}", username);
-
-    match get_user_by_username(&username, &users_collection).await {
+    match get_user_by_username_or_email(&identifier, &users_collection).await {
         Ok(user) => {
-            // Debug: Check if user is found
-            println!("User found: {:?}", user);
-
-            // Verify the password
             if verify(&password, &user.hashed_password).unwrap_or(false) {
-                // Update `last_login` timestamp
                 let filter = doc! { "user_id": &user.user_id };
                 let update = doc! {
                     "$set": {
@@ -97,34 +92,23 @@ pub async fn authenticate_user(
                     eprintln!("Failed to update last login timestamp: {}", e);
                 }
 
-                // Generate JWT token after successful authentication
                 let token_result = generate_token(&user.user_id);
                 match token_result {
                     Ok(token) => {
-                        // Debug: Check if token was generated
-                        println!("Generated token: {}", token);
-                        // Return the generated token along with user data in JSON format
                         return Ok(json!({
                             "token": token,
                             "data": user
                         }));
                     }
                     Err(e) => {
-                        // Return an error message if token generation fails
                         Err(format!("Error generating token: {}", e))
                     }
                 }
             } else {
-                eprintln!(
-                    "Failed login attempt: Incorrect password for user '{}'",
-                    username
-                );
-                // Invalid credentials
                 Err("Invalid credentials.".to_string())
             }
         }
         Err(e) => {
-            // Handle case where user is not found
             Err(format!("Authentication failed: {}", e))
         }
     }

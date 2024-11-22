@@ -6,6 +6,7 @@ import { token_secure } from "./token_secure";
 
 interface User {
     id: number;
+    username: string;
     name: string;
     email: string;
 }
@@ -15,23 +16,24 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
-    const [username, setUsername] = useState("");
+    const [identifier, setIdentifier] = useState("");
     const [password, setPassword] = useState("");
     const [passwordVisible, setPasswordVisible] = useState(false);
     const navigate = useNavigate();
 
     const handleLogin = async () => {
-        if (username.length < 3 || username.length > 15) {
-            alert('Username must be between 3 and 15 characters long.');
+        if (identifier.length < 3 || identifier.length > 50) {
+            alert('Identifier must be between 3 and 50 characters long.');
             return;
         }
 
         try {
-            const response = await invoke<{ token: string; data: User }>("authenticate_user", { username, password });
+            const response = await invoke<{ token: string; data: User }>("authenticate_user", { identifier, password });
             if (response) {
                 token_secure(response);
                 alert("Login successful!");
                 setIsAuthenticated(true);
+                sessionStorage.setItem("Username", response.data.username);
                 navigate("/");
             } else {
                 alert("Invalid credentials. Please try again.");
@@ -54,9 +56,9 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
                 <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
                 <input
                     type="text"
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Username or Email"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
                     onKeyDown={handleKeyDown}
                     className="w-full p-3 mb-4 border border-gray-300 rounded-lg"
                 />
