@@ -21,7 +21,10 @@ const Signup: React.FC = () => {
     const [message, setMessage] = useState('');
     const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
     const [passwordVisible, setPasswordVisible] = useState(false);
+    const [isEmailValid, setIsEmailValid] = useState<boolean | null>(null);
     const navigate = useNavigate();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     const checkUsernameAvailability = async (username: string) => {
         if (username === '' || username === null) {
@@ -46,11 +49,34 @@ const Signup: React.FC = () => {
         }
     }, [username]);
 
+    const checkEmailValidity = (email: string) => {
+        if (email === '' || email === null) {
+            setIsEmailValid(null);
+            return;
+        }
+        setIsEmailValid(emailRegex.test(email));
+    };
+
+    const debouncedCheckEmailValidity = debounce(checkEmailValidity, 300);
+
+    useEffect(() => {
+        if (email) {
+            debouncedCheckEmailValidity(email);
+        } else {
+            setIsEmailValid(null);
+        }
+    }, [email]);
+
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (username.length < 3 || username.length > 15) {
             setMessage('Username must be between 3 and 15 characters long.');
+            return;
+        }
+
+        if (!isEmailValid) {
+            setMessage('Invalid email address.');
             return;
         }
 
@@ -125,6 +151,11 @@ const Signup: React.FC = () => {
                         required
                         className="mt-1 p-2 w-full border rounded"
                     />
+                    {isEmailValid === null ? null : isEmailValid ? (
+                        <p></p>
+                    ) : (
+                        <p className="text-red-500">Invalid email address</p>
+                    )}
                 </div>
                 <div className="mb-4 relative">
                     <label htmlFor="password" className="block text-gray-700">Password:</label>
