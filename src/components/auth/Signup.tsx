@@ -194,7 +194,7 @@ const Signup: React.FC = () => {
                 </div>
                 <div>
                     <img
-                        src="src/assets/foo.jpg" // Replace with your image path
+                        src="src/assets/temp.jpg" // Replace with your image path
                         alt="Login Illustration"
                         className="w-full h-full object-cover rounded-md"
                     />

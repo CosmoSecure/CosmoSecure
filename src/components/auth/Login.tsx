@@ -55,7 +55,7 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
             <div className="max-w-4xl w-full h-5/6 m-2 mx-auto border border-rich-black-2 rounded-lg shadow-lg bg-raisin-black grid grid-cols-[3fr,4fr]">
                 <div>
                     <img
-                        src="src/assets/foo.jpg" // Replace with your image path
+                        src="src/assets/temp.jpg" // Replace with your image path
                         alt="Login Illustration"
                         className="w-full h-full object-cover rounded-md"
                     />
