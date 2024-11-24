@@ -51,47 +51,70 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
     };
 
     return (
-        <div className="w-full h-full flex justify-center items-center bg-slate-500">
-            <div className="max-w-md mx-auto p-6 border border-gray-300 rounded-lg shadow-lg bg-white">
-                <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
-                <input
-                    type="text"
-                    placeholder="Username or Email"
-                    value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    className="w-full p-3 mb-4 border border-gray-300 rounded-lg"
-                />
-                <div className="mb-4 relative">
-                    <input
-                        type={passwordVisible ? "text" : "password"}
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        className="w-full p-3 border border-gray-300 rounded-lg pr-10"
+        <div className="w-full h-full flex justify-center items-center bg-rich-black text-white">
+            <div className="max-w-4xl w-full h-5/6 m-2 mx-auto border border-rich-black-2 rounded-lg shadow-lg bg-raisin-black grid grid-cols-[3fr,4fr]">
+                <div>
+                    <img
+                        src="src/assets/foo.jpg" // Replace with your image path
+                        alt="Login Illustration"
+                        className="w-full h-full object-cover rounded-md"
                     />
-                    <button
-                        onClick={togglePasswordVisibility}
-                        className="absolute inset-y-0 right-0 px-3 py-2 text-gray-600"
-                    >
-                        {passwordVisible ? <VisibilityOffTwoToneIcon /> : <VisibilityTwoToneIcon />}
-                    </button>
                 </div>
-                <button
-                    onClick={handleLogin}
-                    className="w-full p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-700"
-                >
-                    Login
-                </button>
-                <div className="mt-4 text-center">
-                    Don't have an account?{" "}
-                    <button
-                        onClick={() => navigate("/signup")}
-                        className="text-blue-500 hover:underline"
-                    >
-                        Signup
-                    </button>
+                <div className="m-5 grid grid-rows-[1fr,2fr]">
+                    <div className="w-1/2 mx-auto">
+                        <img
+                            src="src/assets/logo.png" // Replace with your image path
+                            alt="Logo"
+                            className="w-auto h-auto object-cover mx-auto"
+                        />
+                    </div>
+                    <div className="mx-8">
+                        <h2 className="text-2xl font-bold text-center mb-6 text-african-violet">Welcome Back!</h2>
+                        <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
+                            <div className="mb-4">
+                                <input
+                                    type="text"
+                                    placeholder="Username or Email"
+                                    value={identifier}
+                                    onChange={(e) => setIdentifier(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    className="w-full p-3 border border-paynes-gray rounded-lg bg-ultra-violet text-white"
+                                />
+                            </div>
+                            <div className="mb-4 relative">
+                                <input
+                                    type={passwordVisible ? "text" : "password"}
+                                    placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    className="w-full p-3 border border-paynes-gray rounded-lg bg-ultra-violet text-white pr-10"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={togglePasswordVisibility}
+                                    className="absolute inset-y-0 right-0 px-3 py-2 text-gray-400"
+                                >
+                                    {passwordVisible ? <VisibilityOffTwoToneIcon /> : <VisibilityTwoToneIcon />}
+                                </button>
+                            </div>
+                            <button
+                                type="submit"
+                                className="w-full p-3 bg-glaucous text-white rounded-lg hover:bg-mauve"
+                            >
+                                Login
+                            </button>
+                        </form>
+                        <div className="mt-4 text-center">
+                            Don't have an account?{" "}
+                            <button
+                                onClick={() => navigate("/signup")}
+                                className="text-persian-pink hover:underline"
+                            >
+                                Signup
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
