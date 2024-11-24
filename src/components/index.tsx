@@ -1,20 +1,23 @@
-import About from './About';
+import { Login, Signup } from './auth';
 import AppLayout from './AppLayout';
-import Dashboard from './Dashboard';
-import Home from './Home';
+
 import Decor from './Decor';
 import Navigate from './Navigate';
-import { Login } from './auth';
-import { Signup } from './auth';
+
+import About from './About';
+import Dashboard from './Dashboard';
+import Home from './Home';
 
 export {
     Login,
     Signup,
 
-    About,
     AppLayout,
-    Dashboard,
-    Home,
+
     Decor,
     Navigate,
+
+    About,
+    Dashboard,
+    Home,
 };
