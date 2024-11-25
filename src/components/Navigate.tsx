@@ -1,12 +1,34 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { routes, bottomRoutes } from '../routes';
+import { useEffect, useState } from 'react';
+import { decryptUser } from './auth/token_secure';
 
 const Navigate: React.FC = () => {
     const navigate = useNavigate();
 
+
+    const [username, setUsername] = useState('');
+
+    useEffect(() => {
+        try {
+            const user = decryptUser();
+            if (user && user.name) {
+                setUsername(user.name);
+            } else {
+                console.error('No user found in decrypted data');
+            }
+        } catch (error) {
+            console.error('Error decrypting or parsing user data:', error);
+        }
+    }, []);
+
     return (
         <div className="transition-all duration-300 ease-in-out bg-blue-100/50 group hover:w-64 w-14 h-full rounded-md flex flex-col justify-between">
+            <div className="p-2">
+                <p className="text-indigo-900 font-bold">Hello, {username}!</p>
+            </div>
+
             {/* <div className='bg-slate-300/50 rounded-2xl py-2 '> */}
             <div>
                 <nav className="p-2 space-y-4">
