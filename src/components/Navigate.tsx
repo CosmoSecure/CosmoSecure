@@ -37,7 +37,7 @@ const Navigate: React.FC = () => {
 
                 {/* Username */}
                 <div
-                    className="absolute top-[5rem] left-1/2 -translate-x-1/2 hidden group-hover:block text-mauve font-bold text-center transition-all duration-300"
+                    className="absolute top-[5rem] left-[47%]  -translate-x-1/2 hidden group-hover:block text-cyan-300 font-bold text-center transition-all duration-300"
                 >
                     {username}
                 </div>
@@ -70,7 +70,7 @@ const Navigate: React.FC = () => {
                         <button
                             key={route.path}
                             onClick={() => navigate(route.path)}
-                            className="flex items-center justify-normal space-x-4 text-mauve h-[40px] w-full rounded-md pl-[3px] bg-glaucous/60 hover:bg-glaucous/90"
+                            className="flex items-center justify-normal space-x-4 text-gray-300 h-[40px] w-full rounded-md pl-[3px] bg-glaucous/60 hover:bg-glaucous/90"
                         >
                             <div className="text-3xl pl-[2px]">
                                 {route.icon ? route.icon : <span>🔗</span>}
