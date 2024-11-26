@@ -23,7 +23,7 @@ const Navigate: React.FC = () => {
     }, []);
 
     return (
-        <div className="transition-all duration-300 ease-in-out bg-rich-black/70 group hover:w-64 w-14 h-full rounded-md flex flex-col justify-between relative">
+        <div className="transition-all duration-300 ease-in-out bg-rich-black/95 group hover:w-64 w-14 h-full rounded-md flex flex-col justify-between relative">
             {/* Profile Icon */}
             <div className="p-2 relative">
                 <button
