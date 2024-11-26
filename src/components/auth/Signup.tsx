@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router-dom";
 import { VisibilityOffTwoToneIcon, VisibilityTwoToneIcon } from "./passCSS";
 import { signup_token_secure } from "./token_secure";
+import { Background, Logo } from "../../assets";
 
 function debounce(func: (...args: any[]) => void, wait: number) {
     let timeout: ReturnType<typeof setTimeout>;
@@ -103,7 +104,7 @@ const Signup: React.FC = () => {
                 <div className="m-5 grid grid-rows-[1fr,3fr]">
                     <div className="w-1/2 mx-auto">
                         <img
-                            src="src/assets/logo.png" // Replace with your image path
+                            src={Logo} // Replace with your image path
                             alt="Logo"
                             className="w-auto h-auto object-cover mx-auto"
                         />
@@ -194,7 +195,7 @@ const Signup: React.FC = () => {
                 </div>
                 <div>
                     <img
-                        src="src/assets/temp.jpg" // Replace with your image path
+                        src={Background} // Replace with your image path
                         alt="Login Illustration"
                         className="w-full h-full object-cover rounded-md"
                     />

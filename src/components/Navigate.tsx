@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { routes, bottomRoutes } from '../routes';
 import { decryptUser } from './auth/token_secure';
-import profileImage from '../assets/pro.jpeg';
+import { Pro } from '../assets/';
 // import SensorOccupiedIcon from '@mui/icons-material/SensorOccupied';
 
 const Navigate: React.FC = () => {
@@ -31,13 +31,13 @@ const Navigate: React.FC = () => {
                     className="relative flex flex-col items-center justify-center space-y-2 group"
                 >
                     <div className="text-4xl transition-transform duration-300 group-hover:scale-150 group-hover:translate-x-24 group-hover:translate-y-3">
-                        <img src={profileImage} alt="Profile" className="w-10 h-10 rounded-full" />
+                        <img src={Pro} alt="Profile" className="w-10 h-10 rounded-full" />
                     </div>
                 </button>
 
                 {/* Username */}
                 <div
-                    className="absolute top-[5rem] left-[47%]  -translate-x-1/2 hidden group-hover:block text-cyan-300 font-bold text-center transition-all duration-300"
+                    className="absolute top-[5rem] left-[47%] -translate-x-1/2 hidden group-hover:block text-cyan-300 font-bold text-center transition-all duration-300"
                 >
                     {username}
                 </div>

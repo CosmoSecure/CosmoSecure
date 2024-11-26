@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useNavigate } from "react-router-dom";
 import { VisibilityOffTwoToneIcon, VisibilityTwoToneIcon } from './passCSS';
 import { token_secure } from "./token_secure";
+import { Background, Logo } from "../../assets";
 
 interface User {
     id: number;
@@ -55,7 +56,7 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
             <div className="max-w-4xl w-full h-5/6 m-2 mx-auto border border-rich-black-2 rounded-lg shadow-lg bg-raisin-black grid grid-cols-[3fr,4fr]">
                 <div>
                     <img
-                        src="src/assets/temp.jpg" // Replace with your image path
+                        src={Background} // Replace with your image path
                         alt="Login Illustration"
                         className="w-full h-full object-cover rounded-md"
                     />
@@ -63,7 +64,7 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
                 <div className="m-5 grid grid-rows-[1fr,2fr]">
                     <div className="w-1/2 mx-auto">
                         <img
-                            src="src/assets/logo.png" // Replace with your image path
+                            src={Logo} // Replace with your image path
                             alt="Logo"
                             className="w-auto h-auto object-cover mx-auto"
                         />
