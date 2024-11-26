@@ -1,6 +1,6 @@
 import React from 'react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import Logo from '../assets/Logo.png'; // Adjust the path as necessary
+import Logo from '../assets/Logo1.png'; // Adjust the path as necessary
 
 interface DecorProps {
     pageName: string;
