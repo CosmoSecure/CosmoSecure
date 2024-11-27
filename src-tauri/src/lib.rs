@@ -2,6 +2,7 @@
 use crate::db::db_connect::{authenticate_user, check_username_availability, tauri_add_user};
 
 mod db;
+mod secure;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub async fn run() {
