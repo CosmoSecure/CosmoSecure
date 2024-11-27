@@ -1,9 +1,8 @@
 use crate::db::schema::db_schema::User;
 use crate::db::token::generate_token;
-use crate::secure::{decrypt, encrypt};
+use crate::secure::decrypt;
 use bcrypt::{hash, verify, DEFAULT_COST};
 use dotenv::dotenv;
-use hex;
 use mongodb::bson::DateTime;
 use mongodb::bson::{doc, oid::ObjectId};
 use mongodb::error::Error;
