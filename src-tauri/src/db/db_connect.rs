@@ -1,13 +1,16 @@
 use crate::db::schema::db_schema::User;
 use crate::db::token::generate_token;
+use crate::secure::{decrypt, encrypt};
 use bcrypt::{hash, verify, DEFAULT_COST};
 use dotenv::dotenv;
+use hex;
 use mongodb::bson::DateTime;
 use mongodb::bson::{doc, oid::ObjectId};
 use mongodb::error::Error;
 use mongodb::options::{ClientOptions, IndexOptions};
 use mongodb::{Client, Collection, Database, IndexModel};
 use serde_json::json;
+use sha2::{Digest, Sha256};
 use std::env;
 use tauri::State;
 
@@ -100,17 +103,13 @@ pub async fn authenticate_user(
                             "data": user
                         }));
                     }
-                    Err(e) => {
-                        Err(format!("Error generating token: {}", e))
-                    }
+                    Err(e) => Err(format!("Error generating token: {}", e)),
                 }
             } else {
                 Err("Invalid credentials.".to_string())
             }
         }
-        Err(e) => {
-            Err(format!("Authentication failed: {}", e))
-        }
+        Err(e) => Err(format!("Authentication failed: {}", e)),
     }
 }
 
@@ -192,13 +191,24 @@ pub(crate) async fn connect_rust_db() -> mongodb::error::Result<MongoClientState
     dotenv().ok();
 
     // MongoDB URI
-    let mongo_uri = env::var("MONGO_URI").expect("MONGO_URI must be set");
+    let encrypted_mongo_uri = env::var("MONGO_URI").expect("MONGO_URI must be set");
+    let key = env::var("KEY").expect("KEY must be set");
+
+    let sec_key = derive_key(&key);
+    // let sec_key_str = hex::encode(sec_key);
+
+    println!("Mongo URI: {}", encrypted_mongo_uri);
+    // let mongo_uri = encrypt(&encrypted_mongo_uri, &sec_key).expect("Failed to decrypt Mongo URI");
+    // println!("Encrypted Mongo URI: {}", mongo_uri);
+    let mongo_uri = decrypt(&encrypted_mongo_uri, &sec_key).expect("Failed to decrypt Mongo URI");
+    println!("Decrypted Mongo URI: {}", mongo_uri);
+
     let client_options = ClientOptions::parse(&mongo_uri).await?;
     let client = Client::with_options(client_options)?;
 
     match Client::with_options(ClientOptions::parse(&mongo_uri).await?) {
         Ok(_) => {
-            println!("Connected to MongoDB securely! Foo");
+            println!("Connected to MongoDB securely!");
         }
         Err(e) => {
             eprintln!("Failed to connect to MongoDB: {}", e);
@@ -213,4 +223,14 @@ pub(crate) async fn connect_rust_db() -> mongodb::error::Result<MongoClientState
     create_unique_indexes(&users_collection).await?;
 
     Ok(MongoClientState::new(client).await)
+}
+
+// Derive the key using SHA-256
+fn derive_key(input_key: &str) -> [u8; 32] {
+    let mut hasher = Sha256::new();
+    hasher.update(input_key.as_bytes());
+    let result = hasher.finalize();
+    let mut key = [0u8; 32];
+    key.copy_from_slice(&result[..32]);
+    key
 }
