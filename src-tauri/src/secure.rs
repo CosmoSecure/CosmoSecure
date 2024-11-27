@@ -4,7 +4,7 @@ use anyhow::Error;
 use base64::Engine;
 
 /// Encrypts a plaintext value using a key
-pub fn encrypt(plaintext: &str, key: &[u8]) -> Result<String, Error> {
+pub fn _encrypt(plaintext: &str, key: &[u8]) -> Result<String, Error> {
     // Ensure the key is 32 bytes (256 bits)
     let key_bytes = Key::<Aes256Gcm>::from_slice(key);
     if key_bytes.len() != 32 {
