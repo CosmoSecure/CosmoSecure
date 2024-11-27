@@ -101,7 +101,7 @@ const Signup: React.FC = () => {
     return (
         <div className="w-full h-full flex justify-center items-center bg-rich-black text-white">
             <div className="max-w-4xl w-full h-5/6 m-2 mx-auto border border-rich-black-2 rounded-lg shadow-lg bg-raisin-black grid grid-cols-[4fr,3fr]">
-                <div className="m-5 grid grid-rows-[1fr,3fr]">
+                <div className="m-5 grid grid-rows-[0.5fr,3fr]">
                     <div className="w-1/2 mx-auto">
                         <img
                             src={Logo} // Replace with your image path
@@ -109,7 +109,7 @@ const Signup: React.FC = () => {
                             className="w-auto h-auto object-cover mx-auto"
                         />
                     </div>
-                    <div className="mx-8">
+                    <div className="mx-8 flex flex-col justify-center min-h-[0px]">
                         <h2 className="text-2xl font-bold text-center mb-6 text-african-violet">Create an Account</h2>
                         <form onSubmit={handleSignup}>
                             <div className="mb-4">
