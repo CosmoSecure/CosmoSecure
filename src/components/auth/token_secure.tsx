@@ -35,13 +35,17 @@ export function signup_token_secure(response: { token: string }) {
     sessionStorage.setItem("token", encryptedToken);
 }
 
-//! Decrypt the token and user data for use in the application [Display On Profile Page]
-
+// Decrypt the token and user data for use in the application
 export function decryptToken() {
     const encryptedToken = sessionStorage.getItem("token");
     if (encryptedToken) {
         const bytes = CryptoJS.AES.decrypt(encryptedToken, SECRET_KEY);
-        return bytes.toString(CryptoJS.enc.Utf8);
+        try {
+            return bytes.toString(CryptoJS.enc.Utf8);
+        } catch (error) {
+            console.error("Failed to decrypt token:", error);
+            return null;
+        }
     }
     return null;
 }
@@ -50,7 +54,12 @@ export function decryptUser() {
     const encryptedData = sessionStorage.getItem("user");
     if (encryptedData) {
         const bytes = CryptoJS.AES.decrypt(encryptedData, SECRET_KEY);
-        return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        try {
+            return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        } catch (error) {
+            console.error("Failed to decrypt user data:", error);
+            return null;
+        }
     }
     return null;
 }
