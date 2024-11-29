@@ -32,9 +32,9 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
             const response = await invoke<{ token: string; data: User }>("authenticate_user", { identifier, password });
             if (response) {
                 token_secure(response);
+                await invoke('save_token_command', { token: sessionStorage.getItem('token'), user: sessionStorage.getItem('user') });
                 alert("Login successful!");
                 setIsAuthenticated(true);
-                sessionStorage.setItem("Username", response.data.username);
                 navigate("/");
             } else {
                 alert("Invalid credentials. Please try again.");
