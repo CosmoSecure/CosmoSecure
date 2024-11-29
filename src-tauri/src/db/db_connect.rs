@@ -1,9 +1,9 @@
 use crate::db::schema::db_schema::User;
 use crate::db::token::generate_token;
-use crate::secure::decrypt;
+use crate::env_var::{get_env_key, get_env_vars};
 // use crate::secure::encrypt;
+use crate::secure::decrypt;
 use bcrypt::{hash, verify, DEFAULT_COST};
-use dotenv::dotenv;
 use mongodb::bson::DateTime;
 use mongodb::bson::{doc, oid::ObjectId};
 use mongodb::error::Error;
@@ -11,7 +11,6 @@ use mongodb::options::{ClientOptions, IndexOptions};
 use mongodb::{Client, Collection, Database, IndexModel};
 use serde_json::json;
 use sha2::{Digest, Sha256};
-use std::env;
 use tauri::State;
 
 pub struct MongoClientState {
@@ -188,20 +187,25 @@ async fn create_unique_indexes(collection: &Collection<User>) -> mongodb::error:
 }
 
 pub(crate) async fn connect_rust_db() -> mongodb::error::Result<MongoClientState> {
-    dotenv().ok();
+    let env_vars = get_env_vars();
 
     // MongoDB URI
-    let encrypted_mongo_uri = env::var("MONGO_URI").expect("MONGO_URI must be set");
-    let key = env::var("KEY").expect("KEY must be set");
+    let encrypted_mongo_uri = env_vars.get("MONGO_URI").expect("MONGO_URI must be set");
+    // let key1 = env_vars.get("KEY").expect("KEY must be set");
+    // println!("Key-test: {} \n\n", key1);
 
-    let sec_key = derive_key(&key);
-    // let sec_key_str = hex::encode(sec_key);
+    let key = get_env_key().expect("KEY must be set");
+    let sec_key = derive_key(key);
 
-    println!("Mongo URI: {}", encrypted_mongo_uri);
-    // let mongo_uri = encrypt(&encrypted_mongo_uri, &sec_key).expect("Failed to decrypt Mongo URI");
-    // println!("Encrypted Mongo URI: {}", mongo_uri);
-    let mongo_uri = decrypt(&encrypted_mongo_uri, &sec_key).expect("Failed to decrypt Mongo URI");
-    println!("Decrypted Mongo URI: {}", mongo_uri);
+    // let mongodb_uri = encrypt(encrypted_mongo_uri, &sec_key);
+
+    // println!("Mongodb_uri: {:?} \n", encrypted_mongo_uri);
+    // println!("Mongodb_uri: {} \n", mongodb_uri.unwrap());
+    // println!("Key: {} \n", key1);
+    // println!("Key-Hash: {} \n", key);
+    // println!("Sec_Key: {:?} \n", sec_key);
+
+    let mongo_uri = decrypt(encrypted_mongo_uri, &sec_key).expect("Failed to decrypt Mongo URI");
 
     let client_options = ClientOptions::parse(&mongo_uri).await?;
     let client = Client::with_options(client_options)?;
