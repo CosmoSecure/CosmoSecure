@@ -5,6 +5,8 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import React from "react";
 import Auth_page from "./components/auth/Auth_page";
 import { Login, Signup } from "./components";
+import { invoke } from "@tauri-apps/api/core";
+import { decryptToken, decryptUser } from "./components/auth/token_secure";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = React.useState<boolean | null>(null);
@@ -14,9 +16,26 @@ function App() {
       getCurrentWindow().setContentProtected(true).catch(console.error);
     }
 
-    const checkAuthentication = () => {
-      const token = sessionStorage.getItem('token');
-      setIsAuthenticated(!!token);
+    const checkAuthentication = async () => {
+      try {
+        const [encryptedToken, encryptedUser] = await invoke<[string, string]>('load_token_command');
+        if (encryptedToken && encryptedUser) {
+          sessionStorage.setItem('token', encryptedToken);
+          sessionStorage.setItem('user', encryptedUser);
+          const token = decryptToken();
+          const user = decryptUser();
+          if (token && user) {
+            setIsAuthenticated(true);
+          } else {
+            setIsAuthenticated(false);
+          }
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error("Failed to load token:", error);
+        setIsAuthenticated(false);
+      }
     };
 
     checkAuthentication();
