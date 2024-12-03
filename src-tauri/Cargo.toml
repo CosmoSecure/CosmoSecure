@@ -2,8 +2,9 @@
 name = "cosmosecure"
 version = "0.1.0"
 description = "A Tauri App"
-authors = ["akash2061", "aakashsoni8781@gmail.com"]
+authors = ["akash2061 <aakashsoni8781@gmail.com>"]
 edition = "2021"
+#! Add Catagory.
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -39,3 +40,10 @@ anyhow = "1.0"
 sha2 = "0.10.8"
 dirs = "5.0.1"
 hex = "0.4.3"
+
+#! Reduce the size of the binary.
+# [profile.release]
+# strip = true
+# lto = true
+# codegen-units = 1
+# opt-level = "z"
