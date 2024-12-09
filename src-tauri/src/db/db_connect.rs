@@ -1,4 +1,4 @@
-use crate::db::schema::db_schema::User;
+use crate::db::schema::db_schema::{PasswordEntry, User};
 use crate::db::token::generate_token;
 use crate::env_var::{get_env_key, get_env_vars};
 // use crate::secure::encrypt;
@@ -34,6 +34,7 @@ impl MongoClientState {
     }
 }
 
+// ! User
 #[tauri::command]
 pub async fn check_username_availability(
     state: State<'_, MongoClientState>,
@@ -120,6 +121,9 @@ pub async fn tauri_add_user(
     password: String, // Receive plain password here
     email: String,
 ) -> Result<String, String> {
+    let trimmed_name = name.trim();
+    let trimmed_email = email.trim();
+
     // Hash the password using bcrypt
     let hashed_password = match hash(password, DEFAULT_COST) {
         Ok(hashed) => hashed,
@@ -134,9 +138,9 @@ pub async fn tauri_add_user(
     add_user(
         &users_collection,
         &username,
-        &name,
+        &trimmed_name,
         &hashed_password, // Use the hashed password
-        &email,
+        &trimmed_email,
     )
     .await
     .map_err(|e| e.to_string())
