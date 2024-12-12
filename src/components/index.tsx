@@ -4,6 +4,7 @@ import AppLayout from './AppLayout';
 import Decor from './Decor';
 import Navigate from './Navigate';
 
+import Vault from './Vault';
 import About from './About';
 import Dashboard from './Dashboard';
 import Home from './Home';
@@ -17,6 +18,7 @@ export {
     Decor,
     Navigate,
 
+    Vault,
     About,
     Dashboard,
     Home,
