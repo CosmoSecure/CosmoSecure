@@ -4,6 +4,7 @@ use crate::env_var::{get_env_key, get_env_vars};
 // use crate::secure::encrypt;
 use crate::secure::decrypt;
 use bcrypt::{hash, verify, DEFAULT_COST};
+use futures_util::TryStreamExt;
 use mongodb::bson::DateTime;
 use mongodb::bson::{doc, oid::ObjectId};
 use mongodb::error::Error;
@@ -31,6 +32,101 @@ impl MongoClientState {
     // Access a specific database
     pub fn get_database(&self, db_name: &str) -> Database {
         self.client.database(db_name)
+    }
+}
+
+#[tauri::command]
+pub async fn add_password_entry(
+    state: State<'_, MongoClientState>,
+    user_id: String,
+    account_name: String,
+    username: String,
+    password: String,
+) -> Result<String, String> {
+    let passwords_collection = state
+        .get_database("password_manager")
+        .collection::<PasswordEntry>("passwords");
+
+    let new_entry = PasswordEntry {
+        entry_id: ObjectId::new().to_hex(),
+        user_id,
+        account_name,
+        username,
+        password,
+        custom_fields: None,
+        created_at: DateTime::now(),
+        password_strength: None,
+    };
+
+    match passwords_collection.insert_one(new_entry).await {
+        Ok(result) => Ok(result.inserted_id.as_object_id().unwrap().to_hex()),
+        Err(e) => Err(format!("Error adding password entry: {}", e)),
+    }
+}
+
+#[tauri::command]
+pub async fn update_password_entry(
+    state: State<'_, MongoClientState>,
+    entry_id: String,
+    account_name: String,
+    username: String,
+    password: String,
+) -> Result<String, String> {
+    let passwords_collection = state
+        .get_database("password_manager")
+        .collection::<PasswordEntry>("passwords");
+
+    let filter = doc! { "entry_id": &entry_id };
+    println!("Filter: {:?}", filter);
+    let update = doc! {
+        "$set": {
+            "account_name": account_name,
+            "username": username,
+            "password": password,
+        }
+    };
+
+    match passwords_collection.update_one(filter, update).await {
+        Ok(_) => Ok(entry_id),
+        Err(e) => Err(format!("Error updating password entry: {}", e)),
+    }
+}
+
+#[tauri::command]
+pub async fn delete_password_entry(
+    state: State<'_, MongoClientState>,
+    entry_id: String,
+) -> Result<String, String> {
+    let passwords_collection = state
+        .get_database("password_manager")
+        .collection::<PasswordEntry>("passwords");
+
+    let filter = doc! { "entry_id": &entry_id };
+
+    match passwords_collection.delete_one(filter).await {
+        Ok(_) => Ok(entry_id),
+        Err(e) => Err(format!("Error deleting password entry: {}", e)),
+    }
+}
+
+#[tauri::command]
+pub async fn get_password_entries(
+    state: State<'_, MongoClientState>,
+    user_id: String,
+) -> Result<Vec<PasswordEntry>, String> {
+    let passwords_collection = state
+        .get_database("password_manager")
+        .collection::<PasswordEntry>("passwords");
+
+    let filter = doc! { "user_id": &user_id };
+
+    match passwords_collection.find(filter).await {
+        Ok(cursor) => {
+            let entries: Vec<PasswordEntry> =
+                cursor.try_collect().await.map_err(|e| e.to_string())?;
+            Ok(entries)
+        }
+        Err(e) => Err(format!("Error fetching password entries: {}", e)),
     }
 }
 
