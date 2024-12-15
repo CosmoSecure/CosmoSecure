@@ -4,7 +4,7 @@ import RoutesConf from "./routes/RoutesConf";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import React from "react";
 import Auth_page from "./components/auth/Auth_page";
-import { Login, Signup } from "./components";
+import { Intro, Login, Signup } from "./components";
 import { invoke } from "@tauri-apps/api/core";
 import { decryptToken, decryptUser } from "./components/auth/token_secure";
 
@@ -52,7 +52,8 @@ function App() {
           <Route path="/*" element={<RoutesConf setIsAuthenticated={setIsAuthenticated} />} />
         ) : (
           <Route path="/" element={<Auth_page />}>
-            <Route index element={<Login setIsAuthenticated={setIsAuthenticated} />} />
+            <Route index element={<Intro />} />
+            <Route path="login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
             <Route path="signup" element={<Signup />} />
           </Route>
         )}
