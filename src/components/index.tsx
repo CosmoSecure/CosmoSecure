@@ -1,4 +1,4 @@
-import { Login, Signup } from './auth';
+import { Intro, Login, Signup } from './auth';
 import AppLayout from './AppLayout';
 
 import Decor from './Decor';
@@ -10,6 +10,7 @@ import Dashboard from './Dashboard';
 import Home from './Home';
 
 export {
+    Intro,
     Login,
     Signup,
 
