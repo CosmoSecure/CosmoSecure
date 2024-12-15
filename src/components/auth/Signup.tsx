@@ -105,7 +105,7 @@ const Signup: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 300 }}
             transition={{ duration: 0.6 }}
-            className="w-full h-full flex justify-center items-center bg-rich-black text-white"
+            className="w-full h-full flex justify-center items-center bg-rich-black text-white rounded-md"
         >
             <div className="max-w-4xl w-full h-5/6 m-2 mx-auto border border-rich-black-2 rounded-lg shadow-lg bg-raisin-black grid grid-cols-[4fr,3fr]">
                 <div className="m-5 grid grid-rows-[0.5fr,3fr]">
