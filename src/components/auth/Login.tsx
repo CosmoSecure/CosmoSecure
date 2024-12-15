@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { VisibilityOffTwoToneIcon, VisibilityTwoToneIcon } from './passCSS';
 import { token_secure } from "./token_secure";
 import { Background, Logo } from "../../assets";
+import { motion } from 'framer-motion';
 
 interface User {
     id: number;
@@ -33,7 +34,7 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
             if (response) {
                 token_secure(response);
                 await invoke('save_token_command', { token: sessionStorage.getItem('token'), user: sessionStorage.getItem('user') });
-                alert("Login successful!");
+                // alert("Login successful!");
                 setIsAuthenticated(true);
                 navigate("/");
             } else {
@@ -52,7 +53,13 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
     };
 
     return (
-        <div className="w-full h-full flex justify-center items-center bg-rich-black text-white">
+        <motion.div
+        initial={{ opacity: 0, x: 300 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -300 }}
+        transition={{ duration: 0.6 }}
+            className="w-full h-full flex justify-center items-center bg-rich-black text-white"
+        >
             <div className="max-w-4xl w-full h-5/6 m-2 mx-auto border border-rich-black-2 rounded-lg shadow-lg bg-raisin-black grid grid-cols-[3fr,4fr]">
                 <div>
                     <img
@@ -118,7 +125,7 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
                     </div>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

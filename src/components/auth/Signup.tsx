@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { VisibilityOffTwoToneIcon, VisibilityTwoToneIcon } from "./passCSS";
 import { signup_token_secure } from "./token_secure";
 import { Background, Logo } from "../../assets";
+import { motion } from 'framer-motion';
 
 function debounce(func: (...args: any[]) => void, wait: number) {
     let timeout: ReturnType<typeof setTimeout>;
@@ -84,7 +85,7 @@ const Signup: React.FC = () => {
                 password,
             });
             signup_token_secure(response);
-            alert("Signup successful!");
+            // alert("Signup successful!");
             navigate("/"); // Navigate to login
         } catch (error) {
             console.error("Error adding user:", error);
@@ -99,7 +100,13 @@ const Signup: React.FC = () => {
     };
 
     return (
-        <div className="w-full h-full flex justify-center items-center bg-rich-black text-white">
+        <motion.div
+            initial={{ opacity: 0, x: -300 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 300 }}
+            transition={{ duration: 0.6 }}
+            className="w-full h-full flex justify-center items-center bg-rich-black text-white"
+        >
             <div className="max-w-4xl w-full h-5/6 m-2 mx-auto border border-rich-black-2 rounded-lg shadow-lg bg-raisin-black grid grid-cols-[4fr,3fr]">
                 <div className="m-5 grid grid-rows-[0.5fr,3fr]">
                     <div className="w-1/2 mx-auto">
@@ -184,7 +191,7 @@ const Signup: React.FC = () => {
                         <div className="mt-4 text-center">
                             Already have an account?{" "}
                             <button
-                                onClick={() => navigate("/")}
+                                onClick={() => navigate("/login")}
                                 className="text-persian-pink hover:underline"
                             >
                                 Login
@@ -201,7 +208,7 @@ const Signup: React.FC = () => {
                     />
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 
