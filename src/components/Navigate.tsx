@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { routes, bottomRoutes } from '../routes';
 import { decryptUser } from './auth/token_secure';
 import { Pro } from '../assets/';
@@ -23,7 +23,7 @@ const Navigate: React.FC = () => {
     }, []);
 
     return (
-        <div className="transition-all duration-300 ease-in-out bg-rich-black/95 group hover:w-64 w-14 h-full rounded-md flex flex-col justify-between relative">
+        <div className="transition-all duration-300 ease-in-out bg-theme-background group hover:w-64 w-14 h-full rounded-md flex flex-col justify-between relative">
             {/* Profile Icon */}
             <div className="p-2 relative">
                 <button
@@ -39,7 +39,7 @@ const Navigate: React.FC = () => {
                 <div
                     className="absolute top-[5rem] left-[47%] -translate-x-1/2 hidden group-hover:block text-cyan-300 font-bold text-center transition-all duration-300"
                 >
-                    {username}
+                    <Link to="/profile">{username}</Link>
                 </div>
             </div>
 
