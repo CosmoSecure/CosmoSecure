@@ -91,7 +91,7 @@ const Vault = () => {
     };
 
     return (
-        <div className="p-4">
+        <div className="p-4 h-full bg-light-background dark:bg-dark-background text-light-text dark:text-dark-text">
             <h1 className="text-2xl font-bold mb-4">Vault</h1>
             <div className="mb-4">
                 <input
@@ -99,25 +99,25 @@ const Vault = () => {
                     placeholder="Account Name"
                     value={accountName}
                     onChange={(e) => setAccountName(e.target.value)}
-                    className="border p-2 mr-2"
+                    className="border p-2 mr-2 bg-light-background dark:bg-dark-background text-light-text dark:text-dark-text"
                 />
                 <input
                     type="text"
                     placeholder="Username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="border p-2 mr-2"
+                    className="border p-2 mr-2 bg-light-background dark:bg-dark-background text-light-text dark:text-dark-text"
                 />
                 <input
                     type="password"
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="border p-2 mr-2"
+                    className="border p-2 mr-2 bg-light-background dark:bg-dark-background text-light-text dark:text-dark-text"
                 />
                 <button
                     onClick={handleAddPassword}
-                    className="bg-blue-500 text-white p-2 rounded"
+                    className="bg-light-primary dark:bg-dark-primary text-light-text dark:text-dark-text p-2 rounded"
                 >
                     {editId !== null ? 'Update' : 'Add'}
                 </button>
@@ -128,13 +128,13 @@ const Vault = () => {
                         <strong>{entry.account_name}</strong> - {entry.username} - {entry.password}
                         <button
                             onClick={() => handleEditPassword(entry.entry_id)}
-                            className="bg-yellow-500 text-white p-1 ml-2 rounded"
+                            className="bg-light-secondary dark:bg-dark-secondary text-light-text dark:text-dark-text p-1 ml-2 rounded"
                         >
                             Edit
                         </button>
                         <button
                             onClick={() => handleDeletePassword(entry.entry_id)}
-                            className="bg-red-500 text-white p-1 ml-2 rounded"
+                            className="bg-light-accent dark:bg-dark-accent text-light-text dark:text-dark-text p-1 ml-2 rounded"
                         >
                             Delete
                         </button>
