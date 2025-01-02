@@ -22,7 +22,7 @@ const Decor: React.FC<DecorProps> = ({ pageName }) => {
     };
 
     return (
-        <div data-tauri-drag-region className="bg-gray-800 text-white p-4 h-12 w-full text-center rounded-md flex items-center justify-between">
+        <div data-tauri-drag-region className="bg-theme-background text-theme-text p-4 h-12 w-full text-center rounded-md flex items-center justify-between">
             <div data-tauri-drag-region className="flex items-center justify-start">
                 <img data-tauri-drag-region src={DecorLogo} alt="Logo" className="h-20 mr-2" style={{ userSelect: 'none' }} />
             </div>

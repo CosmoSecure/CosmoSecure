@@ -7,6 +7,7 @@ import Auth_page from "./components/auth/Auth_page";
 import { Intro, Login, Signup } from "./components";
 import { invoke } from "@tauri-apps/api/core";
 import { decryptToken, decryptUser } from "./components/auth/token_secure";
+import { ThemeToggle } from "./themes"; // Import ThemeToggle
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = React.useState<boolean | null>(null);
@@ -47,6 +48,9 @@ function App() {
 
   return (
     <Router>
+      <div className="p-4">
+        <ThemeToggle /> {/* Add ThemeToggle button */}
+      </div>
       <Routes>
         {isAuthenticated ? (
           <Route path="/*" element={<RoutesConf setIsAuthenticated={setIsAuthenticated} />} />
