@@ -1,9 +1,23 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./src/**/*.{html,js,ts,jsx,tsx}"],
+  darkMode: 'class', // Enable dark mode using a class
   theme: {
     extend: {
       colors: {
+        // Define CSS variables for theme colors
+        'theme-background': 'var(--background-color)',
+        'theme-background-transparent': 'var(--background-color-transparent)',
+        'theme-text': 'var(--text-color)',
+        'theme-text-transparent': 'var(--text-color-transparent)',
+        'theme-primary': 'var(--primary-color)',
+        'theme-primary-transparent': 'var(--primary-color-transparent)',
+        'theme-secondary': 'var(--secondary-color)',
+        'theme-secondary-transparent': 'var(--secondary-color-transparent)',
+        'theme-accent': 'var(--accent-color)',
+        'theme-accent-transparent': 'var(--accent-color-transparent)',
+
+        // Existing colors
         'persian-pink': '#fa7ebf',
         'paynes-gray': '#47586d',
         'ultra-violet': '#6c6c8d',
