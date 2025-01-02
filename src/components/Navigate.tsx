@@ -23,7 +23,7 @@ const Navigate: React.FC = () => {
     }, []);
 
     return (
-        <div className="transition-all duration-300 ease-in-out bg-theme-background group hover:w-64 w-14 h-full rounded-md flex flex-col justify-between relative">
+        <div className="transition-all duration-300 ease-in-out bg-theme-background-transparent group hover:w-64 w-14 h-full rounded-md flex flex-col justify-between relative">
             {/* Profile Icon */}
             <div className="p-2 relative">
                 <button
@@ -37,7 +37,7 @@ const Navigate: React.FC = () => {
 
                 {/* Username */}
                 <div
-                    className="absolute top-[5rem] left-[47%] -translate-x-1/2 hidden group-hover:block text-cyan-300 font-bold text-center transition-all duration-300"
+                    className="absolute top-[5rem] left-[47%] -translate-x-1/2 hidden group-hover:block text-theme-text font-bold text-center text-xl transition-all duration-300"
                 >
                     <Link to="/profile">{username}</Link>
                 </div>
@@ -50,7 +50,7 @@ const Navigate: React.FC = () => {
                         <button
                             key={route.path}
                             onClick={() => navigate(route.path)}
-                            className="flex items-center justify-normal space-x-4 text-gray-300 h-[40px] w-full rounded-md pl-[3px] bg-glaucous/60 hover:bg-glaucous/90"
+                            className="flex items-center justify-normal space-x-4 text-theme-text h-[40px] w-full rounded-md pl-[3px] bg-theme-accent-transparent hover:bg-theme-accent"
                         >
                             <div className="text-3xl pl-[2px]">
                                 {route.icon ? route.icon : <span>🔗</span>}
@@ -70,7 +70,7 @@ const Navigate: React.FC = () => {
                         <button
                             key={route.path}
                             onClick={() => navigate(route.path)}
-                            className="flex items-center justify-normal space-x-4 text-gray-300 h-[40px] w-full rounded-md pl-[3px] bg-glaucous/60 hover:bg-glaucous/90"
+                            className="flex items-center justify-normal space-x-4 text-theme-text h-[40px] w-full rounded-md pl-[3px] bg-theme-accent-transparent hover:bg-theme-accent"
                         >
                             <div className="text-3xl pl-[2px]">
                                 {route.icon ? route.icon : <span>🔗</span>}
