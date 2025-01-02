@@ -5,6 +5,8 @@ interface User {
     name: string;
     email: string;
     username: string;
+    created_at: string;
+    last_login: string;
     // Add other fields as necessary
 }
 
@@ -39,9 +41,13 @@ export function signup_token_secure(response: { token: string }) {
 export function decryptToken() {
     const encryptedToken = sessionStorage.getItem("token");
     if (encryptedToken) {
-        const bytes = CryptoJS.AES.decrypt(encryptedToken, SECRET_KEY);
         try {
-            return bytes.toString(CryptoJS.enc.Utf8);
+            const bytes = CryptoJS.AES.decrypt(encryptedToken, SECRET_KEY);
+            const decryptedToken = bytes.toString(CryptoJS.enc.Utf8);
+            if (!decryptedToken) {
+                throw new Error("Failed to decrypt token: Decrypted token is empty");
+            }
+            return decryptedToken;
         } catch (error) {
             console.error("Failed to decrypt token:", error);
             return null;
@@ -53,9 +59,13 @@ export function decryptToken() {
 export function decryptUser() {
     const encryptedData = sessionStorage.getItem("user");
     if (encryptedData) {
-        const bytes = CryptoJS.AES.decrypt(encryptedData, SECRET_KEY);
         try {
-            return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+            const bytes = CryptoJS.AES.decrypt(encryptedData, SECRET_KEY);
+            const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
+            if (!decryptedData) {
+                throw new Error("Failed to decrypt user data: Decrypted data is empty");
+            }
+            return JSON.parse(decryptedData);
         } catch (error) {
             console.error("Failed to decrypt user data:", error);
             return null;
