@@ -1,6 +1,6 @@
 // import SensorOccupiedIcon from '@mui/icons-material/SensorOccupied';
 import { Outlet, Route, Routes } from 'react-router-dom';
-import { AppLayout, Dashboard, Home, About, Vault } from '../components';
+import { AppLayout, Dashboard, Home, About, Vault, Profile } from '../components';
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
 import HomeIcon from '@mui/icons-material/Home';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
@@ -19,6 +19,7 @@ const RoutesConf: React.FC<RoutesConfProps> = ({ }) => {
                 <Route path="home" element={<Home />} />
                 <Route path="about" element={<About />} />
                 <Route path="setting" element={<Outlet />} />
+                <Route path='profile' element={<Profile />} />
             </Route>
         </Routes>
     );
