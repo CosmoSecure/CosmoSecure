@@ -1,6 +1,6 @@
 // import SensorOccupiedIcon from '@mui/icons-material/SensorOccupied';
-import { Outlet, Route, Routes } from 'react-router-dom';
-import { AppLayout, Dashboard, Home, About, Vault, Profile } from '../components';
+import { Route, Routes } from 'react-router-dom';
+import { AppLayout, Dashboard, Home, About, Vault, Profile, Settings } from '../components';
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
 import HomeIcon from '@mui/icons-material/Home';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
@@ -18,8 +18,10 @@ const RoutesConf: React.FC<RoutesConfProps> = ({ }) => {
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="home" element={<Home />} />
                 <Route path="about" element={<About />} />
-                <Route path="setting" element={<Outlet />} />
-                <Route path='profile' element={<Profile />} />
+                <Route path="setting" element={<Settings />} />
+                <Route path='profile' element={<Profile isVisible={false} onClose={function (): void {
+                    throw new Error('Function not implemented.');
+                }} />} />
             </Route>
         </Routes>
     );
