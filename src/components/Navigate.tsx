@@ -5,7 +5,7 @@ import { decryptUser } from './auth/token_secure';
 import { Pro } from '../assets/';
 // import SensorOccupiedIcon from '@mui/icons-material/SensorOccupied';
 
-const Navigate: React.FC = () => {
+const Navigate: React.FC<{ toggleProfileVisibility: () => void }> = ({ toggleProfileVisibility }) => {
     const navigate = useNavigate();
     const [username, setUsername] = useState('');
 
@@ -27,7 +27,7 @@ const Navigate: React.FC = () => {
             {/* Profile Icon */}
             <div className="p-2 relative">
                 <button
-                    onClick={() => navigate('/profile')}
+                    onClick={toggleProfileVisibility}
                     className="relative flex flex-col items-center justify-center space-y-2 group"
                 >
                     <div className="text-4xl transition-transform duration-300 group-hover:scale-150 group-hover:translate-x-24 group-hover:translate-y-3">
@@ -39,7 +39,7 @@ const Navigate: React.FC = () => {
                 <div
                     className="absolute top-[5rem] left-[47%] -translate-x-1/2 hidden group-hover:block text-theme-text font-bold text-center text-xl transition-all duration-300"
                 >
-                    <Link to="/profile">{username}</Link>
+                    <Link to="#" onClick={toggleProfileVisibility}>{username}</Link>
                 </div>
             </div>
 
