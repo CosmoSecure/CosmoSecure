@@ -31,13 +31,13 @@ const Navigate: React.FC<{ toggleProfileVisibility: () => void }> = ({ togglePro
                     className="relative flex flex-col items-center justify-center space-y-2 group"
                 >
                     <div className="text-4xl transition-transform duration-300 group-hover:scale-150 group-hover:translate-x-24 group-hover:translate-y-3">
-                        <img src={Pro} alt="Profile" className="w-10 h-10 rounded-full" />
+                        <img src={Pro} alt="Profile" className="w-10 h-10 rounded-full active:scale-95" />
                     </div>
                 </button>
 
                 {/* Username */}
                 <div
-                    className="absolute top-[5rem] left-[47%] -translate-x-1/2 hidden group-hover:block text-theme-text font-bold text-center text-xl transition-all duration-300"
+                    className="absolute top-[5rem] left-[47%] -translate-x-1/2 hidden group-hover:block text-theme-text font-bold text-center text-xl transition-all duration-300 active:scale-95"
                 >
                     <Link to="#" onClick={toggleProfileVisibility}>{username}</Link>
                 </div>
@@ -50,7 +50,7 @@ const Navigate: React.FC<{ toggleProfileVisibility: () => void }> = ({ togglePro
                         <button
                             key={route.path}
                             onClick={() => navigate(route.path)}
-                            className="flex items-center justify-normal space-x-4 text-theme-text h-[40px] w-full rounded-md pl-[3px] bg-theme-accent-transparent hover:bg-theme-accent"
+                            className="flex items-center justify-normal space-x-4 text-theme-text h-[40px] w-full rounded-md pl-[3px] bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
                         >
                             <div className="text-3xl pl-[2px]">
                                 {route.icon ? route.icon : <span>🔗</span>}
@@ -70,7 +70,7 @@ const Navigate: React.FC<{ toggleProfileVisibility: () => void }> = ({ togglePro
                         <button
                             key={route.path}
                             onClick={() => navigate(route.path)}
-                            className="flex items-center justify-normal space-x-4 text-theme-text h-[40px] w-full rounded-md pl-[3px] bg-theme-accent-transparent hover:bg-theme-accent"
+                            className="flex items-center justify-normal space-x-4 text-theme-text h-[40px] w-full rounded-md pl-[3px] bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
                         >
                             <div className="text-3xl pl-[2px]">
                                 {route.icon ? route.icon : <span>🔗</span>}
