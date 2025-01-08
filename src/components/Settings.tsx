@@ -1,8 +1,13 @@
 import React from 'react'
+import { ThemeToggle } from "../themes";// Import ThemeToggle
 
 const Settings = () => {
     return (
-        <div>Settings</div>
+        <div>
+            <div className="p-4">
+                <ThemeToggle /> {/* Add ThemeToggle button */}
+            </div>
+        </div>
     )
 }
 

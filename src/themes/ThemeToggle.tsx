@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from 'react';
 
-type ThemeKeys = 'light' | 'dark' | 'aqua' | 'forest' | 'vamp';
+export type ThemeKeys = 'light' | 'dark' | 'aqua' | 'forest' | 'vamp';
 
-const themes: Record<ThemeKeys, { [key: string]: string }> = {
+export const themes: Record<ThemeKeys, { [key: string]: string }> = {
     light: {
         '--background-color': '#edf2fb',
         '--text-color': '#292929',
         '--primary-color': '#a5a5a5',
         '--secondary-color': '#cccccc',
         '--accent-color': '#7f7f7f',
-    }
-    ,
+    },
     dark: {
         '--background-color': '#212529',
         '--text-color': '#f8f9fa',
@@ -20,9 +19,7 @@ const themes: Record<ThemeKeys, { [key: string]: string }> = {
     },
     aqua: {
         '--background-color': '#e0f7fa',
-        // '--background-color': '#212529',
         '--text-color': '#006064',
-        // '--text-color': '#c2fffe',
         '--primary-color': '#00acc1',
         '--secondary-color': '#00838f',
         '--accent-color': '#4db6ac',
@@ -53,7 +50,7 @@ const hexToRgba = (hex: string, opacity: number): string => {
 };
 
 // Dynamically apply theme with transparency properties
-const applyTheme = (theme: { [key: string]: string }) => {
+export const applyTheme = (theme: { [key: string]: string }) => {
     Object.keys(theme).forEach((key) => {
         const value = theme[key];
         if (value.startsWith('#')) {

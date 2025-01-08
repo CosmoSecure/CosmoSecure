@@ -2,17 +2,17 @@ import "./App.css";
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import RoutesConf from "./routes/RoutesConf";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import React from "react";
+import { useEffect, useState } from "react";
 import Auth_page from "./components/auth/Auth_page";
 import { Intro, Login, Signup } from "./components";
 import { invoke } from "@tauri-apps/api/core";
 import { decryptToken, decryptUser } from "./components/auth/token_secure";
-import { ThemeToggle } from "./themes"; // Import ThemeToggle
+import { applyTheme, themes, ThemeKeys } from "./themes/ThemeToggle"; // Import applyTheme and themes
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = React.useState<boolean | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if ((window as any).__TAURI__) {
       getCurrentWindow().setContentProtected(true).catch(console.error);
     }
@@ -40,6 +40,10 @@ function App() {
     };
 
     checkAuthentication();
+
+    // Apply the saved theme or default to 'light'
+    const savedTheme = (localStorage.getItem('theme') as ThemeKeys) || 'light';
+    applyTheme(themes[savedTheme]);
   }, []);
 
   if (isAuthenticated === null) {
@@ -48,9 +52,6 @@ function App() {
 
   return (
     <Router>
-      <div className="p-4">
-        <ThemeToggle /> {/* Add ThemeToggle button */}
-      </div>
       <Routes>
         {isAuthenticated ? (
           <Route path="/*" element={<RoutesConf setIsAuthenticated={setIsAuthenticated} />} />
