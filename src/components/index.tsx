@@ -7,6 +7,7 @@ import Navigate from './Navigate';
 import Vault from './Vault';
 import About from './About';
 import Dashboard from './Dashboard';
+import Settings from './Settings';
 import Profile from './Profile';
 import Home from './Home';
 
@@ -23,6 +24,7 @@ export {
     Vault,
     About,
     Dashboard,
+    Settings,
     Profile,
     Home,
 };

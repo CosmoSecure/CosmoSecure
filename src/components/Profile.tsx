@@ -3,7 +3,7 @@ import { Pro } from '../assets/';
 import { decryptUser } from './auth/token_secure';
 import CakeIcon from '@mui/icons-material/Cake';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
-import CloseIcon from '@mui/icons-material/Close';
+import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 
 const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisible, onClose }) => {
     const [username, setUsername] = useState('');
@@ -30,22 +30,25 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
 
     return (
         <div
-            className={`fixed top-14 right-0 h-[94.3%] w-1/2 bg-theme-background-transparent text-theme-text transform transition-transform duration-300 ease-in-out rounded-r-md rounded-l-xl mr-[4px]`}
+            className={`fixed top-14 right-0 h-auto w-1/2 bg-theme-background-transparent text-theme-text transform transition-transform duration-300 ease-in-out rounded-r-md rounded-l-xl mr-[4px]`}
             style={{ transform: isVisible ? 'translateX(0)' : 'translateX(120%)' }} // Custom translation value
         >
             <main className="relative h-full flex flex-col items-center rounded-xl">
                 <div className='h-28 w-full bg-gradient-to-r from-theme-secondary-transparent via-theme-primary to-theme-secondary-transparent rounded-tl-xl rounded-tr-md'></div>
-                <button onClick={onClose} className="absolute top-4 right-4 bg-red-500 text-white p-2 rounded-full">
-                    <CloseIcon />
+                <button onClick={onClose} className="absolute top-4 left-4 bg-transparent border-2 border-gray-500 text-white p-2 rounded-xl active:scale-95">
+                    <DoubleArrowIcon />
                 </button>
                 <div className="relative flex flex-col items-center">
                     <img src={Pro} alt="" className='rounded-full h-32 w-32 absolute top-[-4rem] z-10' />
                     <div className="mt-20 text-center">
                         <div className="text-3xl font-bold mt-2">{username}</div>
-                        <div className="text-xl mt-2 flex items-center">
+                        <div className="text-xl mt-2 flex justify-center">
                             <CakeIcon className="mr-2" /> {joinDate}
                         </div>
-                        <div className="text-xl mt-2 flex items-center">
+                        <div className="text-xl mt-2 flex justify-center">
+                            <AlternateEmailIcon className="mr-2" /> {email}
+                        </div>
+                        <div className="text-xl mt-2 flex justify-center">
                             <AlternateEmailIcon className="mr-2" /> {email}
                         </div>
                     </div>
