@@ -86,7 +86,7 @@ const Signup: React.FC = () => {
             });
             signup_token_secure(response);
             // alert("Signup successful!");
-            navigate("/"); // Navigate to login
+            navigate("/login"); // Navigate to login
         } catch (error) {
             console.error("Error adding user:", error);
             setMessage("Error adding user. Please try again.");
