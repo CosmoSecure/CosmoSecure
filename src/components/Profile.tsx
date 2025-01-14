@@ -25,28 +25,50 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
     const [totalPasswords, setTotalPasswords] = useState(0);
 
     useEffect(() => {
-        try {
-            const user = decryptUser();
-            if (user && user.name && user.created_at) {
-                setUsername(user.name);
-                setEmail(user.email);
-                const createdAt = new Date(parseInt(user.created_at.$date.$numberLong));
-                const formattedDate = `${String(createdAt.getDate()).padStart(2, '0')}-${String(createdAt.getMonth() + 1).padStart(2, '0')}-${createdAt.getFullYear()}`;
-                setJoinDate(formattedDate);
-                console.log('User data decrypted:', user);
+        let intervalId: NodeJS.Timeout | null = null;
 
-                // Fetch the total number of passwords
-                fetchTotalPasswords(user.username).then((total) => {
-                    setTotalPasswords(total);
-                }).catch((error) => {
-                    console.error('Error fetching total passwords:', error);
-                });
-            } else {
-                console.error('No user found in decrypted data');
+        const initializeData = async () => {
+            try {
+                const user = decryptUser();
+                if (user && user.name && user.created_at) {
+                    setUsername(user.name);
+                    setEmail(user.email);
+
+                    const createdAt = new Date(parseInt(user.created_at.$date.$numberLong));
+                    const formattedDate = `${String(createdAt.getDate()).padStart(2, '0')}-${String(createdAt.getMonth() + 1).padStart(2, '0')}-${createdAt.getFullYear()}`;
+                    setJoinDate(formattedDate);
+
+                    console.log('User data decrypted:', user);
+
+                    // Fetch the initial total number of passwords
+                    const initialTotal = await fetchTotalPasswords(user.username);
+                    setTotalPasswords(initialTotal);
+
+                    // Set up an interval to fetch the total passwords every 1 seconds
+                    intervalId = setInterval(async () => {
+                        try {
+                            const updatedTotal = await fetchTotalPasswords(user.username);
+                            setTotalPasswords(updatedTotal);
+                        } catch (error) {
+                            console.error('Error fetching total passwords in interval:', error);
+                        }
+                    }, 1000);
+                } else {
+                    console.error('No user found in decrypted data');
+                }
+            } catch (error) {
+                console.error('Error decrypting or parsing user data:', error);
             }
-        } catch (error) {
-            console.error('Error decrypting or parsing user data:', error);
-        }
+        };
+
+        initializeData();
+
+        // Cleanup interval on component unmount
+        return () => {
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+        };
     }, []);
 
     return (
