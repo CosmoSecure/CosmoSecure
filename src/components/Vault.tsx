@@ -81,8 +81,14 @@ const Vault = () => {
 
     const handleDeletePassword = async (entryId: string) => {
         try {
-            await invoke('delete_password_entry', { entryId });
-            setPasswords(passwords.filter(entry => entry.entry_id !== entryId));
+            const user = decryptUser();
+            if (user) {
+                const userId = user.user_id; // Use user_id instead of username
+                await invoke('delete_password_entry', { userId, entryId });
+                setPasswords(passwords.filter(entry => entry.entry_id !== entryId));
+            } else {
+                console.error("Failed to decrypt user data");
+            }
         } catch (error) {
             console.error("Error deleting password:", error);
         }

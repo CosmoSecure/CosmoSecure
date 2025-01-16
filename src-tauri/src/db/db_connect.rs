@@ -95,15 +95,14 @@ pub async fn update_password_entry(
 ) -> Result<String, String> {
     let passwords_collection = state
         .get_database("password_manager")
-        .collection::<PasswordEntry>("passwords");
+        .collection::<PasswordEntries>("password_entries");
 
-    let filter = doc! { "entry_id": &entry_id };
-    println!("Filter: {:?}", filter);
+    let filter = doc! { "entries.entry_id": &entry_id };
     let update = doc! {
         "$set": {
-            "account_name": account_name,
-            "username": username,
-            "password": password,
+            "entries.$.account_name": account_name,
+            "entries.$.username": username,
+            "entries.$.password": password,
         }
     };
 
@@ -120,11 +119,16 @@ pub async fn delete_password_entry(
 ) -> Result<String, String> {
     let passwords_collection = state
         .get_database("password_manager")
-        .collection::<PasswordEntry>("passwords");
+        .collection::<PasswordEntries>("password_entries");
 
-    let filter = doc! { "entry_id": &entry_id };
+    let filter = doc! { "entries.entry_id": &entry_id };
+    let update = doc! {
+        "$pull": {
+            "entries": { "entry_id": &entry_id }
+        }
+    };
 
-    match passwords_collection.delete_one(filter).await {
+    match passwords_collection.update_one(filter, update).await {
         Ok(_) => Ok(entry_id),
         Err(e) => Err(format!("Error deleting password entry: {}", e)),
     }
