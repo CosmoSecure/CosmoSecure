@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { decryptToken, decryptUser } from './auth/token_secure';
+import { decryptUser } from './auth/token_secure';
 
 interface PasswordEntry {
     entry_id: string;
@@ -20,15 +20,13 @@ const Vault = () => {
         // Fetch password entries on component mount
         const fetchPasswords = async () => {
             try {
-                const token = decryptToken();
                 const user = decryptUser();
-                console.log("Decrypted user:", user);
-                if (token && user) {
-                    const userId = user.username; // Use userId instead of user_id
+                if (user) {
+                    const userId = user.user_id; // Use user_id instead of username
                     const entries: PasswordEntry[] = await invoke('get_password_entries', { userId });
                     setPasswords(entries);
                 } else {
-                    console.error("Failed to decrypt token or user data");
+                    console.error("Failed to decrypt user data");
                 }
             } catch (error) {
                 console.error("Error fetching passwords:", error);
@@ -42,7 +40,7 @@ const Vault = () => {
         try {
             const user = decryptUser();
             if (user) {
-                const userId = user.username; // Use userId instead of user_id
+                const userId = user.user_id; // Use user_id instead of username
                 if (editId !== null) {
                     await invoke('update_password_entry', { entryId: editId, accountName: accountName, username, password });
                     setPasswords(passwords.map(entry =>

@@ -1,4 +1,4 @@
-use crate::db::schema::db_schema::{PasswordEntry, User};
+use crate::db::schema::db_schema::{PasswordEntries, PasswordEntry, User};
 use crate::db::token::generate_token;
 use crate::env_var::{get_env_key, get_env_vars};
 // use crate::secure::encrypt;
@@ -45,11 +45,10 @@ pub async fn add_password_entry(
 ) -> Result<String, String> {
     let passwords_collection = state
         .get_database("password_manager")
-        .collection::<PasswordEntry>("passwords");
+        .collection::<PasswordEntries>("password_entries");
 
     let new_entry = PasswordEntry {
         entry_id: ObjectId::new().to_hex(),
-        user_id,
         account_name,
         username,
         password,
@@ -58,8 +57,30 @@ pub async fn add_password_entry(
         password_strength: None,
     };
 
-    match passwords_collection.insert_one(new_entry).await {
-        Ok(result) => Ok(result.inserted_id.as_object_id().unwrap().to_hex()),
+    let filter = doc! { "user_id": &user_id };
+    let update = doc! {
+        "$push": {
+            "entries": bson::to_bson(&new_entry).unwrap()
+        }
+    };
+
+    match passwords_collection.update_one(filter, update).await {
+        Ok(result) => {
+            if result.matched_count == 0 {
+                let new_password_entries = PasswordEntries {
+                    user_id: user_id.clone(),
+                    entries: vec![new_entry],
+                };
+                match passwords_collection.insert_one(new_password_entries).await {
+                    Ok(insert_result) => {
+                        Ok(insert_result.inserted_id.as_object_id().unwrap().to_hex())
+                    }
+                    Err(e) => Err(format!("Error adding password entry: {}", e)),
+                }
+            } else {
+                Ok(new_entry.entry_id)
+            }
+        }
         Err(e) => Err(format!("Error adding password entry: {}", e)),
     }
 }
@@ -116,16 +137,13 @@ pub async fn get_password_entries(
 ) -> Result<Vec<PasswordEntry>, String> {
     let passwords_collection = state
         .get_database("password_manager")
-        .collection::<PasswordEntry>("passwords");
+        .collection::<PasswordEntries>("password_entries");
 
     let filter = doc! { "user_id": &user_id };
 
-    match passwords_collection.find(filter).await {
-        Ok(cursor) => {
-            let entries: Vec<PasswordEntry> =
-                cursor.try_collect().await.map_err(|e| e.to_string())?;
-            Ok(entries)
-        }
+    match passwords_collection.find_one(filter).await {
+        Ok(Some(password_entries)) => Ok(password_entries.entries),
+        Ok(None) => Ok(vec![]), // No entries found for the user
         Err(e) => Err(format!("Error fetching password entries: {}", e)),
     }
 }
