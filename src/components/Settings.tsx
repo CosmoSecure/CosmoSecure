@@ -1,10 +1,26 @@
-import { useState } from "react";
-import { ThemeToggle } from "../themes";
+import { useState, useEffect } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import { ThemeToggle } from "../themes";
+import { decryptUser } from './auth/token_secure';
+
+function debounce(func: (...args: any[]) => void, wait: number) {
+    let timeout: ReturnType<typeof setTimeout>;
+    return (...args: any[]) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+    };
+}
 
 const Settings = () => {
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+    const [newName, setNewName] = useState('');
+    const [newUsername, setNewUsername] = useState('');
+    const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+    const [usernameChangeCount, setUsernameChangeCount] = useState(0);
 
     const toggleDropdown = (dropdownName: string) => {
         setActiveDropdown(activeDropdown === dropdownName ? null : dropdownName);
@@ -12,6 +28,52 @@ const Settings = () => {
 
     const stopPropagation = (e: React.MouseEvent) => {
         e.stopPropagation();
+    };
+
+    const checkUsernameAvailability = async (username: string) => {
+        if (!username) {
+            setUsernameAvailable(null);
+            return;
+        }
+        try {
+            const available = await invoke<boolean>("check_username_availability", { username });
+            setUsernameAvailable(available);
+        } catch (error) {
+            console.error("Error checking username availability:", error);
+        }
+    };
+
+    const debouncedCheckUsernameAvailability = debounce(checkUsernameAvailability, 300);
+
+    useEffect(() => {
+        debouncedCheckUsernameAvailability(newUsername);
+    }, [newUsername]);
+
+    const handleUpdateNameUsername = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (usernameChangeCount >= 3) {
+            alert("You can only change your username 3 times.");
+            return;
+        }
+        if (usernameAvailable === false) {
+            alert("Username is already taken. Please choose a unique username.");
+            return;
+        }
+        try {
+            const user = decryptUser();
+            console.log("Decrypted user data:", user); // Print decrypted user data
+            if (user) {
+                const args = { userId: user.user_id, newName: newName, newUsername: newUsername };
+                console.log("Arguments passed to invoke:", args); // Print arguments passed to invoke
+                await invoke("update_name_username", args);
+                setUsernameChangeCount(usernameChangeCount + 1);
+                alert("Name and Username updated successfully!");
+            } else {
+                console.error("Failed to decrypt user data");
+            }
+        } catch (error) {
+            console.error("Error updating name and username:", error);
+        }
     };
 
     return (
@@ -37,23 +99,37 @@ const Settings = () => {
                         onClick={stopPropagation}
                     >
                         {activeDropdown === "nameUsernameChange" && (
-                            <form className="flex flex-col gap-4 mt-4">
-                                <input
-                                    type="text"
-                                    placeholder="New Name"
-                                    className="p-3 rounded-md bg-theme-background text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-accent shadow-sm"
+                            <form className="flex flex-col gap-4 mt-4" onSubmit={handleUpdateNameUsername}>
+                                <TextField
+                                    label="New Name"
+                                    variant="standard"
+                                    fullWidth
+                                    value={newName}
+                                    onChange={(e) => setNewName(e.target.value)}
                                 />
-                                <input
-                                    type="text"
-                                    placeholder="New Username"
-                                    className="p-3 rounded-md bg-theme-background text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-accent shadow-sm"
+                                <TextField
+                                    label="New Username"
+                                    variant="standard"
+                                    fullWidth
+                                    value={newUsername}
+                                    onChange={(e) => setNewUsername(e.target.value)}
                                 />
-                                <button
+                                {usernameAvailable === null ? null : usernameAvailable ? (
+                                    <p className="text-green-500">Username is available</p>
+                                ) : (
+                                    <p className="text-red-500">Username is already taken</p>
+                                )}
+                                <Button
                                     type="submit"
-                                    className="py-2 px-4 bg-theme-accent text-white rounded-md hover:bg-theme-accent-dark transition duration-300 ease-in-out transform hover:scale-[101%] shadow-md hover:shadow-lg"
+                                    variant="contained"
+                                    color="primary"
+                                    className="py-2 px-4 w-fit bg-theme-accent text-white rounded-md hover:bg-theme-accent-dark transition duration-300 ease-in-out transform hover:scale-[101%] shadow-md hover:shadow-lg"
                                 >
                                     Update Name & Username
-                                </button>
+                                </Button>
+                                <p className="text-sm text-gray-500 mt-2">
+                                    Note: You can only change your username 3 times.
+                                </p>
                             </form>
                         )}
                     </div>
@@ -78,27 +154,32 @@ const Settings = () => {
                     >
                         {activeDropdown === "passwordChange" && (
                             <form className="flex flex-col gap-4 mt-4">
-                                <input
+                                <TextField
+                                    label="Current Password"
                                     type="password"
-                                    placeholder="Current Password"
-                                    className="p-3 rounded-md bg-theme-background text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-accent shadow-sm"
+                                    variant="standard"
+                                    fullWidth
                                 />
-                                <input
+                                <TextField
+                                    label="New Password"
                                     type="password"
-                                    placeholder="New Password"
-                                    className="p-3 rounded-md bg-theme-background text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-accent shadow-sm"
+                                    variant="standard"
+                                    fullWidth
                                 />
-                                <input
+                                <TextField
+                                    label="Rewrite New Password"
                                     type="password"
-                                    placeholder="Rewrite New Password"
-                                    className="p-3 rounded-md bg-theme-background text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-accent shadow-sm"
+                                    variant="standard"
+                                    fullWidth
                                 />
-                                <button
+                                <Button
                                     type="submit"
-                                    className="py-2 px-4 bg-theme-accent text-white rounded-md hover:bg-theme-accent-dark transition duration-300 ease-in-out transform hover:scale-[101%] shadow-md hover:shadow-lg"
+                                    variant="contained"
+                                    color="primary"
+                                    className="py-2 px-4 w-fit bg-theme-accent text-white rounded-md hover:bg-theme-accent-dark transition duration-300 ease-in-out transform hover:scale-[101%] shadow-md hover:shadow-lg"
                                 >
                                     Update Password
-                                </button>
+                                </Button>
                             </form>
                         )}
                     </div>
@@ -150,16 +231,20 @@ const Settings = () => {
                     >
                         {activeDropdown === "backupRestore" && (
                             <div className="mt-4 flex flex-col gap-4 w-1/2">
-                                <button
-                                    className="py-2 px-4 bg-theme-accent text-white rounded-md hover:bg-theme-accent-dark transition duration-300 ease-in-out transform hover:scale-[101%] shadow-md hover:shadow-lg"
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    className="py-2 px-4 w-fit bg-theme-accent text-white rounded-md hover:bg-theme-accent-dark transition duration-300 ease-in-out transform hover:scale-[101%] shadow-md hover:shadow-lg"
                                 >
                                     Backup
-                                </button>
-                                <button
-                                    className="py-2 px-4 bg-theme-accent text-white rounded-md hover:bg-theme-accent-dark transition duration-300 ease-in-out transform hover:scale-[101%] shadow-md hover:shadow-lg"
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    className="py-2 px-4 w-fit bg-theme-accent text-white rounded-md hover:bg-theme-accent-dark transition duration-300 ease-in-out transform hover:scale-[101%] shadow-md hover:shadow-lg"
                                 >
                                     Restore
-                                </button>
+                                </Button>
                             </div>
                         )}
                     </div>
@@ -213,22 +298,25 @@ const Settings = () => {
                     >
                         {activeDropdown === "deleteAccount" && (
                             <form className="flex flex-col gap-4 mt-4 w-3/4">
-                                <input
-                                    type="text"
-                                    placeholder="Username"
-                                    className="p-3 rounded-md bg-theme-background text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-accent shadow-sm"
+                                <TextField
+                                    label="Username"
+                                    variant="standard"
+                                    fullWidth
                                 />
-                                <input
+                                <TextField
+                                    label="Password"
                                     type="password"
-                                    placeholder="Password"
-                                    className="p-3 rounded-md bg-theme-background text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-accent shadow-sm"
+                                    variant="standard"
+                                    fullWidth
                                 />
-                                <button
+                                <Button
                                     type="submit"
+                                    variant="contained"
+                                    color="secondary"
                                     className="py-2 px-4 w-fit bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-100 ease-in-out transform hover:scale-[101%] shadow-md hover:shadow-lg"
                                 >
                                     Delete Account
-                                </button>
+                                </Button>
                             </form>
                         )}
                     </div>

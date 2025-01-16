@@ -12,6 +12,7 @@ pub struct User {
     pub email: String,                // Email address
     pub created_at: DateTime,         // Account creation timestamp
     pub last_login: Option<DateTime>, // Last login timestamp
+    pub username_change_count: u8,    // Username change count
 }
 
 #[derive(Debug, Serialize, Deserialize)]

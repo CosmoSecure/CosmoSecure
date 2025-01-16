@@ -4,7 +4,7 @@ use crate::env_var::{get_env_key, get_env_vars};
 // use crate::secure::encrypt;
 use crate::secure::decrypt;
 use bcrypt::{hash, verify, DEFAULT_COST};
-use futures_util::TryStreamExt;
+// use futures_util::TryStreamExt;
 use mongodb::bson::DateTime;
 use mongodb::bson::{doc, oid::ObjectId};
 use mongodb::error::Error;
@@ -172,6 +172,41 @@ pub async fn check_username_availability(
     }
 }
 
+#[tauri::command]
+pub async fn update_name_username(
+    state: State<'_, MongoClientState>,
+    user_id: String,
+    new_name: String,
+    new_username: String,
+) -> Result<(), String> {
+    let users_collection = state
+        .get_database("password_manager")
+        .collection::<User>("users");
+
+    // Check if the new username is available
+    match check_username_availability(state.clone(), new_username.clone()).await {
+        Ok(true) => {
+            let filter = doc! { "user_id": &user_id };
+            let update = doc! {
+                "$set": {
+                    "name": new_name,
+                    "username": new_username,
+                },
+                "$inc": {
+                    "username_change_count": 1
+                }
+            };
+
+            match users_collection.update_one(filter, update).await {
+                Ok(_) => Ok(()),
+                Err(e) => Err(format!("Error updating name and username: {}", e)),
+            }
+        }
+        Ok(false) => Err("Username is already taken.".to_string()),
+        Err(e) => Err(format!("Error checking username availability: {}", e)),
+    }
+}
+
 pub async fn get_user_by_username_or_email(
     identifier: &str,
     collection: &Collection<User>,
@@ -279,6 +314,7 @@ pub async fn add_user(
         email: email.to_string(),
         created_at: DateTime::now(),
         last_login: None,
+        username_change_count: 0,
     };
 
     match collection.insert_one(new_user).await {
