@@ -17,7 +17,6 @@ pub struct User {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PasswordEntry {
     pub entry_id: String,     // Unique identifier for the entry
-    pub user_id: String,      // Reference to the user
     pub account_name: String, // Encrypted account name
     pub username: String,     // Encrypted username for the account
     pub password: String,     // Encrypted password
@@ -26,6 +25,12 @@ pub struct PasswordEntry {
     pub password_strength: Option<u8>, // Password strength rating
                               // Last update timestamp
                               // Add ZKP [Zero Knowledge Proof]
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PasswordEntries {
+    pub user_id: String,             // Reference to the user
+    pub entries: Vec<PasswordEntry>, // List of password entries for the user
 }
 
 // ! Futore Feature
