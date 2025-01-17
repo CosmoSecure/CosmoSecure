@@ -6,6 +6,7 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import { ThemeToggle } from "../themes";
 import { decryptUser } from './auth/token_secure';
+import { VisibilityOffTwoToneIcon, VisibilityTwoToneIcon } from './auth/passCSS';
 
 function debounce(func: (...args: any[]) => void, wait: number) {
     let timeout: ReturnType<typeof setTimeout>;
@@ -21,6 +22,13 @@ const Settings = () => {
     const [newUsername, setNewUsername] = useState('');
     const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
     const [usernameChangeCount, setUsernameChangeCount] = useState(0);
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [passwordVisible, setPasswordVisible] = useState(false);
+    const [newPasswordVisible, setNewPasswordVisible] = useState(false);
+    const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+    const [passwordsMatch, setPasswordsMatch] = useState(true);
 
     const toggleDropdown = (dropdownName: string) => {
         setActiveDropdown(activeDropdown === dropdownName ? null : dropdownName);
@@ -49,6 +57,10 @@ const Settings = () => {
         debouncedCheckUsernameAvailability(newUsername);
     }, [newUsername]);
 
+    useEffect(() => {
+        setPasswordsMatch(newPassword === confirmPassword);
+    }, [newPassword, confirmPassword]);
+
     const handleUpdateNameUsername = async (e: React.FormEvent) => {
         e.preventDefault();
         if (usernameChangeCount >= 3) {
@@ -76,13 +88,37 @@ const Settings = () => {
         }
     };
 
+    const handleUpdatePassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!passwordsMatch) {
+            alert("New password and confirm password do not match.");
+            return;
+        }
+        try {
+            const user = decryptUser();
+            if (user) {
+                const args = { userId: user.user_id, currentPassword: currentPassword, newPassword: newPassword };
+                await invoke("update_password", args);
+                alert("Password updated successfully!");
+            } else {
+                console.error("Failed to decrypt user data");
+            }
+        } catch (error) {
+            console.error("Error updating password:", error);
+        }
+    };
+
+    const togglePasswordVisibility = () => setPasswordVisible(!passwordVisible);
+    const toggleNewPasswordVisibility = () => setNewPasswordVisible(!newPasswordVisible);
+    const toggleConfirmPasswordVisibility = () => setConfirmPasswordVisible(!confirmPasswordVisible);
+
     return (
         <div className="bg-theme-background h-full p-8 flex flex-col justify-center items-center text-theme-accent">
             {/* Settings Container */}
-            <div className="bg-theme-primary p-6 rounded-lg overflow-auto shadow-theme-primary-transparent h-[95%] w-[95%] flex flex-col gap-6 transition duration-300 ease-in-out transform hover:scale-[101%]">
+            <div className="bg-theme-primary p-6 rounded-lg overflow-auto shadow-theme-primary-transparent h-[95%] w-[95%] flex flex-col gap-6 transition duration-300 ease-in-out transform">
                 {/* Name & Username Update/Change Section */}
                 <div
-                    className="hover:text-theme-text cursor-pointer h-auto bg-theme-secondary-transparent rounded-lg p-6 shadow-md transition duration-300 ease-in-out hover:shadow-lg"
+                    className="hover:text-theme-text cursor-pointer h-auto bg-theme-secondary-transparent rounded-lg p-6 shadow-md transition duration-300 ease-in-out hover:shadow-lg hover:scale-[101%]"
                     onClick={() => toggleDropdown("nameUsernameChange")}
                 >
                     <div className="flex items-center justify-between">
@@ -101,16 +137,28 @@ const Settings = () => {
                         {activeDropdown === "nameUsernameChange" && (
                             <form className="flex flex-col gap-4 mt-4" onSubmit={handleUpdateNameUsername}>
                                 <TextField
+                                    style={{ width: '30%' }}
                                     label="New Name"
                                     variant="standard"
-                                    fullWidth
+                                    InputProps={{
+                                        style: { color: 'var(--theme-text)' },
+                                    }}
+                                    InputLabelProps={{
+                                        style: { color: 'var(--theme-text)' },
+                                    }}
                                     value={newName}
                                     onChange={(e) => setNewName(e.target.value)}
                                 />
                                 <TextField
+                                    style={{ width: '30%' }}
                                     label="New Username"
                                     variant="standard"
-                                    fullWidth
+                                    InputProps={{
+                                        style: { color: 'var(--theme-text)' },
+                                    }}
+                                    InputLabelProps={{
+                                        style: { color: 'var(--theme-text)' },
+                                    }}
                                     value={newUsername}
                                     onChange={(e) => setNewUsername(e.target.value)}
                                 />
@@ -127,7 +175,7 @@ const Settings = () => {
                                 >
                                     Update Name & Username
                                 </Button>
-                                <p className="text-sm text-gray-500 mt-2">
+                                <p className="text-sm font-bold text-theme-text mt-2">
                                     Note: You can only change your username 3 times.
                                 </p>
                             </form>
@@ -136,7 +184,7 @@ const Settings = () => {
                 </div>
                 {/* Password Change Section */}
                 <div
-                    className="hover:text-theme-text cursor-pointer h-auto bg-theme-secondary-transparent rounded-lg p-6 shadow-md transition duration-300 ease-in-out hover:shadow-lg"
+                    className="hover:text-theme-text cursor-pointer h-auto bg-theme-secondary-transparent rounded-lg p-6 shadow-md transition duration-300 ease-in-out hover:shadow-lg hover:scale-[101%]"
                     onClick={() => toggleDropdown("passwordChange")}
                 >
                     <div className="flex items-center justify-between">
@@ -153,25 +201,79 @@ const Settings = () => {
                         onClick={stopPropagation}
                     >
                         {activeDropdown === "passwordChange" && (
-                            <form className="flex flex-col gap-4 mt-4">
-                                <TextField
-                                    label="Current Password"
-                                    type="password"
-                                    variant="standard"
-                                    fullWidth
-                                />
-                                <TextField
-                                    label="New Password"
-                                    type="password"
-                                    variant="standard"
-                                    fullWidth
-                                />
-                                <TextField
-                                    label="Rewrite New Password"
-                                    type="password"
-                                    variant="standard"
-                                    fullWidth
-                                />
+                            <form className="flex flex-col gap-4 mt-4" onSubmit={handleUpdatePassword}>
+                                <div className="relative">
+                                    <TextField
+                                        style={{ width: '30%' }}
+                                        label="Current Password"
+                                        type={passwordVisible ? "text" : "password"}
+                                        variant="standard"
+                                        InputProps={{
+                                            style: { color: 'var(--theme-text)' },
+                                        }}
+                                        InputLabelProps={{
+                                            style: { color: 'var(--theme-text)' },
+                                        }}
+                                        value={currentPassword}
+                                        onChange={(e) => setCurrentPassword(e.target.value)}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={togglePasswordVisibility}
+                                        className="absolute inset-y-0 px-3 py-2 text-gray-400"
+                                    >
+                                        {passwordVisible ? <VisibilityOffTwoToneIcon /> : <VisibilityTwoToneIcon />}
+                                    </button>
+                                </div>
+                                <div className="relative">
+                                    <TextField
+                                        style={{ width: '30%' }}
+                                        label="New Password"
+                                        type={newPasswordVisible ? "text" : "password"}
+                                        variant="standard"
+                                        InputProps={{
+                                            style: { color: 'var(--theme-text)' },
+                                        }}
+                                        InputLabelProps={{
+                                            style: { color: 'var(--theme-text)' },
+                                        }}
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={toggleNewPasswordVisibility}
+                                        className="absolute inset-y-0 px-3 py-2 text-gray-400"
+                                    >
+                                        {newPasswordVisible ? <VisibilityOffTwoToneIcon /> : <VisibilityTwoToneIcon />}
+                                    </button>
+                                </div>
+                                <div className="relative">
+                                    <TextField
+                                        style={{ width: '30%' }}
+                                        label="Confirm Password"
+                                        type={confirmPasswordVisible ? "text" : "password"}
+                                        variant="standard"
+                                        InputProps={{
+                                            style: { color: 'var(--theme-text)' },
+                                        }}
+                                        InputLabelProps={{
+                                            style: { color: 'var(--theme-text)' },
+                                        }}
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={toggleConfirmPasswordVisibility}
+                                        className="absolute inset-y-0 px-3 py-2 text-gray-400"
+                                    >
+                                        {confirmPasswordVisible ? <VisibilityOffTwoToneIcon /> : <VisibilityTwoToneIcon />}
+                                    </button>
+                                </div>
+                                {!passwordsMatch && (
+                                    <p className="text-red-500">New password and confirm password do not match.</p>
+                                )}
                                 <Button
                                     type="submit"
                                     variant="contained"
@@ -187,7 +289,7 @@ const Settings = () => {
 
                 {/* Theme Toggle Section */}
                 <div
-                    className="hover:text-theme-text cursor-pointer p-6 bg-theme-secondary rounded-lg h-auto shadow-md transition duration-300 ease-in-out hover:shadow-lg"
+                    className="hover:text-theme-text cursor-pointer p-6 bg-theme-secondary rounded-lg h-auto shadow-md transition duration-300 ease-in-out hover:shadow-lg hover:scale-[101%]"
                     onClick={() => toggleDropdown("themes")}
                 >
                     <div className="flex items-center justify-between">
@@ -213,7 +315,7 @@ const Settings = () => {
 
                 {/* Backup & Restore Section */}
                 <div
-                    className="hover:text-theme-text cursor-pointer p-6 bg-theme-secondary rounded-lg h-auto shadow-md transition duration-300 ease-in-out hover:shadow-lg"
+                    className="hover:text-theme-text cursor-pointer p-6 bg-theme-secondary rounded-lg h-auto shadow-md transition duration-300 ease-in-out hover:shadow-lg hover:scale-[101%]"
                     onClick={() => toggleDropdown("backupRestore")}
                 >
                     <div className="flex items-center justify-between">
@@ -252,7 +354,7 @@ const Settings = () => {
 
                 {/* About Us Section */}
                 <div
-                    className="hover:text-theme-text cursor-pointer p-6 bg-theme-secondary rounded-lg h-auto shadow-md transition duration-300 ease-in-out hover:shadow-lg"
+                    className="hover:text-theme-text cursor-pointer p-6 bg-theme-secondary rounded-lg h-auto shadow-md transition duration-300 ease-in-out hover:shadow-lg hover:scale-[101%]"
                     onClick={() => toggleDropdown("aboutUs")}
                 >
                     <div className="flex items-center justify-between">
@@ -280,7 +382,7 @@ const Settings = () => {
 
                 {/* Delete Account Section */}
                 <div
-                    className="hover:text-theme-text cursor-pointer p-6 bg-theme-secondary rounded-lg h-auto shadow-md transition duration-300 ease-in-out hover:shadow-lg"
+                    className="hover:text-theme-text cursor-pointer p-6 bg-theme-secondary rounded-lg h-auto shadow-md transition duration-300 ease-in-out hover:shadow-lg hover:scale-[101%]"
                     onClick={() => toggleDropdown("deleteAccount")}
                 >
                     <div className="flex items-center justify-between">
@@ -299,15 +401,27 @@ const Settings = () => {
                         {activeDropdown === "deleteAccount" && (
                             <form className="flex flex-col gap-4 mt-4 w-3/4">
                                 <TextField
+                                    style={{ width: '30%' }}
                                     label="Username"
                                     variant="standard"
-                                    fullWidth
+                                    InputProps={{
+                                        style: { color: 'var(--theme-text)' },
+                                    }}
+                                    InputLabelProps={{
+                                        style: { color: 'var(--theme-text)' },
+                                    }}
                                 />
                                 <TextField
+                                    style={{ width: '30%' }}
                                     label="Password"
                                     type="password"
                                     variant="standard"
-                                    fullWidth
+                                    InputProps={{
+                                        style: { color: 'var(--theme-text)' },
+                                    }}
+                                    InputLabelProps={{
+                                        style: { color: 'var(--theme-text)' },
+                                    }}
                                 />
                                 <Button
                                     type="submit"
