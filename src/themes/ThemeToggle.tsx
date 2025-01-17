@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Button from '@mui/material/Button';
 
 export type ThemeKeys = 'light' | 'dark' | 'aqua' | 'forest' | 'vamp';
 
@@ -83,18 +84,26 @@ const ThemeToggle: React.FC = () => {
     return (
         <div className="flex space-x-4">
             {Object.keys(themes).map((themeKey) => (
-                <div
+                <Button
                     key={themeKey}
                     onClick={() => selectTheme(themeKey as ThemeKeys)}
-                    className={`p-4 rounded cursor-pointer ${currentTheme === themeKey ? 'border-4 border-theme-primary' : ''
-                        }`}
-                    style={{
+                    variant={currentTheme === themeKey ? 'contained' : 'outlined'}
+                    sx={{
                         backgroundColor: `var(--background-color)`,
                         color: `var(--text-color)`,
+                        padding: '12px 24px', // Increase padding
+                        fontSize: '16px', // Increase font size
+                        '&:hover': {
+                            backgroundColor: `var(--accent-color)`,
+                            color: `var(--background-color)`,
+                        },
+                        '&:active': {
+                            scale: 0.95,
+                        }
                     }}
                 >
                     {themeKey.charAt(0).toUpperCase() + themeKey.slice(1)} Mode
-                </div>
+                </Button>
             ))}
         </div>
     );
