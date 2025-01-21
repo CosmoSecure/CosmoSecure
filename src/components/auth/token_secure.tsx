@@ -73,3 +73,13 @@ export function decryptUser() {
     }
     return null;
 }
+
+export function encryptUser(user: User): string {
+    try {
+        const encryptedData = CryptoJS.AES.encrypt(JSON.stringify(user), SECRET_KEY).toString();
+        return encryptedData;
+    } catch (error) {
+        console.error("Error encrypting user data:", error);
+        return '';
+    }
+}

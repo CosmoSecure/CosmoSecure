@@ -7,6 +7,9 @@ import Button from '@mui/material/Button';
 import { ThemeToggle } from "../themes";
 import { decryptUser } from './auth/token_secure';
 import { VisibilityOffTwoToneIcon, VisibilityTwoToneIcon } from './auth/passCSS';
+import { reloadApp_Update } from "./reloadApp_Update";
+import { useNavigate } from "react-router-dom";
+import { toast } from 'sonner';
 
 function debounce(func: (...args: any[]) => void, wait: number) {
     let timeout: ReturnType<typeof setTimeout>;
@@ -29,6 +32,8 @@ const Settings = () => {
     const [newPasswordVisible, setNewPasswordVisible] = useState(false);
     const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
     const [passwordsMatch, setPasswordsMatch] = useState(true);
+    const [showReloginMessage, setShowReloginMessage] = useState(false);
+    const navigate = useNavigate();
 
     const toggleDropdown = (dropdownName: string) => {
         setActiveDropdown(activeDropdown === dropdownName ? null : dropdownName);
@@ -63,10 +68,6 @@ const Settings = () => {
 
     const handleUpdateNameUsername = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (usernameChangeCount >= 3) {
-            alert("You can only change your username 3 times.");
-            return;
-        }
         if (usernameAvailable === false) {
             alert("Username is already taken. Please choose a unique username.");
             return;
@@ -75,18 +76,30 @@ const Settings = () => {
             const user = decryptUser();
             console.log("Decrypted user data:", user); // Print decrypted user data
             if (user) {
-                const args = { userId: user.user_id, newName: newName, newUsername: newUsername };
+                const args = { userId: user.user_id, newName: newName || null, newUsername: newUsername || null };
                 console.log("Arguments passed to invoke:", args); // Print arguments passed to invoke
                 await invoke("update_name_username", args);
-                setUsernameChangeCount(usernameChangeCount + 1);
-                alert("Name and Username updated successfully!");
+                alert("Name and/or Username updated successfully!");
+                await reloadApp_Update(user.user_id);
+                setShowReloginMessage(true);
+
+                // Show notification to relogin
+                toast('Changes applied. Please relogin to apply changes.', {
+                    action: {
+                        label: 'Relogin',
+                        onClick: async () => {
+                            await invoke('delete_config');
+                        },
+                    },
+                });
             } else {
                 console.error("Failed to decrypt user data");
             }
         } catch (error) {
-            console.error("Error updating name and username:", error);
+            console.error("Error updating name and/or username:", error);
         }
     };
+
 
     const handleUpdatePassword = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -100,6 +113,9 @@ const Settings = () => {
                 const args = { userId: user.user_id, currentPassword: currentPassword, newPassword: newPassword };
                 await invoke("update_password", args);
                 alert("Password updated successfully!");
+                toast.success('Time to take a break!', {
+                    duration: 5000
+                });
             } else {
                 console.error("Failed to decrypt user data");
             }
@@ -136,45 +152,57 @@ const Settings = () => {
                     >
                         {activeDropdown === "nameUsernameChange" && (
                             <form className="flex flex-col gap-4 mt-4" onSubmit={handleUpdateNameUsername}>
-                                <TextField
-                                    style={{ width: '30%' }}
-                                    label="New Name"
-                                    variant="standard"
-                                    InputProps={{
-                                        style: { color: 'var(--theme-text)' },
-                                    }}
-                                    InputLabelProps={{
-                                        style: { color: 'var(--theme-text)' },
-                                    }}
-                                    value={newName}
-                                    onChange={(e) => setNewName(e.target.value)}
-                                />
-                                <TextField
-                                    style={{ width: '30%' }}
-                                    label="New Username"
-                                    variant="standard"
-                                    InputProps={{
-                                        style: { color: 'var(--theme-text)' },
-                                    }}
-                                    InputLabelProps={{
-                                        style: { color: 'var(--theme-text)' },
-                                    }}
-                                    value={newUsername}
-                                    onChange={(e) => setNewUsername(e.target.value)}
-                                />
+                                <div className="flex items-center gap-4">
+                                    <TextField
+                                        style={{ width: '30%' }}
+                                        label="New Name"
+                                        variant="standard"
+                                        InputProps={{
+                                            style: { color: 'var(--theme-text)' },
+                                        }}
+                                        InputLabelProps={{
+                                            style: { color: 'var(--theme-text)' },
+                                        }}
+                                        value={newName}
+                                        onChange={(e) => setNewName(e.target.value)}
+                                    />
+                                    <Button
+                                        type="submit"
+                                        variant="contained"
+                                        color="primary"
+                                        className="py-2 px-4 bg-theme-accent text-white rounded-md hover:bg-theme-accent-dark transition duration-300 ease-in-out transform hover:scale-[101%] shadow-md hover:shadow-lg"
+                                    >
+                                        Save
+                                    </Button>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <TextField
+                                        style={{ width: '30%' }}
+                                        label="New Username"
+                                        variant="standard"
+                                        InputProps={{
+                                            style: { color: 'var(--theme-text)' },
+                                        }}
+                                        InputLabelProps={{
+                                            style: { color: 'var(--theme-text)' },
+                                        }}
+                                        value={newUsername}
+                                        onChange={(e) => setNewUsername(e.target.value)}
+                                    />
+                                    <Button
+                                        type="submit"
+                                        variant="contained"
+                                        color="primary"
+                                        className="py-2 px-4 bg-theme-accent text-white rounded-md hover:bg-theme-accent-dark transition duration-300 ease-in-out transform hover:scale-[101%] shadow-md hover:shadow-lg"
+                                    >
+                                        Save
+                                    </Button>
+                                </div>
                                 {usernameAvailable === null ? null : usernameAvailable ? (
                                     <p className="text-green-500">Username is available</p>
                                 ) : (
                                     <p className="text-red-500">Username is already taken</p>
                                 )}
-                                <Button
-                                    type="submit"
-                                    variant="contained"
-                                    color="primary"
-                                    className="py-2 px-4 w-fit bg-theme-accent text-white rounded-md hover:bg-theme-accent-dark transition duration-300 ease-in-out transform hover:scale-[101%] shadow-md hover:shadow-lg"
-                                >
-                                    Update Name & Username
-                                </Button>
                                 <p className="text-sm font-bold text-theme-text mt-2">
                                     Note: You can only change your username 3 times.
                                 </p>

@@ -8,6 +8,7 @@ import { Intro, Login, Signup } from "./components";
 import { invoke } from "@tauri-apps/api/core";
 import { decryptToken, decryptUser } from "./components/auth/token_secure";
 import { applyTheme, themes, ThemeKeys } from "./themes/ThemeToggle"; // Import applyTheme and themes
+import { Toaster } from 'sonner'; // Import Toaster from sonner
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -54,15 +55,32 @@ function App() {
     <Router>
       <Routes>
         {isAuthenticated ? (
-          <Route path="/*" element={<RoutesConf setIsAuthenticated={setIsAuthenticated} />} />
+          <>
+            <Route path="/*" element={<RoutesConf setIsAuthenticated={setIsAuthenticated} />} />
+          </>
         ) : (
-          <Route path="/" element={<Auth_page />}>
-            <Route index element={<Intro />} />
-            <Route path="login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
-            <Route path="signup" element={<Signup />} />
-          </Route>
+          <>
+            <Route path="/" element={<Auth_page />}>
+              <Route index element={<Intro />} />
+              <Route path="login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
+              <Route path="signup" element={<Signup />} />
+            </Route>
+          </>
         )}
       </Routes>
+      <Toaster richColors position="top-center" theme="dark"
+        toastOptions={{
+          style: {
+            fontSize: '1rem',
+            padding: '1rem',
+            marginTop: '1rem',
+            color: '#f7fafc',
+            borderRadius: '0.5rem',
+            boxShadow: '0 0 0.5rem rgba(0, 0, 0, 0.1)',
+            zIndex: 9999
+          }
+        }}
+      />
     </Router>
   );
 }
