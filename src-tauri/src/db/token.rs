@@ -63,6 +63,8 @@ pub fn load_token() -> (String, String) {
     load_from_config()
 }
 
-pub fn delete_token() {
-    delete_config();
+use tauri::AppHandle;
+
+pub fn delete_token(app_handle: AppHandle) {
+    delete_config(app_handle); // Provide the required argument
 }

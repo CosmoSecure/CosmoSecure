@@ -176,34 +176,56 @@ pub async fn check_username_availability(
 pub async fn update_name_username(
     state: State<'_, MongoClientState>,
     user_id: String,
-    new_name: String,
-    new_username: String,
+    new_name: Option<String>,
+    new_username: Option<String>,
 ) -> Result<(), String> {
     let users_collection = state
         .get_database("password_manager")
         .collection::<User>("users");
 
-    // Check if the new username is available
-    match check_username_availability(state.clone(), new_username.clone()).await {
-        Ok(true) => {
-            let filter = doc! { "user_id": &user_id };
-            let update = doc! {
-                "$set": {
-                    "name": new_name,
-                    "username": new_username,
-                },
-                "$inc": {
-                    "username_change_count": 1
-                }
-            };
+    let mut update_doc = doc! {};
 
-            match users_collection.update_one(filter, update).await {
-                Ok(_) => Ok(()),
-                Err(e) => Err(format!("Error updating name and username: {}", e)),
+    if let Some(name) = new_name {
+        update_doc.insert("name", name);
+    }
+
+    if let Some(username) = new_username {
+        // Check if the new username is available
+        match check_username_availability(state.clone(), username.clone()).await {
+            Ok(true) => {
+                update_doc.insert("username", username);
             }
+            Ok(false) => return Err("Username is already taken.".to_string()),
+            Err(e) => return Err(format!("Error checking username availability: {}", e)),
         }
-        Ok(false) => Err("Username is already taken.".to_string()),
-        Err(e) => Err(format!("Error checking username availability: {}", e)),
+    }
+
+    let filter = doc! { "user_id": &user_id };
+
+    match users_collection
+        .update_one(filter, doc! { "$set": update_doc })
+        .await
+    {
+        Ok(_) => Ok(()),
+        Err(e) => Err(format!("Error updating name and/or username: {}", e)),
+    }
+}
+
+#[tauri::command]
+pub async fn reloadapp_update(
+    state: State<'_, MongoClientState>,
+    user_id: String,
+) -> Result<User, String> {
+    let users_collection = state
+        .get_database("password_manager")
+        .collection::<User>("users");
+
+    let filter = doc! { "user_id": &user_id };
+
+    match users_collection.find_one(filter).await {
+        Ok(Some(user)) => Ok(user),
+        Ok(None) => Err("User not found.".to_string()),
+        Err(e) => Err(format!("Error fetching user: {}", e)),
     }
 }
 

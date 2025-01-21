@@ -1,9 +1,11 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 use crate::db::db_connect::{
     add_password_entry, authenticate_user, check_username_availability, delete_password_entry,
-    get_password_entries, tauri_add_user, update_name_username, update_password_entry,
+    get_password_entries, reloadapp_update, tauri_add_user, update_name_username,
+    update_password_entry,
 };
 use crate::db::token;
+use config::delete_config;
 
 pub mod config;
 mod db;
@@ -21,8 +23,8 @@ fn load_token_command() -> (String, String) {
 }
 
 #[tauri::command]
-fn delete_token_command() {
-    token::delete_token();
+fn delete_token_command(app_handle: tauri::AppHandle) {
+    token::delete_token(app_handle);
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -51,6 +53,8 @@ pub async fn run() {
             delete_password_entry,
             update_password_entry,
             update_name_username,
+            reloadapp_update,
+            delete_config,
         ])
         .setup(|_app| {
             // Use an asynchronous runtime to run the database connection

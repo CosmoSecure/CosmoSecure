@@ -2,6 +2,8 @@ use dirs::config_dir;
 use serde_json::json;
 use std::fs;
 use std::path::PathBuf;
+use std::process::Command;
+use tauri::AppHandle;
 
 pub fn get_config_file_path() -> PathBuf {
     let mut config_path = config_dir().expect("Failed to get config directory");
@@ -34,9 +36,20 @@ pub fn load_from_config() -> (String, String) {
     )
 }
 
-pub fn delete_config() {
+#[tauri::command]
+pub fn delete_config(_app: AppHandle) {
     let config_path = get_config_file_path();
     if config_path.exists() {
         fs::remove_file(config_path).expect("Failed to delete config file");
     }
+
+    // Exit and restart the application
+    Command::new("sh")
+        .arg("-c")
+        .arg("npm run tauri dev")
+        .spawn()
+        .expect("Failed to restart application");
+    std::process::exit(0);
+
+    // app.restart();
 }
