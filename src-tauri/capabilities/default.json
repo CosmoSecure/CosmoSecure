@@ -12,6 +12,8 @@
     "core:window:allow-maximize",
     "core:window:allow-close",
     "core:window:allow-start-dragging",
-    "core:window:allow-set-content-protected"
+    "core:window:allow-set-content-protected",
+    "opener:default",
+    "opener:allow-default-urls"
   ]
 }

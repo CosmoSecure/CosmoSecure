@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useAnimation } from 'framer-motion';
+import { invoke } from '@tauri-apps/api/core';
 import { Key, Old, Crow } from '../../assets';
 
 const Intro: React.FC = () => {
@@ -8,6 +9,17 @@ const Intro: React.FC = () => {
     const controls = useAnimation();
     const [rotation, setRotation] = useState(-45);
 
+    // Function to handle opening external links
+    const handleExternalLink = async (url: string) => {
+        try {
+            await invoke('open_url', { url });
+            console.log(`Opened ${url} in the default browser.`);
+        } catch (err) {
+            console.error('Failed to open URL:', err);
+        }
+    };
+
+    // Function to handle key rotation and navigation
     const handleRotate = async () => {
         const newRotation = rotation + 45;
         setRotation(newRotation);
@@ -42,7 +54,38 @@ const Intro: React.FC = () => {
                 <section className="mt-5 mb-5 text-center">
                     <h1 className="text-2xl font-bold">About Me</h1>
                     <p className="text-xl font-medium mt-4">
-                        Hi, I am <span className="font-bold">Akash</span> (GitHub: <a href="https://github.com/akash2061" className="text-cyan-800 underline">akash2061</a>), a passionate Full Stack Developer and Rustacean. <br />I specialize in building secure, scalable, and efficient software solutions. Feel free to explore my <a href="https://github.com/akash2061/Code_Canvas" target="_blank" className="text-cyan-800 underline">projects</a> and reach out for collaborations & <a href="https://www.linkedin.com/in/akash-soni-01475924b/" target="_blank" className="text-cyan-800 underline">connection</a>.
+                        Hi, I am <span className="font-bold">Akash</span> (GitHub:&nbsp;
+                        <a
+                            href="#"
+                            className="text-cyan-800 underline"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleExternalLink('https://github.com/akash2061');
+                            }}
+                        >
+                            akash2061
+                        </a>), a passionate Full Stack Developer and Rustacean. <br />
+                        I specialize in building secure, scalable, and efficient software solutions. Feel free to explore my&nbsp;
+                        <a
+                            href="#"
+                            className="text-cyan-800 underline"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleExternalLink('https://github.com/akash2061/Code_Canvas');
+                            }}
+                        >
+                            projects
+                        </a> and reach out for collaborations &&nbsp;
+                        <a
+                            href="#"
+                            className="text-cyan-800 underline"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleExternalLink('https://www.linkedin.com/in/akash-soni-01475924b/');
+                            }}
+                        >
+                            connection
+                        </a>.
                     </p>
                 </section>
                 <div className="flex justify-evenly">
@@ -79,7 +122,17 @@ const Intro: React.FC = () => {
                     />
                 </div>
                 <p className="text-base mt-4">
-                    © 2024 CosmoSecure. All rights reserved. <a href="https://github.com/CosmoSecure/CosmoSecure/blob/master/LICENSE" target="_blank" className="text-cyan-800 underline">License</a>
+                    © 2024 CosmoSecure. All rights reserved.&nbsp;
+                    <a
+                        href="#"
+                        className="text-cyan-800 underline"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            handleExternalLink('https://github.com/CosmoSecure/CosmoSecure/blob/master/LICENSE');
+                        }}
+                    >
+                        License
+                    </a>
                 </p>
             </footer>
         </motion.div>

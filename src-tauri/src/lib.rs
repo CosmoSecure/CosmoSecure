@@ -6,11 +6,13 @@ use crate::db::db_connect::{
 };
 use crate::db::token;
 use config::delete_config;
+use openurl::open_url;
 
 pub mod config;
 mod db;
 pub mod env_var;
 mod secure;
+mod openurl;
 
 #[tauri::command]
 fn save_token_command(token: String, user: String) {
@@ -39,6 +41,7 @@ pub async fn run() {
     };
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .manage(client_state)
         .invoke_handler(tauri::generate_handler![
@@ -55,6 +58,7 @@ pub async fn run() {
             update_name_username,
             reloadapp_update,
             delete_config,
+            open_url,
         ])
         .setup(|_app| {
             // Use an asynchronous runtime to run the database connection
