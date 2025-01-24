@@ -128,6 +128,16 @@ const Settings = () => {
     const toggleNewPasswordVisibility = () => setNewPasswordVisible(!newPasswordVisible);
     const toggleConfirmPasswordVisibility = () => setConfirmPasswordVisible(!confirmPasswordVisible);
 
+    // Function to handle opening external links
+    const handleExternalLink = async (url: string) => {
+        try {
+            await invoke('open_url', { url });
+            console.log(`Opened ${url} in the default browser.`);
+        } catch (err) {
+            console.error('Failed to open URL:', err);
+        }
+    };
+
     return (
         <div className="bg-theme-background h-full p-8 flex flex-col justify-center items-center text-theme-accent">
             {/* Settings Container */}
@@ -401,7 +411,37 @@ const Settings = () => {
                         {activeDropdown === "aboutUs" && (
                             <div className="mt-4">
                                 <p className="text-xl font-medium">
-                                    Hi, I am <span className="font-bold">Akash</span> (GitHub: <a href="https://github.com/akash2061" className="text-cyan-800 underline">akash2061</a>), a passionate Full Stack Developer and Rustacean. <br />I specialize in building secure, scalable, and efficient software solutions. Feel free to explore my <a href="https://github.com/akash2061/Code_Canvas" target="_blank" className="text-cyan-800 underline">projects</a> and reach out for collaborations & <a href="https://www.linkedin.com/in/akash-soni-01475924b/" target="_blank" className="text-cyan-800 underline">connection</a>.
+                                    Hi, I am <span className="font-bold">Akash</span> (GitHub:&nbsp;
+                                    <a
+                                        href="#"
+                                        className="text-cyan-800 underline"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            handleExternalLink('https://github.com/akash2061');
+                                        }}
+                                    >
+                                        akash2061
+                                    </a>), a passionate Full Stack Developer and Rustacean. <br />I  specialize in building secure, scalable, and efficient software solutions. Feel free to explore my&nbsp;
+                                    <a
+                                        href="#"
+                                        className="text-cyan-800 underline"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            handleExternalLink('https://github.com/akash2061/Code_Canvas');
+                                        }}
+                                    >
+                                        projects
+                                    </a> and reach out for collaborations &&nbsp;
+                                    <a
+                                        href="#"
+                                        className="text-cyan-800 underline"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            handleExternalLink('https://www.linkedin.com/in/akash-soni-01475924b/');
+                                        }}
+                                    >
+                                        connection
+                                    </a>.
                                 </p>
                             </div>
                         )}
