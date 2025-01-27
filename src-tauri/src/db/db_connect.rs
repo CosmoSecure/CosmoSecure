@@ -212,6 +212,49 @@ pub async fn update_name_username(
 }
 
 #[tauri::command]
+pub async fn update_user_password(
+    state: State<'_, MongoClientState>,
+    user_id: String,
+    current_password: String,
+    new_password: String,
+) -> Result<(), String> {
+    let users_collection = state
+        .get_database("password_manager")
+        .collection::<User>("users");
+
+    let filter = doc! { "user_id": &user_id };
+
+    match users_collection.find_one(filter.clone()).await {
+        Ok(Some(user)) => {
+            // Verify the current password
+            if !verify(&current_password, &user.hashed_password).unwrap_or(false) {
+                return Err("Current password is incorrect.".to_string());
+            }
+
+            // Ensure the new password is not the same as the current password
+            if verify(&new_password, &user.hashed_password).unwrap_or(false) {
+                return Err("New password cannot be the same as the current password.".to_string());
+            }
+
+            // Hash the new password
+            let hashed_password = match hash(new_password, DEFAULT_COST) {
+                Ok(hashed) => hashed,
+                Err(e) => return Err(format!("Error hashing new password: {}", e)),
+            };
+
+            // Update the password in the database
+            let update = doc! { "$set": { "hashed_password": hashed_password } };
+            match users_collection.update_one(filter, update).await {
+                Ok(_) => Ok(()),
+                Err(e) => Err(format!("Error updating password: {}", e)),
+            }
+        }
+        Ok(None) => Err("User not found.".to_string()),
+        Err(e) => Err(format!("Error fetching user: {}", e)),
+    }
+}
+
+#[tauri::command]
 pub async fn reloadapp_update(
     state: State<'_, MongoClientState>,
     user_id: String,

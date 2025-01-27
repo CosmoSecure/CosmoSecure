@@ -104,23 +104,83 @@ const Settings = () => {
     const handleUpdatePassword = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!passwordsMatch) {
-            alert("New password and confirm password do not match.");
+            toast.error("New password and confirm password do not match.", {
+                style: {
+                    background: '#f8d7da',
+                    color: '#721c24',
+                    border: '1px solid #f5c6cb',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    fontSize: '16px',
+                },
+                icon: '❌',
+            });
             return;
         }
         try {
             const user = decryptUser();
             if (user) {
                 const args = { userId: user.user_id, currentPassword: currentPassword, newPassword: newPassword };
-                await invoke("update_password", args);
-                alert("Password updated successfully!");
-                toast.success('Time to take a break!', {
-                    duration: 5000
+                const response = await invoke<string>("update_user_password", args);
+                if (response === "New password cannot be the same as the current password.") {
+                    toast.error("New password cannot be the same as the current password.", {
+                        style: {
+                            background: '#f8d7da',
+                            color: '#721c24',
+                            border: '1px solid #f5c6cb',
+                            borderRadius: '8px',
+                            padding: '16px',
+                            fontSize: '16px',
+                        },
+                        icon: '❌',
+                    });
+                    return;
+                }
+                // toast.success("Password updated successfully!", {
+                //     style: {
+                //         background: '#d4edda',
+                //         color: '#155724',
+                //         border: '1px solid #c3e6cb',
+                //         borderRadius: '8px',
+                //         padding: '16px',
+                //         fontSize: '16px',
+                //     },
+                //     icon: '✅',
+                // });
+                toast('Password updated successfully! Changes applied. Please relogin to apply changes.', {
+                    action: {
+                        label: 'Relogin',
+                        onClick: async () => {
+                            await invoke('delete_config');
+                        },
+                    },
+                    style: {
+                        background: '#d4edda',
+                        color: '#155724',
+                        border: '1px solid #c3e6cb',
+                        borderRadius: '8px',
+                        padding: '16px',
+                        fontSize: '16px',
+                    },
+                    // icon: '🔄',
+                    icon: '✅',
                 });
             } else {
                 console.error("Failed to decrypt user data");
             }
         } catch (error) {
             console.error("Error updating password:", error);
+            toast.error(`Error updating password: ${error}`, {
+                style: {
+                    background: '#f8d7da',
+                    color: '#721c24',
+                    border: '1px solid #f5c6cb',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    fontSize: '16px',
+                },
+                icon: '❌',
+            });
         }
     };
 
