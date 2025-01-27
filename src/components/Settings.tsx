@@ -157,12 +157,13 @@ const Settings = () => {
                     style: {
                         background: '#d4edda',
                         color: '#155724',
-                        border: '1px solid #ffeeba',
+                        border: '1px solid #c3e6cb',
                         borderRadius: '8px',
                         padding: '16px',
                         fontSize: '16px',
                     },
-                    icon: '🔄',
+                    // icon: '🔄',
+                    icon: '✅',
                 });
             } else {
                 console.error("Failed to decrypt user data");
