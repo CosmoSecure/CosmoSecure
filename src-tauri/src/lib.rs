@@ -2,7 +2,7 @@
 use crate::db::db_connect::{
     add_password_entry, authenticate_user, check_username_availability, delete_password_entry,
     get_password_entries, reloadapp_update, tauri_add_user, update_name_username,
-    update_password_entry,
+    update_password_entry, update_user_password,
 };
 use crate::db::token;
 use config::delete_config;
@@ -11,8 +11,8 @@ use openurl::open_url;
 pub mod config;
 mod db;
 pub mod env_var;
-mod secure;
 mod openurl;
+mod secure;
 
 #[tauri::command]
 fn save_token_command(token: String, user: String) {
@@ -58,6 +58,7 @@ pub async fn run() {
             update_name_username,
             reloadapp_update,
             delete_config,
+            update_user_password,
             open_url,
         ])
         .setup(|_app| {
