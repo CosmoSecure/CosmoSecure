@@ -8,7 +8,6 @@ import { ThemeToggle } from "../themes";
 import { decryptUser } from './auth/token_secure';
 import { VisibilityOffTwoToneIcon, VisibilityTwoToneIcon } from './auth/passCSS';
 import { reloadApp_Update } from "./reloadApp_Update";
-import { useNavigate } from "react-router-dom";
 import { toast } from 'sonner';
 
 function debounce(func: (...args: any[]) => void, wait: number) {
@@ -24,7 +23,7 @@ const Settings = () => {
     const [newName, setNewName] = useState('');
     const [newUsername, setNewUsername] = useState('');
     const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
-    const [usernameChangeCount, setUsernameChangeCount] = useState(0);
+    // const [usernameChangeCount, setUsernameChangeCount] = useState(0);
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -32,8 +31,8 @@ const Settings = () => {
     const [newPasswordVisible, setNewPasswordVisible] = useState(false);
     const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
     const [passwordsMatch, setPasswordsMatch] = useState(true);
-    const [showReloginMessage, setShowReloginMessage] = useState(false);
-    const navigate = useNavigate();
+    const [deleteUsername, setDeleteUsername] = useState('');
+    const [deletePassword, setDeletePassword] = useState('');
 
     const toggleDropdown = (dropdownName: string) => {
         setActiveDropdown(activeDropdown === dropdownName ? null : dropdownName);
@@ -81,7 +80,6 @@ const Settings = () => {
                 await invoke("update_name_username", args);
                 alert("Name and/or Username updated successfully!");
                 await reloadApp_Update(user.user_id);
-                setShowReloginMessage(true);
 
                 // Show notification to relogin
                 toast('Changes applied. Please relogin to apply changes.', {
@@ -171,6 +169,55 @@ const Settings = () => {
         } catch (error) {
             console.error("Error updating password:", error);
             toast.error(`Error updating password: ${error}`, {
+                style: {
+                    background: '#f8d7da',
+                    color: '#721c24',
+                    border: '1px solid #f5c6cb',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    fontSize: '16px',
+                },
+                icon: '❌',
+            });
+        }
+    };
+
+    const handleDeleteAccount = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const args = { username: deleteUsername, password: deletePassword };
+            const response = await invoke<string>("user_delete", args);
+            if (response === "Invalid credentials.") {
+                toast.error("Invalid username or password.", {
+                    style: {
+                        background: '#f8d7da',
+                        color: '#721c24',
+                        border: '1px solid #f5c6cb',
+                        borderRadius: '8px',
+                        padding: '16px',
+                        fontSize: '16px',
+                    },
+                    icon: '❌',
+                });
+                return;
+            }
+            toast.success("Account deleted successfully!", {
+                style: {
+                    background: '#d4edda',
+                    color: '#155724',
+                    border: '1px solid #c3e6cb',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    fontSize: '16px',
+                },
+                icon: '✅',
+            });
+            (async () => {
+                await invoke('delete_config');
+            })();
+        } catch (error) {
+            console.error("Error deleting account:", error);
+            toast.error(`Error deleting account: ${error}`, {
                 style: {
                     background: '#f8d7da',
                     color: '#721c24',
@@ -510,7 +557,7 @@ const Settings = () => {
 
                 {/* Delete Account Section */}
                 <div
-                    className="hover:text-theme-text cursor-pointer p-6 bg-theme-secondary rounded-lg h-auto shadow-md transition duration-300 ease-in-out hover:shadow-lg hover:scale-[101%]"
+                    className="hover:text-theme-text cursor-pointer h-auto bg-theme-secondary-transparent rounded-lg p-6 shadow-md transition duration-300 ease-in-out hover:shadow-lg hover:scale-[101%]"
                     onClick={() => toggleDropdown("deleteAccount")}
                 >
                     <div className="flex items-center justify-between">
@@ -522,12 +569,12 @@ const Settings = () => {
                         )}
                     </div>
                     <div
-                        className={`transition-[max-height] duration-300 ease-in-out overflow-hidden flex justify-center ${activeDropdown === "deleteAccount" ? "max-h-[300px]" : "max-h-0"
+                        className={`transition-[max-height] duration-300 ease-in-out overflow-hidden ${activeDropdown === "deleteAccount" ? "max-h-[300px]" : "max-h-0"
                             }`}
                         onClick={stopPropagation}
                     >
                         {activeDropdown === "deleteAccount" && (
-                            <form className="flex flex-col gap-4 mt-4 w-3/4">
+                            <form className="flex flex-col gap-4 mt-4" onSubmit={handleDeleteAccount}>
                                 <TextField
                                     style={{ width: '30%' }}
                                     label="Username"
@@ -538,24 +585,37 @@ const Settings = () => {
                                     InputLabelProps={{
                                         style: { color: 'var(--theme-text)' },
                                     }}
+                                    value={deleteUsername}
+                                    onChange={(e) => setDeleteUsername(e.target.value)}
                                 />
-                                <TextField
-                                    style={{ width: '30%' }}
-                                    label="Password"
-                                    type="password"
-                                    variant="standard"
-                                    InputProps={{
-                                        style: { color: 'var(--theme-text)' },
-                                    }}
-                                    InputLabelProps={{
-                                        style: { color: 'var(--theme-text)' },
-                                    }}
-                                />
+                                <div className="relative">
+                                    <TextField
+                                        style={{ width: '30%' }}
+                                        label="Password"
+                                        type={passwordVisible ? "text" : "password"}
+                                        variant="standard"
+                                        InputProps={{
+                                            style: { color: 'var(--theme-text)' },
+                                        }}
+                                        InputLabelProps={{
+                                            style: { color: 'var(--theme-text)' },
+                                        }}
+                                        value={deletePassword}
+                                        onChange={(e) => setDeletePassword(e.target.value)}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={togglePasswordVisibility}
+                                        className="absolute inset-y-0 px-3 py-2 text-gray-400"
+                                    >
+                                        {passwordVisible ? <VisibilityOffTwoToneIcon /> : <VisibilityTwoToneIcon />}
+                                    </button>
+                                </div>
                                 <Button
                                     type="submit"
                                     variant="contained"
-                                    color="secondary"
-                                    className="py-2 px-4 w-fit bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-100 ease-in-out transform hover:scale-[101%] shadow-md hover:shadow-lg"
+                                    color="error"
+                                    className="py-2 px-4 w-fit bg-red-500 text-white rounded-md hover:bg-red-700 transition duration-100 ease-in-out transform hover:scale-[101%] shadow-md hover:shadow-lg"
                                 >
                                     Delete Account
                                 </Button>

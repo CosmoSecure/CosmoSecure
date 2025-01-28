@@ -16,6 +16,22 @@ pub struct User {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct DeletedUser {
+    #[serde(rename = "ui")]
+    pub user_id: String, // Unique identifier for the user
+    #[serde(rename = "un")]
+    pub username: String, // Encrypted username
+    #[serde(rename = "n")]
+    pub name: String, // Name
+    #[serde(rename = "hp")]
+    pub hashed_password: String, // Hashed password for authentication
+    #[serde(rename = "e")]
+    pub email: String, // Email address
+    #[serde(rename = "d")]
+    pub deleted_at: DateTime, // Account creation timestamp
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PasswordEntry {
     pub entry_id: String,     // Unique identifier for the entry
     pub account_name: String, // Encrypted account name
