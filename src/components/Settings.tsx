@@ -8,7 +8,6 @@ import { ThemeToggle } from "../themes";
 import { decryptUser } from './auth/token_secure';
 import { VisibilityOffTwoToneIcon, VisibilityTwoToneIcon } from './auth/passCSS';
 import { reloadApp_Update } from "./reloadApp_Update";
-import { useNavigate } from "react-router-dom";
 import { toast } from 'sonner';
 
 function debounce(func: (...args: any[]) => void, wait: number) {
@@ -24,7 +23,7 @@ const Settings = () => {
     const [newName, setNewName] = useState('');
     const [newUsername, setNewUsername] = useState('');
     const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
-    const [usernameChangeCount, setUsernameChangeCount] = useState(0);
+    // const [usernameChangeCount, setUsernameChangeCount] = useState(0);
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -32,10 +31,8 @@ const Settings = () => {
     const [newPasswordVisible, setNewPasswordVisible] = useState(false);
     const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
     const [passwordsMatch, setPasswordsMatch] = useState(true);
-    const [showReloginMessage, setShowReloginMessage] = useState(false);
     const [deleteUsername, setDeleteUsername] = useState('');
     const [deletePassword, setDeletePassword] = useState('');
-    const navigate = useNavigate();
 
     const toggleDropdown = (dropdownName: string) => {
         setActiveDropdown(activeDropdown === dropdownName ? null : dropdownName);
@@ -83,7 +80,6 @@ const Settings = () => {
                 await invoke("update_name_username", args);
                 alert("Name and/or Username updated successfully!");
                 await reloadApp_Update(user.user_id);
-                setShowReloginMessage(true);
 
                 // Show notification to relogin
                 toast('Changes applied. Please relogin to apply changes.', {
