@@ -1,4 +1,4 @@
-use crate::db::schema::db_schema::{PasswordEntries, PasswordEntry, User};
+use crate::db::schema::db_schema::{DeletedUser, PasswordEntries, PasswordEntry, User};
 use crate::db::token::generate_token;
 use crate::env_var::{get_env_key, get_env_vars};
 // use crate::secure::encrypt;
@@ -388,6 +388,59 @@ pub async fn add_user(
             eprintln!("Error adding user to MongoDB: {}", e); // Log error
             Err(e)
         }
+    }
+}
+
+#[tauri::command]
+pub async fn user_delete(
+    state: State<'_, MongoClientState>,
+    username: String,
+    password: String,
+) -> Result<(), String> {
+    let users_collection = state
+        .get_database("password_manager")
+        .collection::<User>("users");
+    let deleted_users_collection = state
+        .get_database("password_manager")
+        .collection::<DeletedUser>("deleted_users");
+
+    match users_collection
+        .find_one(doc! { "username": &username })
+        .await
+    {
+        Ok(Some(user)) => {
+            // Verify the password
+            if !verify(&password, &user.hashed_password).unwrap_or(false) {
+                return Err("Invalid credentials.".to_string());
+            }
+
+            // Create a DeletedUser entry
+            let deleted_user = DeletedUser {
+                user_id: user.user_id.clone(),
+                username: user.username.clone(),
+                name: user.name.clone(),
+                hashed_password: user.hashed_password.clone(),
+                email: user.email.clone(),
+                deleted_at: DateTime::now(),
+            };
+
+            // Insert the deleted user into the deleted_users collection
+            match deleted_users_collection.insert_one(deleted_user).await {
+                Ok(_) => {
+                    // Delete the user from the users collection
+                    match users_collection
+                        .delete_one(doc! { "username": &username })
+                        .await
+                    {
+                        Ok(_) => Ok(()),
+                        Err(e) => Err(format!("Error deleting user: {}", e)),
+                    }
+                }
+                Err(e) => Err(format!("Error inserting deleted user: {}", e)),
+            }
+        }
+        Ok(None) => Err("Invalid credentials.".to_string()),
+        Err(e) => Err(format!("Error fetching user: {}", e)),
     }
 }
 

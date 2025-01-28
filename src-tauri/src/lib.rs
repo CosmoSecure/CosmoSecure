@@ -2,7 +2,7 @@
 use crate::db::db_connect::{
     add_password_entry, authenticate_user, check_username_availability, delete_password_entry,
     get_password_entries, reloadapp_update, tauri_add_user, update_name_username,
-    update_password_entry, update_user_password,
+    update_password_entry, update_user_password, user_delete,
 };
 use crate::db::token;
 use config::delete_config;
@@ -59,6 +59,7 @@ pub async fn run() {
             reloadapp_update,
             delete_config,
             update_user_password,
+            user_delete,
             open_url,
         ])
         .setup(|_app| {
