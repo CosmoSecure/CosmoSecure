@@ -52,7 +52,7 @@ const Navigate: React.FC<{ toggleProfileVisibility: () => void }> = ({ togglePro
                             onClick={() => navigate(route.path)}
                             className="flex items-center justify-normal space-x-4 text-theme-text h-[40px] w-full rounded-md pl-[3px] bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
                         >
-                            <div className="text-3xl pl-[2px]">
+                            <div className="text-3xl pl-[2px] flex justify-center items-center">
                                 {route.icon ? route.icon : <span>🔗</span>}
                             </div>
                             <div className="hidden font-bold w-full pr-6 justify-center text-lg group-hover:inline-block">
@@ -72,7 +72,7 @@ const Navigate: React.FC<{ toggleProfileVisibility: () => void }> = ({ togglePro
                             onClick={() => navigate(route.path)}
                             className="flex items-center justify-normal space-x-4 text-theme-text h-[40px] w-full rounded-md pl-[3px] bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
                         >
-                            <div className="text-3xl pl-[2px]">
+                            <div className="text-3xl pl-[2px] flex justify-center items-center">
                                 {route.icon ? route.icon : <span>🔗</span>}
                             </div>
                             <div className="hidden font-bold w-full pr-6 justify-center text-lg group-hover:inline-block">
