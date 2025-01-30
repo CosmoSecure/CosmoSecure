@@ -1,0 +1,26 @@
+.animated-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--theme-accent) var(--theme-primary);
+    transition: scrollbar-color 0.3s ease-in-out, scrollbar-width 0.3s ease-in-out;
+    border-radius: 10px; /* Add border-radius to the scrollbar */
+}
+
+.animated-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    transition: width 0.3s ease-in-out;
+    border-radius: 10px; /* Add border-radius to the scrollbar */
+}
+
+.animated-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--theme-accent);
+    border-radius: 10px;
+    transition: background-color 0.3s ease-in-out;
+}
+
+.animated-scrollbar:hover::-webkit-scrollbar {
+    width: 12px;
+}
+
+.animated-scrollbar:hover::-webkit-scrollbar-thumb {
+    background-color: var(--theme-accent-dark);
+}
