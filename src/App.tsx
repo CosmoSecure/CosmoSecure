@@ -45,6 +45,17 @@ function App() {
     // Apply the saved theme or default to 'light'
     const savedTheme = (localStorage.getItem('theme') as ThemeKeys) || 'light';
     applyTheme(themes[savedTheme]);
+
+    // Disable right-click context menu
+    // const handleContextMenu = (e: MouseEvent) => {
+    //   e.preventDefault();
+    // };
+
+    // document.addEventListener('contextmenu', handleContextMenu);
+
+    // return () => {
+    //   document.removeEventListener('contextmenu', handleContextMenu);
+    // };
   }, []);
 
   if (isAuthenticated === null) {
