@@ -1,3 +1,4 @@
+import './scroll.css';
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -248,7 +249,7 @@ const Settings = () => {
     return (
         <div className="bg-theme-background h-full p-8 flex flex-col justify-center items-center text-theme-accent">
             {/* Settings Container */}
-            <div className="bg-theme-primary p-6 rounded-lg overflow-auto shadow-theme-primary-transparent h-[95%] w-[95%] flex flex-col gap-6 transition duration-300 ease-in-out transform">
+            <div className="bg-theme-primary p-6 rounded-lg overflow-auto shadow-theme-primary-transparent h-[95%] w-[95%] flex flex-col gap-6 transition duration-300 ease-in-out transform animated-scrollbar">
                 {/* Name & Username Update/Change Section */}
                 <div
                     className="hover:text-theme-text cursor-pointer h-auto bg-theme-secondary-transparent rounded-lg p-6 shadow-md transition duration-300 ease-in-out hover:shadow-lg hover:scale-[101%]"
