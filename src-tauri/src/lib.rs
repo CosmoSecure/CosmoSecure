@@ -5,12 +5,14 @@ use crate::db::db_connect::{
     update_password_entry, update_user_password, user_delete,
 };
 use crate::db::token;
+use crate::extensions::pass_strength::check_password_strength;
 use config::delete_config;
 use openurl::open_url;
 
 pub mod config;
 mod db;
 pub mod env_var;
+mod extensions;
 mod openurl;
 mod secure;
 
@@ -60,6 +62,7 @@ pub async fn run() {
             delete_config,
             update_user_password,
             user_delete,
+            check_password_strength,
             open_url,
         ])
         .setup(|_app| {
