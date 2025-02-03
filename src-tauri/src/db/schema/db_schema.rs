@@ -5,13 +5,21 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
+    #[serde(rename = "ui")]
     pub user_id: String,              // Unique identifier for the user
+    #[serde(rename = "un")]
     pub username: String,             // Encrypted username
+    #[serde(rename = "n")]
     pub name: String,                 // Name
+    #[serde(rename = "hp")]
     pub hashed_password: String,      // Hashed password for authentication
+    #[serde(rename = "e")]
     pub email: String,                // Email address
+    #[serde(rename = "c")]
     pub created_at: DateTime,         // Account creation timestamp
+    #[serde(rename = "l")]
     pub last_login: Option<DateTime>, // Last login timestamp
+    #[serde(rename = "uc")]
     pub username_change_count: u8,    // Username change count
 }
 
