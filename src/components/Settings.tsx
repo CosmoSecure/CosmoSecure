@@ -32,6 +32,7 @@ const Settings = () => {
     const [newPasswordVisible, setNewPasswordVisible] = useState(false);
     const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
     const [passwordsMatch, setPasswordsMatch] = useState(true);
+    const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: '' });
     const [deleteUsername, setDeleteUsername] = useState('');
     const [deletePassword, setDeletePassword] = useState('');
 
@@ -65,6 +66,23 @@ const Settings = () => {
     useEffect(() => {
         setPasswordsMatch(newPassword === confirmPassword);
     }, [newPassword, confirmPassword]);
+
+    useEffect(() => {
+        const checkPasswordStrength = async (password: string) => {
+            try {
+                const result = await invoke<{ score: number, feedback: string }>('check_password_strength', { password });
+                setPasswordStrength(result);
+            } catch (error) {
+                console.error('Failed to check password strength:', error);
+            }
+        };
+
+        if (newPassword) {
+            checkPasswordStrength(newPassword);
+        } else {
+            setPasswordStrength({ score: 0, feedback: '' });
+        }
+    }, [newPassword]);
 
     const handleUpdateNameUsername = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -246,6 +264,24 @@ const Settings = () => {
         }
     };
 
+    // Password Strength Color
+    const getPasswordStrengthColor = (score: number) => {
+        switch (score) {
+            case 0:
+                return 'red';
+            case 1:
+                return 'orange';
+            case 2:
+                return 'yellow';
+            case 3:
+                return 'lightgreen';
+            case 4:
+                return 'green';
+            default:
+                return 'gray';
+        }
+    };
+
     return (
         <div className="bg-theme-background h-full p-8 flex flex-col justify-center items-center text-theme-accent">
             {/* Settings Container */}
@@ -342,7 +378,7 @@ const Settings = () => {
                         )}
                     </div>
                     <div
-                        className={`transition-[max-height] duration-300 ease-in-out overflow-hidden ${activeDropdown === "passwordChange" ? "max-h-[300px]" : "max-h-0"
+                        className={`transition-[max-height] duration-300 ease-in-out overflow-hidden ${activeDropdown === "passwordChange" ? "max-h-[400px]" : "max-h-0"
                             }`}
                         onClick={stopPropagation}
                     >
@@ -389,10 +425,22 @@ const Settings = () => {
                                     <button
                                         type="button"
                                         onClick={toggleNewPasswordVisibility}
-                                        className="absolute inset-y-0 px-3 py-2 text-gray-400"
+                                        className="absolute inset-y-0 px-3 py-2 mb-5 text-gray-400"
                                     >
                                         {newPasswordVisible ? <VisibilityOffTwoToneIcon /> : <VisibilityTwoToneIcon />}
                                     </button>
+                                    {newPassword && (
+                                        <div className="mt-2">
+                                            <div
+                                                className="h-2 rounded-full"
+                                                style={{
+                                                    backgroundColor: getPasswordStrengthColor(passwordStrength.score),
+                                                    width: passwordStrength.score === 0 ? '4%' : `${(passwordStrength.score / 4) * 30}%`,
+                                                }}
+                                            />
+                                            <p className="mt-2 text-sm text-theme-text font-bold">{passwordStrength.feedback}</p>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="relative">
                                     <TextField
