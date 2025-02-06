@@ -5,6 +5,8 @@ import CakeIcon from '@mui/icons-material/Cake';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import PasswordIcon from '@mui/icons-material/Password';
 import { invoke } from '@tauri-apps/api/core';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
 
 // Function to fetch the total number of passwords
 const fetchTotalPasswords = async (userId: string): Promise<number> => {
@@ -22,6 +24,8 @@ const Dashboard: React.FC = () => {
     const [joinDate, setJoinDate] = useState('');
     const [email, setEmail] = useState('');
     const [totalPasswords, setTotalPasswords] = useState(0);
+    const [generatedPassword, setGeneratedPassword] = useState('');
+    const [passLen, setPassLen] = useState(8);
 
     useEffect(() => {
         try {
@@ -48,6 +52,15 @@ const Dashboard: React.FC = () => {
         }
     }, []);
 
+    const handleGeneratePassword = async () => {
+        try {
+            const result = await invoke<{ password: string }>('generate_password', { length: passLen });
+            setGeneratedPassword(result.password);
+        } catch (error) {
+            console.error('Failed to generate password:', error);
+        }
+    };
+
     return (
         <div className="bg-theme-background flex flex-col h-full w-full items-center">
             {/* Profile Box */}
@@ -71,8 +84,40 @@ const Dashboard: React.FC = () => {
 
             {/* Dashboard Content */}
             <div className="bg-theme-background grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-4 py-6 w-full">
-                <div className="bg-theme-primary-transparent h-[200px] rounded-md flex justify-center items-center text-theme-text">
-                    <h1>Dashboard</h1>
+                <div className="bg-theme-primary-transparent h-[200px] rounded-md flex flex-col justify-center items-center text-theme-text p-4">
+                    <h1 className="text-2xl font-bold mb-4">Password Generator</h1>
+                    <TextField
+                        label="Password Length"
+                        type="number"
+                        value={passLen}
+                        onChange={(e) => setPassLen(parseInt(e.target.value))}
+                        variant="standard"
+                        InputProps={{
+                            style: { color: 'var(--theme-text)' },
+                        }}
+                        InputLabelProps={{
+                            style: { color: 'var(--theme-text)' },
+                        }}
+                        className="mb-4"
+                    />
+                    <Button onClick={handleGeneratePassword} variant="contained" color="primary">
+                        Generate Password
+                    </Button>
+                    {generatedPassword && (
+                        <TextField
+                            label="Generated Password"
+                            value={generatedPassword}
+                            variant="standard"
+                            InputProps={{
+                                readOnly: true,
+                                style: { color: 'var(--theme-text)' },
+                            }}
+                            InputLabelProps={{
+                                style: { color: 'var(--theme-text)' },
+                            }}
+                            className="mt-4"
+                        />
+                    )}
                 </div>
                 <div className="bg-theme-primary-transparent h-[200px] rounded-md flex justify-center items-center text-theme-text">
                     <h1>Dashboard</h1>
@@ -80,48 +125,7 @@ const Dashboard: React.FC = () => {
                 <div className="bg-theme-primary-transparent h-[200px] rounded-md flex justify-center items-center text-theme-text">
                     <h1>Dashboard</h1>
                 </div>
-                <div className="bg-theme-primary-transparent h-[200px] rounded-md flex justify-center items-center text-theme-text">
-                    <h1>Dashboard</h1>
-                </div>
-                <div className="bg-theme-primary-transparent h-[200px] rounded-md flex justify-center items-center text-theme-text">
-                    <h1>Dashboard</h1>
-                </div>
-                <div className="bg-theme-primary-transparent h-[200px] rounded-md flex justify-center items-center text-theme-text">
-                    <h1>Dashboard</h1>
-                </div>
-                <div className="bg-theme-primary-transparent h-[200px] rounded-md flex justify-center items-center text-theme-text">
-                    <h1>Dashboard</h1>
-                </div>
-                <div className="bg-theme-primary-transparent h-[200px] rounded-md flex justify-center items-center text-theme-text">
-                    <h1>Dashboard</h1>
-                </div>
-                <div className="bg-theme-primary-transparent h-[200px] rounded-md flex justify-center items-center text-theme-text">
-                    <h1>Dashboard</h1>
-                </div>
-                <div className="bg-theme-primary-transparent h-[200px] rounded-md flex justify-center items-center text-theme-text">
-                    <h1>Dashboard</h1>
-                </div>
-                <div className="bg-theme-primary-transparent h-[200px] rounded-md flex justify-center items-center text-theme-text">
-                    <h1>Dashboard</h1>
-                </div>
-                <div className="bg-theme-primary-transparent h-[200px] rounded-md flex justify-center items-center text-theme-text">
-                    <h1>Dashboard</h1>
-                </div>
-                <div className="bg-theme-primary-transparent h-[200px] rounded-md flex justify-center items-center text-theme-text">
-                    <h1>Dashboard</h1>
-                </div>
-                <div className="bg-theme-primary-transparent h-[200px] rounded-md flex justify-center items-center text-theme-text">
-                    <h1>Dashboard</h1>
-                </div>
-                <div className="bg-theme-primary-transparent h-[200px] rounded-md flex justify-center items-center text-theme-text">
-                    <h1>Dashboard</h1>
-                </div>
-                <div className="bg-theme-primary-transparent h-[200px] rounded-md flex justify-center items-center text-theme-text">
-                    <h1>Dashboard</h1>
-                </div>
-                <div className="bg-theme-primary-transparent h-[200px] rounded-md flex justify-center items-center text-theme-text">
-                    <h1>Dashboard</h1>
-                </div>
+                {/* Add more dashboard content as needed */}
             </div>
         </div>
     );
