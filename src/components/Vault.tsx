@@ -24,6 +24,7 @@ const Vault = () => {
                 if (user) {
                     const userId = user.user_id; // Use user_id instead of username
                     const entries: PasswordEntry[] = await invoke('get_password_entries', { userId });
+                    sessionStorage.setItem('p_count', entries.length.toString());
                     setPasswords(entries);
                 } else {
                     console.error("Failed to decrypt user data");
@@ -57,6 +58,11 @@ const Vault = () => {
                     const entry_id = await invoke('add_password_entry', { userId, accountName: accountName, username, password });
                     newEntry.entry_id = entry_id as string;
                     setPasswords([...passwords, newEntry]);
+
+                    // Increment the password count in sessionStorage
+                    const passwordCount = sessionStorage.getItem('p_count');
+                    const newCount = passwordCount ? parseInt(passwordCount) + 1 : 1;
+                    sessionStorage.setItem('p_count', newCount.toString());
                 }
                 setAccountName('');
                 setUsername('');
@@ -86,6 +92,11 @@ const Vault = () => {
                 const userId = user.user_id; // Use user_id instead of username
                 await invoke('delete_password_entry', { userId, entryId });
                 setPasswords(passwords.filter(entry => entry.entry_id !== entryId));
+
+                // Decrement the password count in sessionStorage
+                const passwordCount = sessionStorage.getItem('p_count');
+                const newCount = passwordCount ? parseInt(passwordCount) - 1 : 0;
+                sessionStorage.setItem('p_count', newCount.toString());
             } else {
                 console.error("Failed to decrypt user data");
             }

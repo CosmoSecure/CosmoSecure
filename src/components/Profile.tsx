@@ -5,18 +5,6 @@ import CakeIcon from '@mui/icons-material/Cake';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import PasswordIcon from '@mui/icons-material/Password';
-import { invoke } from '@tauri-apps/api/core';
-
-// Function to fetch the total number of passwords
-const fetchTotalPasswords = async (userId: string): Promise<number> => {
-    try {
-        const entries: { entry_id: string }[] = await invoke('get_password_entries', { userId });
-        return entries.length;
-    } catch (error) {
-        console.error('Error fetching total passwords:', error);
-        return 0;
-    }
-};
 
 const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisible, onClose }) => {
     const [username, setUsername] = useState('');
@@ -25,8 +13,6 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
     const [totalPasswords, setTotalPasswords] = useState(0);
 
     useEffect(() => {
-        let intervalId: NodeJS.Timeout | null = null;
-
         const initializeData = async () => {
             try {
                 const user = decryptUser();
@@ -40,19 +26,9 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
 
                     console.log('User data decrypted:', user);
 
-                    // Fetch the initial total number of passwords
-                    const initialTotal = await fetchTotalPasswords(user.username);
-                    setTotalPasswords(initialTotal);
-
-                    // Set up an interval to fetch the total passwords every 1 seconds
-                    intervalId = setInterval(async () => {
-                        try {
-                            const updatedTotal = await fetchTotalPasswords(user.username);
-                            setTotalPasswords(updatedTotal);
-                        } catch (error) {
-                            console.error('Error fetching total passwords in interval:', error);
-                        }
-                    }, 1000);
+                    // Get the total number of passwords from sessionStorage
+                    const passwordCount = sessionStorage.getItem('p_count');
+                    setTotalPasswords(passwordCount ? parseInt(passwordCount) : 0);
                 } else {
                     console.error('No user found in decrypted data');
                 }
@@ -63,12 +39,14 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
 
         initializeData();
 
-        // Cleanup interval on component unmount
-        return () => {
-            if (intervalId) {
-                clearInterval(intervalId);
-            }
-        };
+        // Set up interval to refresh p_count every 2 seconds
+        const intervalId = setInterval(() => {
+            const passwordCount = sessionStorage.getItem('p_count');
+            setTotalPasswords(passwordCount ? parseInt(passwordCount) : 0);
+        }, 2000);
+
+        // Clean up interval on component unmount
+        return () => clearInterval(intervalId);
     }, []);
 
     return (
