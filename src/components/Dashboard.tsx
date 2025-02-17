@@ -19,11 +19,24 @@ const fetchTotalPasswords = async (userId: string): Promise<number> => {
     }
 };
 
+// Function to count weak passwords
+const countWeakPasswords = async (userId: string): Promise<number> => {
+    try {
+        const entries: { entry_id: string, password: string }[] = await invoke('get_password_entries', { userId });
+        const weakPasswords = entries.filter(entry => entry.password.length < 8); // Example criteria for weak passwords
+        return weakPasswords.length;
+    } catch (error) {
+        console.error('Error counting weak passwords:', error);
+        return 0;
+    }
+};
+
 const Dashboard: React.FC = () => {
     const [username, setUsername] = useState('');
     const [joinDate, setJoinDate] = useState('');
     const [email, setEmail] = useState('');
     const [totalPasswords, setTotalPasswords] = useState(0);
+    const [weakPasswords, setWeakPasswords] = useState(0);
     const [generatedPassword, setGeneratedPassword] = useState('');
     const [passLen, setPassLen] = useState(8);
 
@@ -44,12 +57,38 @@ const Dashboard: React.FC = () => {
                 }).catch((error) => {
                     console.error('Error fetching total passwords:', error);
                 });
+
+                // Count weak passwords
+                countWeakPasswords(user.username).then((count) => {
+                    setWeakPasswords(count);
+                }).catch((error) => {
+                    console.error('Error counting weak passwords:', error);
+                });
             } else {
                 console.error('No user found in decrypted data');
             }
         } catch (error) {
             console.error('Error decrypting or parsing user data:', error);
         }
+    }, []);
+
+    useEffect(() => {
+        const initializeData = async () => {
+            // Get the total number of passwords from sessionStorage
+            const passwordCount = sessionStorage.getItem('p_count');
+            setTotalPasswords(passwordCount ? parseInt(passwordCount) : 0);
+        };
+
+        initializeData();
+
+        // Set up interval to refresh p_count every 2 seconds
+        const intervalId = setInterval(() => {
+            const passwordCount = sessionStorage.getItem('p_count');
+            setTotalPasswords(passwordCount ? parseInt(passwordCount) : 0);
+        }, 2000);
+
+        // Clean up interval on component unmount
+        return () => clearInterval(intervalId);
     }, []);
 
     const handleGeneratePassword = async () => {
@@ -118,6 +157,20 @@ const Dashboard: React.FC = () => {
                             className="mt-4"
                         />
                     )}
+                </div>
+                <div className="bg-theme-primary-transparent h-[200px] rounded-md flex flex-col justify-center items-center text-theme-text p-4">
+                    <h1 className="text-2xl font-bold mb-4">Weak Passwords</h1>
+                    <p className="text-xl">{weakPasswords}</p>
+                </div>
+                <div className="bg-theme-primary-transparent h-[200px] rounded-md flex flex-col justify-center items-center text-theme-text p-4">
+                    <h1 className="text-2xl font-bold mb-4">Password Storage</h1>
+                    <div className="w-full bg-gray-300 rounded-full h-4">
+                        <div
+                            className="bg-ultra-violet h-4 rounded-full"
+                            style={{ width: `${(totalPasswords / 25) * 100}%` }}
+                        ></div>
+                    </div>
+                    <p className="text-xl mt-2">{totalPasswords} / 25</p>
                 </div>
                 <div className="bg-theme-primary-transparent h-[200px] rounded-md flex justify-center items-center text-theme-text">
                     <h1>Dashboard</h1>
