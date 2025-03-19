@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { toast } from 'sonner';
-import { TextField } from '@mui/material';
+import { TextField, Tooltip } from '@mui/material';
+import Zoom from '@mui/material/Zoom';
+import InfoIcon from '@mui/icons-material/Info';
 
 const PasswordGenerator: React.FC = () => {
     const [generatedPassword, setGeneratedPassword] = useState('');
@@ -40,6 +42,34 @@ const PasswordGenerator: React.FC = () => {
                     <li>1 Special Character (!@#$%^&*)</li>
                 </ul>
             </div> */}
+
+            {/* Header with Info Tooltip */}
+            <div className="flex items-center text-theme-text text-2xl font-bold text-center mb-6">
+                🔐 Password Generator
+                <Tooltip
+                    title={
+                        <div className="text-sm">
+                            ⚡ Your password will contain at least:
+                            <ul className="list-disc ml-4 mt-1">
+                                <li>1 Uppercase Letter (A-Z)</li>
+                                <li>1 Lowercase Letter (a-z)</li>
+                                <li>1 Number (0-9)</li>
+                                <li>1 Special Character (!@#$%^&*)</li>
+                            </ul>
+                        </div>
+                    }
+                    arrow
+                    placement="right"
+                    slotProps={{
+                        transition: { timeout: 300 },
+                    }}
+                    slots={{
+                        transition: Zoom,
+                    }}
+                >
+                    <InfoIcon className="ml-4 mb-2 text-theme-primary" fontSize="medium" />
+                </Tooltip>
+            </div>
 
             {/* Password Length Input */}
             <div className="w-full mb-5">
