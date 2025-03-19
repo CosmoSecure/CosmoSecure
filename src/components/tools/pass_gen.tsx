@@ -27,22 +27,6 @@ const PasswordGenerator: React.FC = () => {
 
     return (
         <div className="w-full max-w-md h-min p-6 bg-theme-accent shadow-xl rounded-lg flex flex-col items-center">
-            {/* Header with spacing */}
-            <div className="text-theme-text text-2xl font-bold text-center mb-6">
-                🔐 Password Generator
-            </div>
-
-            {/* Password Strength Note */}
-            {/* <div className="text-sm text-theme-text bg-theme-secondary-transparent px-4 py-2 rounded-md mb-9 shadow-sm">
-                ⚡ Your password will contain at least:
-                <ul className="list-disc ml-4 mt-1">
-                    <li>1 Uppercase Letter (A-Z)</li>
-                    <li>1 Lowercase Letter (a-z)</li>
-                    <li>1 Number (0-9)</li>
-                    <li>1 Special Character (!@#$%^&*)</li>
-                </ul>
-            </div> */}
-
             {/* Header with Info Tooltip */}
             <div className="flex items-center text-theme-text text-2xl font-bold text-center mb-6">
                 🔐 Password Generator
