@@ -10,6 +10,7 @@ import Dashboard from './Dashboard';
 import Settings from './Settings';
 import Profile from './Profile';
 import Home from './Home';
+import Tools from './Tools';
 
 export {
     Intro,
@@ -27,4 +28,5 @@ export {
     Settings,
     Profile,
     Home,
+    Tools,
 };
