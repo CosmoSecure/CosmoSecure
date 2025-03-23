@@ -1,8 +1,24 @@
 import React, { useState } from 'react';
+import List from '@mui/material/List';
+import ListSubheader from '@mui/material/ListSubheader';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Collapse from '@mui/material/Collapse';
+import VpnKeyIcon from '@mui/icons-material/VpnKey';
+import BuildIcon from '@mui/icons-material/Build';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import StarBorder from '@mui/icons-material/StarBorder';
 import { PasswordGenerator } from './tools';
 
 const Tools: React.FC = () => {
     const [selectedTool, setSelectedTool] = useState<string | null>(null);
+    const [open, setOpen] = useState(true); // State for collapsible section
+
+    const handleClick = () => {
+        setOpen(!open);
+    };
 
     const renderContent = () => {
         switch (selectedTool) {
@@ -21,38 +37,100 @@ const Tools: React.FC = () => {
 
     return (
         <div className="bg-theme-background h-full p-8 grid grid-cols-4 gap-4 text-theme-accent">
-            {/* Sidebar */}
-            <div className="col-span-1 flex flex-col items-center bg-theme-primary-transparent p-4 rounded-md">
-                <h2 className="text-3xl font-bold mb-4">Tools</h2>
-                <div className="space-y-4 w-2/3">
-                    <button
-                        className={`w-full px-4 py-2 font-semibold shadow-md rounded transition-all duration-300 ease-in-out transform ${selectedTool === 'Password Generator'
-                            ? 'bg-theme-secondary text-theme-text scale-105'
-                            : 'bg-theme-accent text-theme-text hover:bg-theme-accent-hover hover:scale-105 hover:shadow-lg'
-                            }`}
+            {/* Sidebar using Material-UI List */}
+            <div className="col-span-1 bg-theme-primary-transparent p-4 rounded-md">
+                <List
+                    sx={{ width: '100%' }}
+                    component="nav"
+                    aria-labelledby="nested-list-subheader"
+                    subheader={
+                        <ListSubheader
+                            component="h3"
+                            id="nested-list-subheader"
+                            sx={{ bgcolor: 'transparent', textAlign: 'center', fontWeight: 'bold', fontSize: '1.5rem' }}
+                        >
+                            Tools
+                        </ListSubheader>
+                    }
+                >
+                    {/* Password Generator */}
+                    <ListItemButton
                         onClick={() => setSelectedTool('Password Generator')}
+                        sx={{
+                            borderRadius: '8px',
+                            transition: 'all 0.3s ease-in-out',
+                            '&:hover': {
+                                bgcolor: 'rgba(0, 0, 0, 0.1)',
+                                transform: 'scale(1.05)'
+                            }
+                        }}
                     >
-                        Password Generator
-                    </button>
-                    <button
-                        className={`w-full px-4 py-2 font-semibold shadow-md rounded transition-all duration-300 ease-in-out transform ${selectedTool === 'Another Tool'
-                            ? 'bg-theme-secondary text-theme-text scale-105'
-                            : 'bg-theme-accent text-theme-text hover:bg-theme-accent-hover hover:scale-105 hover:shadow-lg'
-                            }`}
-                        onClick={() => setSelectedTool('Another Tool')}
+                        <ListItemIcon>
+                            <VpnKeyIcon />
+                        </ListItemIcon>
+                        <ListItemText primary="Password Generator" />
+                    </ListItemButton>
+
+                    {/* Collapsible More Tools Section */}
+                    <ListItemButton
+                        onClick={handleClick}
+                        sx={{
+                            borderRadius: '8px',
+                            transition: 'all 0.3s ease-in-out',
+                            '&:hover': {
+                                bgcolor: 'rgba(0, 0, 0, 0.1)',
+                                transform: 'scale(1.05)'
+                            }
+                        }}
                     >
-                        Another Tool
-                    </button>
-                    <button
-                        className={`w-full px-4 py-2 font-semibold shadow-md rounded transition-all duration-300 ease-in-out transform ${selectedTool === 'Another Tool 2'
-                            ? 'bg-theme-secondary text-theme-text scale-105'
-                            : 'bg-theme-accent text-theme-text hover:bg-theme-accent-hover hover:scale-105 hover:shadow-lg'
-                            }`}
-                        onClick={() => setSelectedTool('Another Tool 2')}
-                    >
-                        Another Tool
-                    </button>
-                </div>
+                        <ListItemIcon>
+                            <BuildIcon />
+                        </ListItemIcon>
+                        <ListItemText primary="More Tools" />
+                        {open ? <ExpandLess /> : <ExpandMore />}
+                    </ListItemButton>
+
+                    {/* Nested Tools inside Collapsible List */}
+                    <Collapse in={open} timeout="auto" unmountOnExit>
+                        <List component="div" disablePadding>
+                            <ListItemButton
+                                sx={{
+                                    pl: 4,
+                                    borderRadius: '8px',
+                                    transition: 'all 0.3s ease-in-out',
+                                    '&:hover': {
+                                        bgcolor: 'rgba(0, 0, 0, 0.1)',
+                                        transform: 'scale(1.05)'
+                                    }
+                                }}
+                                onClick={() => setSelectedTool('Another Tool')}
+                            >
+                                <ListItemIcon>
+                                    <StarBorder />
+                                </ListItemIcon>
+                                <ListItemText primary="Another Tool" />
+                            </ListItemButton>
+
+                            <ListItemButton
+                                sx={{
+                                    pl: 4,
+                                    borderRadius: '8px',
+                                    transition: 'all 0.3s ease-in-out',
+                                    '&:hover': {
+                                        bgcolor: 'rgba(0, 0, 0, 0.1)',
+                                        transform: 'scale(1.05)'
+                                    }
+                                }}
+                                onClick={() => setSelectedTool('Another Tool 2')}
+                            >
+                                <ListItemIcon>
+                                    <StarBorder />
+                                </ListItemIcon>
+                                <ListItemText primary="Another Tool 2" />
+                            </ListItemButton>
+                        </List>
+                    </Collapse>
+                </List>
             </div>
 
             {/* Main Content */}
