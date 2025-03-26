@@ -68,7 +68,9 @@ const Tools: React.FC = () => {
                         <ListItemIcon>
                             <VpnKeyIcon />
                         </ListItemIcon>
-                        <ListItemText primary="Password Generator" />
+                        <ListItemText
+                            primary={<span style={{ fontWeight: 'bold' }}>Password Generator</span>}
+                        />
                     </ListItemButton>
 
                     {/* Collapsible More Tools Section */}
@@ -86,7 +88,9 @@ const Tools: React.FC = () => {
                         <ListItemIcon>
                             <BuildIcon />
                         </ListItemIcon>
-                        <ListItemText primary="More Tools" />
+                        <ListItemText
+                            primary={<span style={{ fontWeight: 'bold' }}>More Tools</span>}
+                        />
                         {open ? <ExpandLess /> : <ExpandMore />}
                     </ListItemButton>
 
@@ -108,7 +112,9 @@ const Tools: React.FC = () => {
                                 <ListItemIcon>
                                     <StarBorder />
                                 </ListItemIcon>
-                                <ListItemText primary="Another Tool" />
+                                <ListItemText
+                                    primary={<span style={{ fontWeight: 'bold' }}>Another Tool</span>}
+                                />
                             </ListItemButton>
 
                             <ListItemButton
@@ -126,7 +132,9 @@ const Tools: React.FC = () => {
                                 <ListItemIcon>
                                     <StarBorder />
                                 </ListItemIcon>
-                                <ListItemText primary="Another Tool 2" />
+                                <ListItemText
+                                    primary={<span style={{ fontWeight: 'bold' }}>Another Tool 2</span>}
+                                />
                             </ListItemButton>
                         </List>
                     </Collapse>
