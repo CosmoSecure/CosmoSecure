@@ -7,8 +7,10 @@ use crate::db::db_connect::{
 use crate::db::token;
 use crate::extensions::pass_gen::generate_password;
 use crate::extensions::pass_strength::check_password_strength;
+use clap::Command;
 use config::delete_config;
 use openurl::open_url;
+use std::env;
 
 pub mod config;
 mod db;
@@ -34,6 +36,11 @@ fn delete_token_command(app_handle: tauri::AppHandle) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub async fn run() {
+    let _matches = Command::new("CosmoSecure")
+        .author("akash2061")
+        .version(env!("CARGO_PKG_VERSION"))
+        .get_matches();
+
     // Initialize the Tauri application
     let client_state = match db::db_connect::connect_rust_db().await {
         Ok(state) => state,

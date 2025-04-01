@@ -61,9 +61,10 @@ const Tools: React.FC = () => {
                             transition: 'all 0.3s ease-in-out',
                             '&:hover': {
                                 bgcolor: 'rgba(0, 0, 0, 0.1)',
-                                transform: 'scale(1.05)'
-                            }
+                                transform: 'scale(1.05)',
+                            },
                         }}
+                        className="hover:text-theme-text" // Use theme-text class for hover
                     >
                         <ListItemIcon>
                             <VpnKeyIcon />
@@ -81,9 +82,10 @@ const Tools: React.FC = () => {
                             transition: 'all 0.3s ease-in-out',
                             '&:hover': {
                                 bgcolor: 'rgba(0, 0, 0, 0.1)',
-                                transform: 'scale(1.05)'
-                            }
+                                transform: 'scale(1.05)',
+                            },
                         }}
+                        className="hover:text-theme-text" // Use theme-text class for hover
                     >
                         <ListItemIcon>
                             <BuildIcon />
@@ -104,9 +106,10 @@ const Tools: React.FC = () => {
                                     transition: 'all 0.3s ease-in-out',
                                     '&:hover': {
                                         bgcolor: 'rgba(0, 0, 0, 0.1)',
-                                        transform: 'scale(1.05)'
-                                    }
+                                        transform: 'scale(1.05)',
+                                    },
                                 }}
+                                className="hover:text-theme-text" // Use theme-text class for hover
                                 onClick={() => setSelectedTool('Another Tool')}
                             >
                                 <ListItemIcon>
@@ -124,9 +127,10 @@ const Tools: React.FC = () => {
                                     transition: 'all 0.3s ease-in-out',
                                     '&:hover': {
                                         bgcolor: 'rgba(0, 0, 0, 0.1)',
-                                        transform: 'scale(1.05)'
-                                    }
+                                        transform: 'scale(1.05)',
+                                    },
                                 }}
+                                className="hover:text-theme-text" // Use theme-text class for hover
                                 onClick={() => setSelectedTool('Another Tool 2')}
                             >
                                 <ListItemIcon>
