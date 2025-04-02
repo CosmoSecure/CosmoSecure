@@ -1,7 +1,6 @@
 import React from 'react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { DecorLogo } from '../assets'; // Adjust the path as necessary
-import { AssistWalkerOutlined } from '@mui/icons-material';
 
 interface DecorProps {
     pageName: string;
