@@ -1,6 +1,7 @@
 import React from 'react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { DecorLogo } from '../assets'; // Adjust the path as necessary
+import { AssistWalkerOutlined } from '@mui/icons-material';
 
 interface DecorProps {
     pageName: string;
@@ -9,15 +10,15 @@ interface DecorProps {
 const Decor: React.FC<DecorProps> = ({ pageName }) => {
 
     const minimizeWebview = async () => {
-        const currentWindow = await getCurrentWindow();
+        const currentWindow = getCurrentWindow();
         await currentWindow.minimize();
     };
     const maximizeWebview = async () => {
-        const currentWindow = await getCurrentWindow();
+        const currentWindow = getCurrentWindow();
         await currentWindow.maximize();
     };
     const closeWebview = async () => {
-        const currentWindow = await getCurrentWindow();
+        const currentWindow = getCurrentWindow();
         await currentWindow.close();
     };
 
