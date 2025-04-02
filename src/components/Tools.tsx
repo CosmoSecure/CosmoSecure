@@ -59,12 +59,15 @@ const Tools: React.FC = () => {
                         sx={{
                             borderRadius: '8px',
                             transition: 'all 0.3s ease-in-out',
+                            bgcolor: selectedTool === 'Password Generator' ? 'rgba(0, 0, 0, 0.1)' : 'transparent',
+                            transform: selectedTool === 'Password Generator' ? 'scale(1.05)' : 'none',
                             '&:hover': {
                                 bgcolor: 'rgba(0, 0, 0, 0.1)',
                                 transform: 'scale(1.05)',
                             },
                         }}
-                        className="hover:text-theme-text" // Use theme-text class for hover
+                        className={`${selectedTool === 'Password Generator' ? 'text-theme-text' : 'hover:text-theme-text'
+                            }`}
                     >
                         <ListItemIcon>
                             <VpnKeyIcon />
@@ -104,12 +107,15 @@ const Tools: React.FC = () => {
                                     pl: 4,
                                     borderRadius: '8px',
                                     transition: 'all 0.3s ease-in-out',
+                                    bgcolor: selectedTool === 'Another Tool' ? 'rgba(0, 0, 0, 0.1)' : 'transparent',
+                                    transform: selectedTool === 'Another Tool' ? 'scale(1.05)' : 'none',
                                     '&:hover': {
                                         bgcolor: 'rgba(0, 0, 0, 0.1)',
                                         transform: 'scale(1.05)',
                                     },
                                 }}
-                                className="hover:text-theme-text" // Use theme-text class for hover
+                                className={`${selectedTool === 'Another Tool' ? 'text-theme-text' : 'hover:text-theme-text'
+                                    }`}
                                 onClick={() => setSelectedTool('Another Tool')}
                             >
                                 <ListItemIcon>
@@ -125,12 +131,15 @@ const Tools: React.FC = () => {
                                     pl: 4,
                                     borderRadius: '8px',
                                     transition: 'all 0.3s ease-in-out',
+                                    bgcolor: selectedTool === 'Another Tool 2' ? 'rgba(0, 0, 0, 0.1)' : 'transparent',
+                                    transform: selectedTool === 'Another Tool 2' ? 'scale(1.05)' : 'none',
                                     '&:hover': {
                                         bgcolor: 'rgba(0, 0, 0, 0.1)',
                                         transform: 'scale(1.05)',
                                     },
                                 }}
-                                className="hover:text-theme-text" // Use theme-text class for hover
+                                className={`${selectedTool === 'Another Tool 2' ? 'text-theme-text' : 'hover:text-theme-text'
+                                    }`}
                                 onClick={() => setSelectedTool('Another Tool 2')}
                             >
                                 <ListItemIcon>
