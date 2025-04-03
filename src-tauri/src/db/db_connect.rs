@@ -13,6 +13,7 @@ use mongodb::{Client, Collection, Database, IndexModel};
 use serde_json::json;
 use sha2::{Digest, Sha256};
 use tauri::State;
+use zxcvbn::zxcvbn;
 
 pub struct MongoClientState {
     client: Client,
@@ -35,6 +36,12 @@ impl MongoClientState {
     }
 }
 
+// Add this function to get password strength score
+fn get_password_strength(password: &str) -> u8 {
+    let score = zxcvbn(&password, &[]);
+    score.score() as u8
+}
+
 #[tauri::command]
 pub async fn add_password_entry(
     state: State<'_, MongoClientState>,
@@ -47,6 +54,9 @@ pub async fn add_password_entry(
         .get_database("password_manager")
         .collection::<PasswordEntries>("password_entries");
 
+    // Get password strength score
+    let strength_score = get_password_strength(&password);
+
     let new_entry = PasswordEntry {
         entry_id: ObjectId::new().to_hex(),
         account_name,
@@ -54,7 +64,7 @@ pub async fn add_password_entry(
         password,
         custom_fields: None,
         created_at: DateTime::now(),
-        password_strength: None,
+        password_strength: Some(strength_score),
     };
 
     let filter = doc! { "user_id": &user_id };
@@ -97,12 +107,16 @@ pub async fn update_password_entry(
         .get_database("password_manager")
         .collection::<PasswordEntries>("password_entries");
 
+    // Get password strength score
+    let strength_score = get_password_strength(&password);
+
     let filter = doc! { "entries.entry_id": &entry_id };
     let update = doc! {
         "$set": {
             "entries.$.account_name": account_name,
             "entries.$.username": username,
             "entries.$.password": password,
+            "entries.$.password_strength": bson::to_bson(&strength_score).unwrap(),
         }
     };
 

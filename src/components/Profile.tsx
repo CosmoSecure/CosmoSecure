@@ -5,6 +5,18 @@ import CakeIcon from '@mui/icons-material/Cake';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import PasswordIcon from '@mui/icons-material/Password';
+import { invoke } from '@tauri-apps/api/core';
+
+// Fetch total passwords
+const fetchTotalPasswords = async (userId: string): Promise<number> => {
+    try {
+        const entries: { entry_id: string }[] = await invoke('get_password_entries', { userId });
+        return entries.length;
+    } catch (error) {
+        console.error('Error fetching total passwords:', error);
+        return 0;
+    }
+};
 
 const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisible, onClose }) => {
     const [username, setUsername] = useState('');
@@ -26,9 +38,9 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
 
                     console.log('User data decrypted:', user);
 
-                    // Get the total number of passwords from sessionStorage
-                    const passwordCount = sessionStorage.getItem('p_count');
-                    setTotalPasswords(passwordCount ? parseInt(passwordCount) : 0);
+                    // Fetch total passwords directly from the backend
+                    const total = await fetchTotalPasswords(user.user_id);
+                    setTotalPasswords(total);
                 } else {
                     console.error('No user found in decrypted data');
                 }
@@ -39,10 +51,17 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
 
         initializeData();
 
-        // Set up interval to refresh p_count every 2 seconds
-        const intervalId = setInterval(() => {
-            const passwordCount = sessionStorage.getItem('p_count');
-            setTotalPasswords(passwordCount ? parseInt(passwordCount) : 0);
+        // Periodically fetch total passwords
+        const intervalId = setInterval(async () => {
+            try {
+                const user = decryptUser();
+                if (user) {
+                    const total = await fetchTotalPasswords(user.user_id);
+                    setTotalPasswords(total);
+                }
+            } catch (error) {
+                console.error('Error fetching total passwords:', error);
+            }
         }, 2000);
 
         // Clean up interval on component unmount

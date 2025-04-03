@@ -15,8 +15,12 @@ const RoutesConf: React.FC<RoutesConfProps> = ({ }) => {
     return (
         <Routes>
             <Route path="/" element={<AppLayout />}>
-                <Route index element={<Vault />} />
-                <Route path="dashboard" element={<Dashboard />} />
+                {/* Vault as Entrypoint OR / */}
+                {/* <Route index element={<Vault />} />
+                <Route path="dashboard" element={<Dashboard />} /> */}
+                {/* Dashboard as Entrypoint OR / */}
+                <Route index element={<Dashboard />} />
+                <Route path="vault" element={<Vault />} />
                 <Route path="home" element={<Home />} />
                 <Route path="about" element={<About />} />
                 <Route path="tools" element={<Tools />} />
@@ -32,8 +36,12 @@ const RoutesConf: React.FC<RoutesConfProps> = ({ }) => {
 export default RoutesConf;
 
 export const routes = [
-    { path: '/', label: 'Vault', icon: <SecurityIcon fontSize="inherit" /> },
-    { path: '/dashboard', label: 'Dashboard', icon: <DashboardRoundedIcon fontSize="inherit" /> },
+    //! Vault as Entrypoint OR /
+    // { path: '/', label: 'Vault', icon: <SecurityIcon fontSize="inherit" /> },
+    // { path: '/dashboard', label: 'Dashboard', icon: <DashboardRoundedIcon fontSize="inherit" /> },
+    //! Dashboard as Entrypoint OR /
+    { path: '/', label: 'Dashboard', icon: <DashboardRoundedIcon fontSize="inherit" /> },
+    { path: '/vault', label: 'Vault', icon: <SecurityIcon fontSize="inherit" /> },
     { path: '/home', label: 'Home', icon: <HomeIcon fontSize="inherit" /> },
     { path: '/about', label: 'About', icon: <InfoRoundedIcon fontSize="inherit" /> },
     { path: '/tools', label: 'Tools', icon: <BuildIcon fontSize="inherit" /> },
