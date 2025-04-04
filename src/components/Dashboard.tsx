@@ -5,7 +5,7 @@ import { invoke } from '@tauri-apps/api/core';
 import CakeIcon from '@mui/icons-material/Cake';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import PasswordIcon from '@mui/icons-material/Password';
-import { List, ListItemButton, ListItemIcon, ListItemText, Collapse, TextField, Button } from '@mui/material';
+import { List, ListItemButton, ListItemIcon, ListItemText, Collapse } from '@mui/material';
 import { ExpandLess, ExpandMore, Warning as WarningIcon } from '@mui/icons-material';
 
 // API Functions
@@ -55,8 +55,6 @@ const Dashboard: React.FC = () => {
     });
 
     const [openWeakPasswords, setOpenWeakPasswords] = useState(false);
-    const [generatedPassword, setGeneratedPassword] = useState('');
-    const [passLen, setPassLen] = useState(8);
 
     // Fetch user data once
     useEffect(() => {
@@ -105,16 +103,6 @@ const Dashboard: React.FC = () => {
         return () => clearInterval(interval);
     }, [fetchPasswordStats]);
 
-    // Handle password generation
-    const handleGeneratePassword = async () => {
-        try {
-            const { password } = await invoke<{ password: string }>('generate_password', { length: passLen });
-            setGeneratedPassword(password);
-        } catch (error) {
-            console.error('Failed to generate password:', error);
-        }
-    };
-
     return (
         <div className="bg-theme-background flex flex-col h-full w-full p-6 rounded-md">
             <div className="grid grid-cols-3 gap-6 h-full">
@@ -154,29 +142,12 @@ const Dashboard: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Password Generator */}
-                    <div className="bg-theme-primary-transparent p-6 rounded-lg flex flex-col items-center h-full">
-                        <h1 className="text-2xl font-bold mb-4">Password Generator</h1>
-                        <TextField
-                            label="Password Length"
-                            type="number"
-                            value={passLen}
-                            onChange={(e) => setPassLen(parseInt(e.target.value))}
-                            variant="standard"
-                            className="mb-4"
-                        />
-                        <Button onClick={handleGeneratePassword} variant="contained" color="primary">
-                            Generate Password
-                        </Button>
-                        {generatedPassword && (
-                            <TextField
-                                label="Generated Password"
-                                value={generatedPassword}
-                                variant="standard"
-                                InputProps={{ readOnly: true }}
-                                className="mt-4"
-                            />
-                        )}
+                    {/* Future Features */}
+                    <div className="bg-theme-primary-transparent p-6 rounded-lg flex flex-col items-center justify-center h-full text-gray-500">
+                        <h1 className="text-2xl font-bold mb-4">Future Features</h1>
+                        <p className="text-center text-lg">
+                            This section is reserved for upcoming features. Stay tuned for updates!
+                        </p>
                     </div>
                 </div>
 
