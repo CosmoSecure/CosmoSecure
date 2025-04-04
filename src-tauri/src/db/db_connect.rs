@@ -38,7 +38,7 @@ impl MongoClientState {
 
 // Add this function to get password strength score
 fn get_password_strength(password: &str) -> u8 {
-    let score = zxcvbn(&password, &[]);
+    let score = zxcvbn(password, &[]);
     score.score() as u8
 }
 
@@ -329,12 +329,10 @@ pub async fn authenticate_user(
 
                 let token_result = generate_token(&user.user_id);
                 match token_result {
-                    Ok(token) => {
-                        return Ok(json!({
-                            "token": token,
-                            "data": user
-                        }));
-                    }
+                    Ok(token) => Ok(json!({
+                        "token": token,
+                        "data": user
+                    })),
                     Err(e) => Err(format!("Error generating token: {}", e)),
                 }
             } else {
@@ -370,9 +368,9 @@ pub async fn tauri_add_user(
     add_user(
         &users_collection,
         &username,
-        &trimmed_name,
+        trimmed_name,
         &hashed_password, // Use the hashed password
-        &trimmed_email,
+        trimmed_email,
     )
     .await
     .map_err(|e| e.to_string())
@@ -500,7 +498,7 @@ pub(crate) async fn connect_rust_db() -> mongodb::error::Result<MongoClientState
     let client_options = ClientOptions::parse(&mongo_uri).await?;
     let client = Client::with_options(client_options)?;
 
-    match Client::with_options(ClientOptions::parse(&mongo_uri).await?) {
+    match client.database("admin").run_command(doc! {"ping": 1}).await {
         Ok(_) => {
             println!("Connected to MongoDB securely!");
         }

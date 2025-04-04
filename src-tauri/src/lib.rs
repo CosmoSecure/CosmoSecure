@@ -74,15 +74,15 @@ pub async fn run() {
             check_password_strength,
             generate_password,
         ])
-        .setup(|_app| {
-            // Use an asynchronous runtime to run the database connection
-            tauri::async_runtime::spawn(async {
-                if let Err(e) = db::db_connect::connect_rust_db().await {
-                    eprintln!("Failed to connect to the database: {}", e);
-                }
-            });
-            Ok(())
-        })
+        // .setup(|_app| {
+            // // Use an asynchronous runtime to run the database connection
+            // tauri::async_runtime::spawn(async {
+            //     if let Err(e) = db::db_connect::connect_rust_db().await {
+            //         eprintln!("Failed to connect to the database: {}", e);
+            //     }
+            // });
+            // Ok(())
+        // })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

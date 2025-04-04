@@ -11,35 +11,25 @@ pub struct PasswordStrength {
 pub fn check_password_strength(password: String) -> Result<PasswordStrength, String> {
     let estimate = zxcvbn(&password, &[]);
 
-    let feedback = estimate.feedback().map_or_else(
-        || "Great Security, Greater Coffee Needed! ☕😅 [buymeacoffee.com/akash2061]".to_string(),
-        |f| {
-            let warning = f
-                .warning()
-                .map_or("".to_string(), |w| w.to_string())
-                .to_string(); // Handle warning
-            let mut suggestions = f
-                .suggestions()
-                .iter()
-                .map(|s| s.to_string())
-                .collect::<Vec<_>>()
-                .join(" "); // Join suggestions
+    let feedback = if let Some(f) = estimate.feedback() {
+        // Handle warning - map_or converts Option<Warning> to String
+        let warning = f.warning().map_or("".to_string(), |w| w.to_string());
 
-            match suggestions.contains("Add another word or two.") {
-                true => {
-                    suggestions = suggestions
-                        .replace("Add another word or two.", "")
-                        .trim()
-                        .to_string();
-                    if suggestions.starts_with(" ") {
-                        suggestions = suggestions[1..].to_string();
-                    }
-                }
-                false => {}
-            }
-            format!("{} {}", warning, suggestions).trim().to_string()
-        },
-    );
+        // Process suggestions
+        let suggestions = f
+            .suggestions()
+            .iter()
+            .map(|s| s.to_string())
+            .collect::<Vec<_>>()
+            .join(" ")
+            .replace("Add another word or two.", "")
+            .trim()
+            .to_string();
+
+        format!("{} {}", warning, suggestions).trim().to_string()
+    } else {
+        "Great Security, Greater Coffee Needed! ☕😅 [buymeacoffee.com/akash2061]".to_string()
+    };
 
     Ok(PasswordStrength {
         score: estimate.score() as u8,
