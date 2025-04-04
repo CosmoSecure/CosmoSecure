@@ -9,15 +9,15 @@ interface DecorProps {
 const Decor: React.FC<DecorProps> = ({ pageName }) => {
 
     const minimizeWebview = async () => {
-        const currentWindow = await getCurrentWindow();
+        const currentWindow = getCurrentWindow();
         await currentWindow.minimize();
     };
     const maximizeWebview = async () => {
-        const currentWindow = await getCurrentWindow();
+        const currentWindow = getCurrentWindow();
         await currentWindow.maximize();
     };
     const closeWebview = async () => {
-        const currentWindow = await getCurrentWindow();
+        const currentWindow = getCurrentWindow();
         await currentWindow.close();
     };
 
