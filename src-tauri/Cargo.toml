@@ -15,7 +15,7 @@
 [package]
 name = "cosmosecure"
 version = "0.1.0"
-description = "A Tauri App"
+description = "A Tauri App" # Change it! [Don't start with A, An, The]
 authors = ["akash2061 <aakashsoni8781@gmail.com>"]
 edition = "2021"
 readme = "../README.md"
