@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Decor from './Decor';
 import Navigate from './Navigate';
 import Profile from './Profile';
+import VersionDisplay from '../version/version';
 
 const AppLayout: React.FC = () => {
     const location = useLocation();
@@ -38,6 +39,7 @@ const AppLayout: React.FC = () => {
 
                     {/* Conditionally render Profile component inside the main area */}
                     <Profile isVisible={isProfileVisible} onClose={toggleProfileVisibility} />
+                    <VersionDisplay />
                 </main>
             </div>
         </div>
