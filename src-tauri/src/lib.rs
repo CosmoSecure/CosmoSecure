@@ -7,6 +7,7 @@ use crate::db::db_connect::{
 use crate::db::token;
 use crate::extensions::pass_gen::generate_password;
 use crate::extensions::pass_strength::check_password_strength;
+use crate::version::get_version::get_version;
 use clap::Command;
 use config::delete_config;
 use openurl::open_url;
@@ -18,6 +19,7 @@ pub mod env_var;
 mod extensions;
 mod openurl;
 mod secure;
+mod version;
 
 #[tauri::command]
 fn save_token_command(token: String, user: String) {
@@ -73,15 +75,16 @@ pub async fn run() {
             open_url,
             check_password_strength,
             generate_password,
+            get_version,
         ])
         // .setup(|_app| {
-            // // Use an asynchronous runtime to run the database connection
-            // tauri::async_runtime::spawn(async {
-            //     if let Err(e) = db::db_connect::connect_rust_db().await {
-            //         eprintln!("Failed to connect to the database: {}", e);
-            //     }
-            // });
-            // Ok(())
+        // // Use an asynchronous runtime to run the database connection
+        // tauri::async_runtime::spawn(async {
+        //     if let Err(e) = db::db_connect::connect_rust_db().await {
+        //         eprintln!("Failed to connect to the database: {}", e);
+        //     }
+        // });
+        // Ok(())
         // })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
