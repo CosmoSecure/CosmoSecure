@@ -8,6 +8,7 @@ import VersionDisplay from '../version/version';
 const AppLayout: React.FC = () => {
     const location = useLocation();
     const [isProfileVisible, setProfileVisible] = useState(false);
+    const [isDecorVisible, setIsDecorVisible] = useState(false);
 
     const getPageName = (pathname: string) => {
         if (pathname === '/') {
@@ -22,7 +23,6 @@ const AppLayout: React.FC = () => {
 
     const pageName = getPageName(location.pathname);
 
-    // Function to toggle profile visibility
     const toggleProfileVisibility = () => {
         setProfileVisible(!isProfileVisible);
     };
@@ -33,11 +33,20 @@ const AppLayout: React.FC = () => {
                 <Navigate toggleProfileVisibility={toggleProfileVisibility} />
             </div>
             <div className="flex-1 flex flex-col m-1 ml-0">
-                <Decor pageName={pageName} />
-                <main className="flex-1 overflow-auto bg-blue-100 mt-1 rounded-md relative">
+                <Decor 
+                    pageName={pageName} 
+                    onVisibilityChange={setIsDecorVisible}
+                />
+                <main 
+                    className={`flex-1 overflow-auto bg-blue-100 rounded-md relative transition-all duration-300 ease-in-out ${
+                        isDecorVisible ? 'mt-16' : 'mt-1'
+                    }`}
+                    style={{
+                        marginTop: isDecorVisible ? '3.25rem' : '0.75rem',
+                        transition: 'margin-top 0.3s ease-in-out'
+                    }}
+                >
                     <Outlet />
-
-                    {/* Conditionally render Profile component inside the main area */}
                     <Profile isVisible={isProfileVisible} onClose={toggleProfileVisibility} />
                     <VersionDisplay />
                 </main>
