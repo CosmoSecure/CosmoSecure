@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Decor from './Decor';
 import Navigate from './Navigate';
@@ -27,27 +27,37 @@ const AppLayout: React.FC = () => {
         setProfileVisible(!isProfileVisible);
     };
 
+    // Memoize components to prevent unnecessary re-renders
+    const memoizedProfile = useMemo(() => (
+        <Profile isVisible={isProfileVisible} onClose={toggleProfileVisibility} />
+    ), [isProfileVisible]);
+
+    const memoizedDecor = useMemo(() => (
+        <Decor 
+            pageName={pageName} 
+            onVisibilityChange={setIsDecorVisible}
+        />
+    ), [pageName]);
+
     return (
         <div className="flex h-screen">
             <div className='m-1'>
                 <Navigate toggleProfileVisibility={toggleProfileVisibility} />
             </div>
             <div className="flex-1 flex flex-col m-1 ml-0">
-                <Decor 
-                    pageName={pageName} 
-                    onVisibilityChange={setIsDecorVisible}
-                />
+                {memoizedDecor}
                 <main 
-                    className={`flex-1 overflow-auto bg-blue-100 rounded-md relative transition-all duration-300 ease-in-out ${
-                        isDecorVisible ? 'mt-16' : 'mt-1'
-                    }`}
+                    className="flex-1 overflow-auto bg-blue-100 rounded-md relative"
                     style={{
                         marginTop: isDecorVisible ? '3.25rem' : '0.75rem',
-                        transition: 'margin-top 0.3s ease-in-out'
+                        transition: 'margin-top 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+                        transform: 'translateZ(0)',
+                        willChange: 'margin-top',
+                        backfaceVisibility: 'hidden'
                     }}
                 >
                     <Outlet />
-                    <Profile isVisible={isProfileVisible} onClose={toggleProfileVisibility} />
+                    {memoizedProfile}
                     <VersionDisplay />
                 </main>
             </div>

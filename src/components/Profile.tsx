@@ -23,6 +23,7 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
     const [joinDate, setJoinDate] = useState('');
     const [email, setEmail] = useState('');
     const [totalPasswords, setTotalPasswords] = useState(0);
+    const [lastFetch, setLastFetch] = useState(0);
 
     useEffect(() => {
         const initializeData = async () => {
@@ -51,26 +52,28 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
 
         initializeData();
 
-        // Periodically fetch total passwords
-        const intervalId = setInterval(async () => {
-            try {
+        let isSubscribed = true;
+        const interval = setInterval(async () => {
+            const now = Date.now();
+            if (now - lastFetch >= 2000 && isSubscribed) { // 2 second minimum interval
                 const user = decryptUser();
                 if (user) {
                     const total = await fetchTotalPasswords(user.user_id);
                     setTotalPasswords(total);
+                    setLastFetch(now);
                 }
-            } catch (error) {
-                console.error('Error fetching total passwords:', error);
             }
         }, 2000);
 
-        // Clean up interval on component unmount
-        return () => clearInterval(intervalId);
-    }, []);
+        return () => {
+            isSubscribed = false;
+            clearInterval(interval);
+        };
+    }, [lastFetch]);
 
     return (
         <div
-            className={`fixed top-14 right-0 h-auto w-1/2 bg-theme-background-transparent text-theme-text transform transition-transform duration-300 ease-in-out rounded-r-md rounded-l-xl mr-[4px]`}
+            className={`fixed top-0 right-0 h-auto w-1/2 bg-theme-background-transparent text-theme-text transform transition-transform duration-300 ease-in-out rounded-r-md rounded-l-xl mr-[4px]`}
             style={{ transform: isVisible ? 'translateX(0)' : 'translateX(120%)' }} // Custom translation value
         >
             <main className="relative h-full flex flex-col items-center rounded-xl mb-4">
