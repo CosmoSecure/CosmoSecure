@@ -98,9 +98,17 @@ const Dashboard: React.FC = () => {
 
     // Fetch password stats initially and then every 10 seconds
     useEffect(() => {
-        fetchPasswordStats();
-        const interval = setInterval(fetchPasswordStats, 10000);
-        return () => clearInterval(interval);
+        let isSubscribed = true;
+        const interval = setInterval(() => {
+            if (isSubscribed) {
+                fetchPasswordStats();
+            }
+        }, 2000);
+
+        return () => {
+            isSubscribed = false;
+            clearInterval(interval);
+        };
     }, [fetchPasswordStats]);
 
     return (

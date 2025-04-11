@@ -22,6 +22,18 @@ const Navigate: React.FC<{ toggleProfileVisibility: () => void }> = ({ togglePro
         }
     }, []);
 
+    // Add cleanup for transitions
+    useEffect(() => {
+        const cleanupTransitions = () => {
+            const elements = document.querySelectorAll('.transition-all');
+            elements.forEach(el => {
+                (el as HTMLElement).style.transition = 'none';
+            });
+        };
+
+        return () => cleanupTransitions();
+    }, []);
+
     return (
         <div className="transition-all duration-300 ease-in-out bg-theme-background-transparent group hover:w-64 w-14 h-full rounded-md flex flex-col justify-between relative">
             {/* Profile Icon */}
@@ -47,18 +59,27 @@ const Navigate: React.FC<{ toggleProfileVisibility: () => void }> = ({ togglePro
             <div>
                 <nav className="p-2 space-y-4">
                     {routes.map((route) => (
-                        <button
-                            key={route.path}
-                            onClick={() => navigate(route.path)}
-                            className="flex items-center justify-normal space-x-4 text-theme-text h-[40px] w-full rounded-md pl-[3px] bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
-                        >
-                            <div className="text-3xl pl-[2px] flex justify-center items-center">
-                                {route.icon ? route.icon : <span>🔗</span>}
-                            </div>
-                            <div className="hidden font-bold w-full pr-6 justify-center text-lg group-hover:inline-block">
-                                {route.label}
-                            </div>
-                        </button>
+                        <div key={route.path} className="flex gap-2">
+                            {/* Icon Tile */}
+                            <button
+                                onClick={() => navigate(route.path)}
+                                className="flex items-center justify-center text-theme-text h-[40px] w-[40px] rounded-md bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
+                            >
+                                <div className="text-3xl">
+                                    {route.icon ? route.icon : <span>🔗</span>}
+                                </div>
+                            </button>
+
+                            {/* Label Tile */}
+                            <button
+                                onClick={() => navigate(route.path)}
+                                className="hidden group-hover:flex items-center justify-start flex-1 text-theme-text h-[40px] rounded-md bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
+                            >
+                                <span className="font-bold text-lg px-4">
+                                    {route.label}
+                                </span>
+                            </button>
+                        </div>
                     ))}
                 </nav>
             </div>
@@ -67,18 +88,27 @@ const Navigate: React.FC<{ toggleProfileVisibility: () => void }> = ({ togglePro
             <div>
                 <nav className="p-2 space-y-4">
                     {bottomRoutes.map((route) => (
-                        <button
-                            key={route.path}
-                            onClick={() => navigate(route.path)}
-                            className="flex items-center justify-normal space-x-4 text-theme-text h-[40px] w-full rounded-md pl-[3px] bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
-                        >
-                            <div className="text-3xl pl-[2px] flex justify-center items-center">
-                                {route.icon ? route.icon : <span>🔗</span>}
-                            </div>
-                            <div className="hidden font-bold w-full pr-6 justify-center text-lg group-hover:inline-block">
-                                {route.label}
-                            </div>
-                        </button>
+                        <div key={route.path} className="flex gap-2">
+                            {/* Icon Tile */}
+                            <button
+                                onClick={() => navigate(route.path)}
+                                className="flex items-center justify-center text-theme-text h-[40px] w-[40px] rounded-md bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
+                            >
+                                <div className="text-3xl">
+                                    {route.icon ? route.icon : <span>🔗</span>}
+                                </div>
+                            </button>
+
+                            {/* Label Tile */}
+                            <button
+                                onClick={() => navigate(route.path)}
+                                className="hidden group-hover:flex items-center justify-start flex-1 text-theme-text h-[40px] rounded-md bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
+                            >
+                                <span className="font-bold text-lg px-4">
+                                    {route.label}
+                                </span>
+                            </button>
+                        </div>
                     ))}
                 </nav>
             </div>

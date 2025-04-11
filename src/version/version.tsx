@@ -20,7 +20,7 @@ const VersionDisplay: React.FC = () => {
 
     return (
         <div
-            className="fixed bottom-1 right-3 text-theme-text opacity-50 text-sm"
+            className="fixed bottom-0 right-3 text-theme-text opacity-50 text-sm"
             style={{ zIndex: 1000 }}
         >
             © 2024 CosmoSecure • v{version}
