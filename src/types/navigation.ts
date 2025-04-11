@@ -1,0 +1,1 @@
+export type NavigationStyle = 'default' | 'hover' | 'button';

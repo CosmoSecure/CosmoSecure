@@ -10,6 +10,7 @@ import { decryptUser } from './auth/token_secure';
 import { VisibilityOffTwoToneIcon, VisibilityTwoToneIcon } from './auth/passCSS';
 import { reloadApp_Update } from "./reloadApp_Update";
 import { toast } from 'sonner';
+import { useNavigation } from '../contexts/';
 
 function debounce(func: (...args: any[]) => void, wait: number) {
     let timeout: ReturnType<typeof setTimeout>;
@@ -35,6 +36,7 @@ const Settings = () => {
     const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: '' });
     const [deleteUsername, setDeleteUsername] = useState('');
     const [deletePassword, setDeletePassword] = useState('');
+    const { navStyle, setNavStyle } = useNavigation();
 
     const toggleDropdown = (dropdownName: string) => {
         setActiveDropdown(activeDropdown === dropdownName ? null : dropdownName);
@@ -282,6 +284,110 @@ const Settings = () => {
         }
     };
 
+    const NavigationPreview = ({ type }: { type: 'default' | 'hover' | 'button' }) => {
+        const commonIconClass = "text-theme-text text-lg";
+
+        switch (type) {
+            case 'default':
+                return (
+                    <div className="flex flex-col gap-2 items-center">
+                        <div className="w-12 h-30 bg-theme-background-transparent rounded-md p-1 flex flex-col gap-2">
+                            <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-center">
+                                <span className={commonIconClass}>🏠</span>
+                            </div>
+                            <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-center">
+                                <span className={commonIconClass}>📊</span>
+                            </div>
+                            <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-center">
+                                <span className={commonIconClass}>⚙️</span>
+                            </div>
+                        </div>
+                        <span className="text-sm font-medium">Default</span>
+                    </div>
+                );
+
+            case 'hover':
+                return (
+                    <div className="flex flex-col gap-2 items-center">
+                        <div className="relative w-24 h-30 bg-theme-background-transparent rounded-md p-1 flex items-start gap-2">
+                            <div className="w-10 flex flex-col gap-2">
+                                <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-center">
+                                    <span className={commonIconClass}>🏠</span>
+                                </div>
+                                <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-center">
+                                    <span className={commonIconClass}>📊</span>
+                                </div>
+                                <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-center">
+                                    <span className={commonIconClass}>⚙️</span>
+                                </div>
+                            </div>
+                            <div className="w-12 h-8 bg-theme-accent/20 rounded flex items-center justify-center text-xs">
+                                Home
+                            </div>
+                        </div>
+                        <span className="text-sm font-medium">Hover</span>
+                    </div>
+                );
+
+            case 'button':
+                return (
+                    <div className="flex flex-col gap-2 items-center">
+                        <div className="w-32 h-30 bg-theme-background-transparent rounded-md p-1 flex flex-col gap-2">
+                            <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-between px-2">
+                                <span className={commonIconClass}>🏠</span>
+                                <span className="text-xs">Home</span>
+                            </div>
+                            <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-between px-2">
+                                <span className={commonIconClass}>📊</span>
+                                <span className="text-xs">Stats</span>
+                            </div>
+                            <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-between px-2">
+                                <span className={commonIconClass}>⚙️</span>
+                                <span className="text-xs">Settings</span>
+                            </div>
+                        </div>
+                        <span className="text-sm font-medium">Button</span>
+                    </div>
+                );
+        }
+    };
+
+    // Update the navigation section
+    const navigationSection = (
+        <div
+            className="hover:text-theme-text cursor-pointer p-6 bg-theme-secondary rounded-lg h-auto shadow-md transition duration-300 ease-in-out hover:shadow-lg hover:scale-[101%]"
+            onClick={() => toggleDropdown("navigation")}
+        >
+            <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold">Navigation Style</h1>
+                {activeDropdown === "navigation" ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </div>
+            <div
+                className={`transition-[max-height] duration-300 ease-in-out overflow-hidden 
+                    ${activeDropdown === "navigation" ? "max-h-[300px]" : "max-h-0"}`}
+                onClick={stopPropagation}
+            >
+                {activeDropdown === "navigation" && (
+                    <div className="mt-4 grid grid-cols-3 gap-8">
+                        {(['default', 'hover', 'button'] as const).map((style) => (
+                            <button
+                                key={style}
+                                onClick={() => setNavStyle(style)}
+                                className={`p-4 rounded-lg border-2 transition-all duration-200 
+                                    flex flex-col items-center gap-4
+                                    ${navStyle === style
+                                        ? 'border-theme-accent bg-theme-accent-transparent'
+                                        : 'border-transparent hover:border-theme-accent-transparent'}`}
+                            >
+                                <NavigationPreview type={style} />
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+
     return (
         <div className="bg-theme-background h-full p-8 flex flex-col justify-center items-center text-theme-accent">
             {/* Settings Container */}
@@ -506,6 +612,9 @@ const Settings = () => {
                         )}
                     </div>
                 </div>
+
+                {/* Add navigationSection before the About Us section in your return statement */}
+                {navigationSection}
 
                 {/* Backup & Restore Section */}
                 <div
