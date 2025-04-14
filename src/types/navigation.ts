@@ -1,1 +1,1 @@
-export type NavigationStyle = 'default' | 'hover' | 'button';
+export type NavigationStyle = 'default' | 'compact' | 'expanded';

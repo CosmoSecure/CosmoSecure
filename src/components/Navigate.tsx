@@ -6,9 +6,9 @@ const Navigate: React.FC<{ toggleProfileVisibility: () => void }> = (props) => {
     const { navStyle } = useNavigation();
 
     switch (navStyle) {
-        case 'hover':
+        case 'compact':
             return <HoverNav {...props} />;
-        case 'button':
+        case 'expanded':
             return <ButtonNav {...props} />;
         default:
             return <DefaultNav {...props} />;
