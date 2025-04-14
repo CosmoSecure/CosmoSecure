@@ -11,6 +11,7 @@ import { VisibilityOffTwoToneIcon, VisibilityTwoToneIcon } from './auth/passCSS'
 import { reloadApp_Update } from "./reloadApp_Update";
 import { toast } from 'sonner';
 import { useNavigation } from '../contexts/';
+import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 
 function debounce(func: (...args: any[]) => void, wait: number) {
     let timeout: ReturnType<typeof setTimeout>;
@@ -284,29 +285,11 @@ const Settings = () => {
         }
     };
 
-    const NavigationPreview = ({ type }: { type: 'default' | 'hover' | 'button' }) => {
+    const NavigationPreview = ({ type }: { type: 'default' | 'compact' | 'expanded' }) => {
         const commonIconClass = "text-theme-text text-lg";
 
         switch (type) {
             case 'default':
-                return (
-                    <div className="flex flex-col gap-2 items-center">
-                        <div className="w-12 h-30 bg-theme-background-transparent rounded-md p-1 flex flex-col gap-2">
-                            <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-center">
-                                <span className={commonIconClass}>🏠</span>
-                            </div>
-                            <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-center">
-                                <span className={commonIconClass}>📊</span>
-                            </div>
-                            <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-center">
-                                <span className={commonIconClass}>⚙️</span>
-                            </div>
-                        </div>
-                        <span className="text-sm font-medium">Default</span>
-                    </div>
-                );
-
-            case 'hover':
                 return (
                     <div className="flex flex-col gap-2 items-center">
                         <div className="relative w-24 h-30 bg-theme-background-transparent rounded-md p-1 flex items-start gap-2">
@@ -321,21 +304,42 @@ const Settings = () => {
                                     <span className={commonIconClass}>⚙️</span>
                                 </div>
                             </div>
-                            <div className="w-12 h-8 bg-theme-accent/20 rounded flex items-center justify-center text-xs">
+                            <div className="w-12 h-8 bg-theme-accent-transparent rounded flex items-center justify-center text-xs">
                                 Home
                             </div>
                         </div>
-                        <span className="text-sm font-medium">Hover</span>
+                        <span className="text-sm font-medium">Standard Mode</span>
                     </div>
                 );
 
-            case 'button':
+            case 'compact':
+                return (
+                    <div className="flex flex-col gap-2 items-center">
+                        <div className="w-12 h-30 bg-theme-background-transparent rounded-md p-1 flex flex-col gap-2">
+                            <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-center">
+                                <span className={commonIconClass}>🏠</span>
+                            </div>
+                            <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-center">
+                                <span className={commonIconClass}>📊</span>
+                            </div>
+                            <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-center">
+                                <span className={commonIconClass}>⚙️</span>
+                            </div>
+                        </div>
+                        <span className="text-sm font-medium">Compact Mode</span>
+                    </div>
+                );
+
+            case 'expanded':
                 return (
                     <div className="flex flex-col gap-2 items-center">
                         <div className="w-32 h-30 bg-theme-background-transparent rounded-md p-1 flex flex-col gap-2">
                             <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-between px-2">
                                 <span className={commonIconClass}>🏠</span>
                                 <span className="text-xs">Home</span>
+                            </div>
+                            <div className="absolute ml-28 mt-5 w-6 h-6 bg-theme-accent rounded-full flex items-center justify-center cursor-pointer z-10 shadow-md hover:scale-110 transition-transform">
+                                <MenuOpenIcon className="text-white text-sm font-bold" />
                             </div>
                             <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-between px-2">
                                 <span className={commonIconClass}>📊</span>
@@ -346,8 +350,8 @@ const Settings = () => {
                                 <span className="text-xs">Settings</span>
                             </div>
                         </div>
-                        <span className="text-sm font-medium">Button</span>
-                    </div>
+                        <span className="text-sm font-medium">Expanded Mode</span>
+                    </div >
                 );
         }
     };
@@ -369,7 +373,7 @@ const Settings = () => {
             >
                 {activeDropdown === "navigation" && (
                     <div className="mt-4 grid grid-cols-3 gap-8">
-                        {(['default', 'hover', 'button'] as const).map((style) => (
+                        {(['default', 'compact', 'expanded'] as const).map((style) => (
                             <button
                                 key={style}
                                 onClick={() => setNavStyle(style)}
