@@ -10,7 +10,8 @@ import BuildIcon from '@mui/icons-material/Build';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import StarBorder from '@mui/icons-material/StarBorder';
-import { PasswordGenerator } from './tools';
+import MonitorIcon from '@mui/icons-material/Monitor';
+import { PasswordGenerator, ProcessCapture } from './tools';
 
 const Tools: React.FC = () => {
     const [selectedTool, setSelectedTool] = useState<string | null>(null);
@@ -24,6 +25,8 @@ const Tools: React.FC = () => {
         switch (selectedTool) {
             case 'Password Generator':
                 return <PasswordGenerator />;
+            case 'Process Monitor':  // Add this case
+                return <ProcessCapture />;
             default:
                 return (
                     <div className="flex flex-col justify-center items-center font-extrabold text-theme-text-transparent text-black">
@@ -74,6 +77,28 @@ const Tools: React.FC = () => {
                         </ListItemIcon>
                         <ListItemText
                             primary={<span style={{ fontWeight: 'bold' }}>Password Generator</span>}
+                        />
+                    </ListItemButton>
+
+                    <ListItemButton
+                        sx={{
+                            borderRadius: '8px',
+                            transition: 'all 0.3s ease-in-out',
+                            bgcolor: selectedTool === 'Process Monitor' ? 'rgba(0, 0, 0, 0.1)' : 'transparent',
+                            transform: selectedTool === 'Process Monitor' ? 'scale(1.05)' : 'none',
+                            '&:hover': {
+                                bgcolor: 'rgba(0, 0, 0, 0.1)',
+                                transform: 'scale(1.05)',
+                            },
+                        }}
+                        className={`${selectedTool === 'Process Monitor' ? 'text-theme-text' : 'hover:text-theme-text'}`}
+                        onClick={() => setSelectedTool('Process Monitor')}
+                    >
+                        <ListItemIcon>
+                            <MonitorIcon /> {/* Import MonitorIcon from @mui/icons-material */}
+                        </ListItemIcon>
+                        <ListItemText
+                            primary={<span style={{ fontWeight: 'bold' }}>Process Monitor</span>}
                         />
                     </ListItemButton>
 

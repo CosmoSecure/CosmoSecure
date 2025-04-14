@@ -7,6 +7,7 @@ use crate::db::db_connect::{
 use crate::db::token;
 use crate::extensions::pass_gen::generate_password;
 use crate::extensions::pass_strength::check_password_strength;
+use crate::extensions::process_capture::get_system_and_process_usage;
 use crate::version::get_version::get_version;
 use clap::Command;
 use config::delete_config;
@@ -76,6 +77,7 @@ pub async fn run() {
             check_password_strength,
             generate_password,
             get_version,
+            get_system_and_process_usage,
         ])
         // .setup(|_app| {
         // // Use an asynchronous runtime to run the database connection
