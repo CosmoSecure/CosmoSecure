@@ -180,7 +180,7 @@ const Tools: React.FC = () => {
             </div>
 
             {/* Main Content */}
-            <div className="col-span-3 flex justify-center items-center bg-theme-primary-transparent p-4 rounded-md">
+            <div className="col-span-3 flex justify-center items-center bg-theme-primary-transparent p-4 rounded-md overflow-y-scroll">
                 {renderContent()}
             </div>
         </div>
