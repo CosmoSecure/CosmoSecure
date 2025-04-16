@@ -56,22 +56,29 @@ const HoverNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ togglePro
     }, []);
 
     return (
-        <div className="w-14 h-full rounded-md flex flex-col justify-between bg-theme-background-transparent">
+        <div className="w-14 h-full rounded-md flex flex-col justify-between bg-theme-background-transparent z-10">
             {/* Profile Section */}
             <div className="p-2">
                 <div className="relative group">
                     <button
-                        onClick={toggleProfileVisibility}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            toggleProfileVisibility();
+                        }}
                         className="flex items-center justify-center hover:scale-110 transition-transform duration-300"
                     >
                         <img src={Pro} alt="Profile" className="w-10 h-10 rounded-full active:scale-95" />
                     </button>
                     <span
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            toggleProfileVisibility();
+                        }}
                         className="absolute left-full top-1/2 -translate-y-1/2 ml-2 h-[40px] px-4
                             rounded-md bg-theme-accent-transparent border border-theme-accent
                             text-theme-text text-lg whitespace-nowrap opacity-0 scale-95
                             group-hover:opacity-100 group-hover:scale-100 group-hover:bg-theme-accent
-                            pointer-events-none transform origin-left z-[9999]
+                            cursor-pointer transform origin-left z-[9999]
                             flex items-center justify-center font-medium transition-all duration-300"
                     >
                         {username || "Profile"}

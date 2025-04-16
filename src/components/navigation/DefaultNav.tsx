@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { routes, bottomRoutes } from '../../routes';
 import { decryptUser } from '../auth/token_secure';
 import { Pro } from '../../assets';
@@ -35,11 +35,14 @@ const DefaultNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ toggleP
     }, []);
 
     return (
-        <div className="transition-all duration-300 ease-in-out bg-theme-background-transparent group hover:w-64 w-14 h-full rounded-md flex flex-col justify-between relative">
+        <div className="transition-all duration-300 ease-in-out bg-theme-background-transparent group hover:w-64 w-14 h-full rounded-md flex flex-col justify-between relative z-10">
             {/* Profile Icon */}
             <div className="p-2 relative">
                 <button
-                    onClick={toggleProfileVisibility}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        toggleProfileVisibility();
+                    }}
                     className="relative flex flex-col items-center justify-center space-y-2 group"
                 >
                     <div className="text-4xl transition-transform duration-300 group-hover:scale-150 group-hover:translate-x-24 group-hover:translate-y-3">
@@ -50,8 +53,12 @@ const DefaultNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ toggleP
                 {/* Username */}
                 <div
                     className="absolute top-[5rem] left-[47%] -translate-x-1/2 hidden group-hover:block text-theme-text font-bold text-center text-xl transition-all duration-300 active:scale-95"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        toggleProfileVisibility();
+                    }}
                 >
-                    <Link to="#" onClick={toggleProfileVisibility}>{username}</Link>
+                    <span className="cursor-pointer">{username}</span>
                 </div>
             </div>
 

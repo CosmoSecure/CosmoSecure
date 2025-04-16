@@ -7,9 +7,11 @@ import Auth_page from "./components/auth/Auth_page";
 import { Intro, Login, Signup } from "./components";
 import { invoke } from "@tauri-apps/api/core";
 import { decryptToken, decryptUser } from "./components/auth/token_secure";
-import { applyTheme, themes, ThemeKeys } from "./themes/ThemeToggle"; // Import applyTheme and themes
+import { applyTheme, themes, ThemeKeys, CosmicLoader } from "./themes/"; // Import applyTheme and themes
 import { Toaster } from 'sonner'; // Import Toaster from sonner
 import { NavigationProvider } from './contexts/';
+
+const TEST_MODE = true;  // Set to false in production
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -21,6 +23,11 @@ function App() {
 
     const checkAuthentication = async () => {
       try {
+        if (TEST_MODE) {
+          // Simulate loading delay for testing
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+
         const [encryptedToken, encryptedUser] = await invoke<[string, string]>('load_token_command');
         if (encryptedToken && encryptedUser) {
           sessionStorage.setItem('token', encryptedToken);
@@ -60,7 +67,9 @@ function App() {
   }, []);
 
   if (isAuthenticated === null) {
-    return <div>Loading...</div>;
+    return <div className="flex justify-center items-center h-screen bg-transparent">
+      <CosmicLoader />;
+    </div>
   }
 
   return (

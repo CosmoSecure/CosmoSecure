@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { LineChart } from '@mui/x-charts/LineChart';
+import { InnerLoader } from '../../themes/';
 
 interface ProcessStats {
     cpu: number;
@@ -13,6 +14,7 @@ interface ProcessStats {
 }
 
 const MAX_DATA_POINTS = 20;
+const TEST_MODE = false; // Set to false in production
 
 const ProcessCapture: React.FC = () => {
     const [stats, setStats] = useState<ProcessStats | null>(null);
@@ -22,6 +24,11 @@ const ProcessCapture: React.FC = () => {
 
     const fetchStats = useCallback(async () => {
         try {
+            if (TEST_MODE) {
+                // Simulate loading delay
+                await new Promise(resolve => setTimeout(resolve, 3000));
+            }
+
             const data = await invoke<ProcessStats>('get_system_and_process_usage');
             const newData = {
                 ...data,
@@ -59,12 +66,18 @@ const ProcessCapture: React.FC = () => {
         };
     };
 
-    if (isLoading) return <div className="p-4">Loading...</div>;
+    if (isLoading) {
+        return (
+            <div className="w-full h-full flex items-center justify-center">
+                <InnerLoader />
+            </div>
+        );
+    }
     if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
     if (!stats) return null;
 
     return (
-        <div className="w-full h-full p-4 bg-transparent">
+        <div className="w-full h-full p-4 pb-4 bg-transparent">
             <h2 className="text-2xl font-bold mb-4 text-theme-accent">Process Stats</h2>
 
             {/* Charts Section */}
@@ -96,7 +109,7 @@ const ProcessCapture: React.FC = () => {
                         slotProps={{
                             legend: {
                                 direction: 'row',
-                                position: { vertical: 'top' , horizontal: 'right' },
+                                position: { vertical: 'top', horizontal: 'right' },
                                 padding: 0,
                             }
                         }}

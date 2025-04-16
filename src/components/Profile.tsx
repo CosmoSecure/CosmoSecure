@@ -6,6 +6,7 @@ import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import PasswordIcon from '@mui/icons-material/Password';
 import { invoke } from '@tauri-apps/api/core';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Fetch total passwords
 const fetchTotalPasswords = async (userId: string): Promise<number> => {
@@ -72,33 +73,108 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
     }, [lastFetch]);
 
     return (
-        <div
-            className={`fixed top-0 right-0 h-auto w-1/2 bg-theme-background-transparent text-theme-text transform transition-transform duration-300 ease-in-out rounded-r-md rounded-l-xl mr-[4px]`}
-            style={{ transform: isVisible ? 'translateX(0)' : 'translateX(120%)' }} // Custom translation value
-        >
-            <main className="relative h-full flex flex-col items-center rounded-xl mb-4">
-                <div className='h-28 w-full bg-gradient-to-r from-theme-secondary-transparent via-theme-primary to-theme-secondary-transparent rounded-tl-xl rounded-tr-md'></div>
-                <button onClick={onClose} className="absolute top-4 left-4 bg-transparent border-2 border-gray-500 text-white p-2 rounded-xl active:scale-95">
-                    <DoubleArrowIcon />
-                </button>
-                <div className="relative flex flex-col items-center">
-                    <img src={Pro} alt="" className='rounded-full h-32 w-32 absolute top-[-4rem] z-10' />
-                    <div className="mt-20 text-center">
-                        <div className="text-3xl font-bold mt-2">{username}</div>
-                        <div className="text-xl mt-2 flex justify-center">
-                            <CakeIcon className="mr-2" /> {joinDate}
-                        </div>
-                        <div className="text-xl mt-2 flex justify-center">
-                            <AlternateEmailIcon className="mr-2" /> {email}
-                        </div>
-                        <div className="text-xl mt-2 flex justify-center">
-                            <PasswordIcon className="mr-2" /> {totalPasswords}
-                        </div>
-                    </div>
-                </div>
-            </main>
-        </div>
+        <AnimatePresence>
+            {isVisible && (
+                <>
+                    {/* Backdrop with fade animation */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="fixed inset-0 bg-black bg-opacity-50 z-20"
+                        onClick={onClose}
+                    />
+
+                    {/* Profile Panel with slide animation */}
+                    <motion.div
+                        initial={{ x: "100%" }}
+                        animate={{ x: 0 }}
+                        exit={{ x: "100%" }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        className="fixed top-0 right-0 rounded-xl w-2/5 bg-theme-background 
+                            shadow-lg z-30"
+                    >
+                        <motion.main className="relative h-full flex flex-col items-center rounded-xl mb-4">
+                            {/* Header gradient with slide up animation */}
+                            <motion.div
+                                initial={{ y: -20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.2 }}
+                                className='h-28 w-full bg-gradient-to-r from-theme-secondary-transparent 
+                                    via-theme-primary to-theme-secondary-transparent rounded-tl-xl rounded-tr-md'
+                            />
+
+                            {/* Close button with fade animation */}
+                            <motion.button
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.3 }}
+                                onClick={onClose}
+                                className="absolute top-4 left-4 bg-transparent border-2 
+                                    border-gray-500 text-white p-2 rounded-xl"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                <DoubleArrowIcon />
+                            </motion.button>
+
+                            <div className="relative flex flex-col items-center">
+                                {/* Profile image with pop animation */}
+                                <motion.img
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={{ 
+                                        type: "spring",
+                                        stiffness: 260,
+                                        damping: 20,
+                                        delay: 0.4 
+                                    }}
+                                    src={Pro}
+                                    alt=""
+                                    className='rounded-full h-32 w-32 absolute top-[-4rem] z-10'
+                                />
+
+                                {/* Profile info with staggered fade in */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.5 }}
+                                    className="mt-20 text-center text-theme-text"
+                                >
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: 0.6 }}
+                                        className="text-3xl font-bold mt-2"
+                                    >
+                                        {username}
+                                    </motion.div>
+
+                                    {/* Staggered info items */}
+                                    {[
+                                        { Icon: CakeIcon, text: joinDate },
+                                        { Icon: AlternateEmailIcon, text: email },
+                                        { Icon: PasswordIcon, text: totalPasswords }
+                                    ].map(({ Icon, text }, index) => (
+                                        <motion.div
+                                            key={index}
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: 0.7 + (index * 0.1) }}
+                                            className="text-xl mt-2 flex justify-center"
+                                        >
+                                            <Icon className="mr-2" /> {text}
+                                        </motion.div>
+                                    ))}
+                                </motion.div>
+                            </div>
+                        </motion.main>
+                    </motion.div>
+                </>
+            )}
+        </AnimatePresence>
     );
-}
+};
 
 export default Profile;
