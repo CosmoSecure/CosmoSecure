@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pro } from '../assets/';
 import { decryptUser } from './auth/token_secure';
 import { invoke } from '@tauri-apps/api/core';
