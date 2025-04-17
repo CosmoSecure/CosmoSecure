@@ -11,7 +11,7 @@ import { ExpandLess, ExpandMore, Warning as WarningIcon } from '@mui/icons-mater
 // API Functions
 const fetchTotalPasswords = async (userId: string) => {
     try {
-        const entries = await invoke<{ entry_id: string }[]>('get_password_entries', { userId });
+        const entries = await invoke<{ entry_id: string }[]>('get_password_entries', { ui: userId });
         return entries.length;
     } catch (error) {
         console.error('Error fetching total passwords:', error);
@@ -21,19 +21,18 @@ const fetchTotalPasswords = async (userId: string) => {
 
 const fetchWeakPasswords = async (userId: string) => {
     try {
-        const entries = await invoke<{ entry_id: string, password: string }[]>('get_password_entries', { userId });
-        const weakPasswords = await Promise.all(
-            entries.map(async (entry) => {
-                const strength = await invoke<{ score: number }>('check_password_strength', {
-                    password: entry.password
-                });
-                return strength.score < 3 ? {
-                    password: entry.password,
-                    score: strength.score
-                } : null;
-            })
-        );
-        return weakPasswords.filter(Boolean);
+        const entries = await invoke<{ aid: string; ap: string; aps: number }[]>('get_password_entries', { ui: userId });
+
+        // Filter weak passwords directly based on `aps` (strength score)
+        const weakPasswords = entries
+            .filter(entry => entry.aps < 3) // Weak passwords have a strength score less than 3
+            .map(entry => ({
+                password: entry.ap,
+                score: entry.aps,
+            }));
+
+        console.log("Weak passwords:", weakPasswords); // Debugging log
+        return weakPasswords;
     } catch (error) {
         console.error('Error fetching weak passwords:', error);
         return [];
@@ -56,20 +55,20 @@ const Dashboard: React.FC = () => {
 
     const [openWeakPasswords, setOpenWeakPasswords] = useState(false);
 
-    // Fetch user data once
+    // Fetch user data once when the component is mounted
     useEffect(() => {
         const fetchUserData = async () => {
             try {
                 const user = decryptUser();
-                if (user && user.name && user.created_at) {
-                    const formattedDate = new Date(parseInt(user.created_at.$date.$numberLong))
+                if (user && user.n && user.c) {
+                    const formattedDate = new Date(parseInt(user.c.$date.$numberLong))
                         .toLocaleDateString('en-GB');
 
                     setUserData({
-                        username: user.name,
+                        username: user.n,
                         email: user.email,
                         joinDate: formattedDate,
-                        userId: user.user_id,
+                        userId: user.ui,
                     });
                 }
             } catch (error) {
@@ -80,36 +79,28 @@ const Dashboard: React.FC = () => {
         fetchUserData();
     }, []);
 
-    // Fetch password statistics (optimized)
-    const fetchPasswordStats = useCallback(async () => {
-        if (!userData.userId) return;
-
-        try {
-            const [total, weak] = await Promise.all([
-                fetchTotalPasswords(userData.userId),
-                fetchWeakPasswords(userData.userId),
-            ]);
-
-            setPasswordStats({ totalPasswords: total, weakPasswords: weak.filter((entry): entry is { password: string; score: number } => entry !== null) });
-        } catch (error) {
-            console.error('Error fetching password stats:', error);
-        }
-    }, [userData.userId]);
-
-    // Fetch password stats initially and then every 10 seconds
+    // Fetch password statistics when the component is opened
     useEffect(() => {
-        let isSubscribed = true;
-        const interval = setInterval(() => {
-            if (isSubscribed) {
-                fetchPasswordStats();
-            }
-        }, 2000);
+        const fetchPasswordStats = async () => {
+            if (!userData.userId) return;
 
-        return () => {
-            isSubscribed = false;
-            clearInterval(interval);
+            try {
+                const [total, weak] = await Promise.all([
+                    fetchTotalPasswords(userData.userId),
+                    fetchWeakPasswords(userData.userId),
+                ]);
+
+                setPasswordStats({
+                    totalPasswords: total,
+                    weakPasswords: weak.filter((entry): entry is { password: string; score: number } => entry !== null),
+                });
+            } catch (error) {
+                console.error('Error fetching password stats:', error);
+            }
         };
-    }, [fetchPasswordStats]);
+
+        fetchPasswordStats();
+    }, [userData.userId]); // Fetch stats only when `userId` is available
 
     return (
         <div className="bg-theme-background flex flex-col h-full w-full p-6 rounded-md">
@@ -119,18 +110,19 @@ const Dashboard: React.FC = () => {
                     {/* Profile & Password Storage */}
                     <div className="grid grid-cols-2 gap-6">
                         {/* Profile Section */}
-                        <div className="grid grid-cols-3 gap-5 bg-gradient-to-r from-theme-secondary-transparent via-theme-primary to-theme-secondary-transparent p-6 rounded-lg items-center">
-                            <img src={Pro} alt="Profile" className="rounded-full h-24 w-24 hidden xl:block" />
+                        <div className="flex flex-row gap-5 bg-gradient-to-r from-theme-secondary-transparent via-theme-primary to-theme-secondary-transparent py-4 px-0 rounded-lg items-center">
+                            <img src={Pro} alt="Profile" className="rounded-full h-24 w-24 hidden xl:block ml-6" />
                             <div className="ml-4 col-span-2">
-                                <div className="text-3xl font-bold">{userData.username}</div>
+                                <div className="text-2xl font-bold">{userData.username}</div>
                                 <div className="flex flex-col gap-2 mt-2">
-                                    <div className="text-xl flex items-center">
+                                    <div className="text-lg flex items-center">
                                         <CakeIcon className="mr-1" /> {userData.joinDate}
                                     </div>
-                                    <div className="text-xl flex items-center">
-                                        <AlternateEmailIcon className="mr-1" /> {userData.email}
+                                    <div className="text-lg flex items-center break-all">
+                                        <AlternateEmailIcon className="mr-1" />
+                                        <span className="break-all">{userData.email}</span>
                                     </div>
-                                    <div className="text-xl flex items-center">
+                                    <div className="text-lg flex items-center">
                                         <PasswordIcon className="mr-1" /> {passwordStats.totalPasswords}
                                     </div>
                                 </div>
@@ -138,7 +130,7 @@ const Dashboard: React.FC = () => {
                         </div>
 
                         {/* Password Storage Section */}
-                        <div className="bg-theme-primary-transparent p-6 rounded-lg flex flex-col items-center">
+                        <div className="bg-theme-primary-transparent p-6 rounded-lg flex flex-col items-center justify-center">
                             <h1 className="text-xl font-bold">Password Storage</h1>
                             <div className="w-full bg-gray-300 rounded-full h-4 mt-2">
                                 <div

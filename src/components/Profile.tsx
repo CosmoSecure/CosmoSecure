@@ -11,7 +11,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 // Fetch total passwords
 const fetchTotalPasswords = async (userId: string): Promise<number> => {
     try {
-        const entries: { entry_id: string }[] = await invoke('get_password_entries', { userId });
+        console.log("userID : ", userId);
+        const entries: { entry_id: string }[] = await invoke('get_password_entries', { ui: userId }); // Pass `ui`
         return entries.length;
     } catch (error) {
         console.error('Error fetching total passwords:', error);
@@ -24,27 +25,28 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
     const [joinDate, setJoinDate] = useState('');
     const [email, setEmail] = useState('');
     const [totalPasswords, setTotalPasswords] = useState(0);
-    const [lastFetch, setLastFetch] = useState(0);
 
     useEffect(() => {
+        if (!isVisible) return; // Only fetch data when the profile is visible
+
         const initializeData = async () => {
             try {
                 const user = decryptUser();
-                if (user && user.name && user.created_at) {
-                    setUsername(user.name);
+                if (user && user.n && user.c) {
+                    setUsername(user.n);
                     setEmail(user.email);
 
-                    const createdAt = new Date(parseInt(user.created_at.$date.$numberLong));
+                    const createdAt = new Date(parseInt(user.c.$date.$numberLong));
                     const formattedDate = `${String(createdAt.getDate()).padStart(2, '0')}-${String(createdAt.getMonth() + 1).padStart(2, '0')}-${createdAt.getFullYear()}`;
                     setJoinDate(formattedDate);
 
                     console.log('User data decrypted:', user);
 
                     // Fetch total passwords directly from the backend
-                    const total = await fetchTotalPasswords(user.user_id);
+                    const total = await fetchTotalPasswords(user.ui);
                     setTotalPasswords(total);
                 } else {
-                    console.error('No user found in decrypted data');
+                    console.error('No user found in decrypted data: ', user);
                 }
             } catch (error) {
                 console.error('Error decrypting or parsing user data:', error);
@@ -52,25 +54,7 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
         };
 
         initializeData();
-
-        let isSubscribed = true;
-        const interval = setInterval(async () => {
-            const now = Date.now();
-            if (now - lastFetch >= 2000 && isSubscribed) { // 2 second minimum interval
-                const user = decryptUser();
-                if (user) {
-                    const total = await fetchTotalPasswords(user.user_id);
-                    setTotalPasswords(total);
-                    setLastFetch(now);
-                }
-            }
-        }, 2000);
-
-        return () => {
-            isSubscribed = false;
-            clearInterval(interval);
-        };
-    }, [lastFetch]);
+    }, [isVisible]); // Run this effect only when `isVisible` changes
 
     return (
         <AnimatePresence>
@@ -124,11 +108,11 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
                                 <motion.img
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
-                                    transition={{ 
+                                    transition={{
                                         type: "spring",
                                         stiffness: 260,
                                         damping: 20,
-                                        delay: 0.4 
+                                        delay: 0.4
                                     }}
                                     src={Pro}
                                     alt=""
