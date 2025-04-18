@@ -57,6 +57,8 @@ pub async fn add_password_entry(
     // Get password strength score
     let strength_score = get_password_strength(&password);
 
+    println!("Strength Score | add_password_entry: {}", strength_score);
+
     let new_entry = PasswordEntry {
         entry_id: ObjectId::new().to_hex(),
         account_name,
@@ -64,10 +66,11 @@ pub async fn add_password_entry(
         password,
         custom_fields: None,
         created_at: DateTime::now(),
-        password_strength: Some(strength_score),
+        password_strength: Some(strength_score), // Store the strength score here
+        last_update: DateTime::now(),
     };
 
-    let filter = doc! { "user_id": &user_id };
+    let filter = doc! { "ui": &user_id };
     let update = doc! {
         "$push": {
             "entries": bson::to_bson(&new_entry).unwrap()
@@ -110,13 +113,14 @@ pub async fn update_password_entry(
     // Get password strength score
     let strength_score = get_password_strength(&password);
 
-    let filter = doc! { "entries.entry_id": &entry_id };
+    let filter = doc! { "entries.aid": &entry_id };
     let update = doc! {
         "$set": {
-            "entries.$.account_name": account_name,
-            "entries.$.username": username,
-            "entries.$.password": password,
-            "entries.$.password_strength": bson::to_bson(&strength_score).unwrap(),
+            "entries.$.an": account_name,
+            "entries.$.aun": username,
+            "entries.$.ap": password,
+            "entries.$.aps": bson::to_bson(&strength_score).unwrap(),
+            "entries.$.lup": DateTime::now(),
         }
     };
 
@@ -135,10 +139,10 @@ pub async fn delete_password_entry(
         .get_database("password_manager")
         .collection::<PasswordEntries>("password_entries");
 
-    let filter = doc! { "entries.entry_id": &entry_id };
+    let filter = doc! { "entries.aid": &entry_id };
     let update = doc! {
         "$pull": {
-            "entries": { "entry_id": &entry_id }
+            "entries": { "aid": &entry_id }
         }
     };
 
@@ -151,17 +155,24 @@ pub async fn delete_password_entry(
 #[tauri::command]
 pub async fn get_password_entries(
     state: State<'_, MongoClientState>,
-    user_id: String,
+    ui: String, // User ID
 ) -> Result<Vec<PasswordEntry>, String> {
     let passwords_collection = state
         .get_database("password_manager")
         .collection::<PasswordEntries>("password_entries");
 
-    let filter = doc! { "user_id": &user_id };
+    let filter = doc! { "ui": &ui }; // Filter by user ID
+    println!("Filter : {:#}", filter);
 
     match passwords_collection.find_one(filter).await {
-        Ok(Some(password_entries)) => Ok(password_entries.entries),
-        Ok(None) => Ok(vec![]), // No entries found for the user
+        Ok(Some(password_entries)) => {
+            // println!("Retrieved password entries: {:?}", password_entries.entries);
+            Ok(password_entries.entries)
+        }
+        Ok(None) => {
+            println!("No entries found for user ID: {}", ui);
+            Ok(vec![])
+        }
         Err(e) => Err(format!("Error fetching password entries: {}", e)),
     }
 }
@@ -348,19 +359,27 @@ pub async fn tauri_add_user(
     state: State<'_, MongoClientState>,
     username: String,
     name: String,
-    password: String, // Receive plain password here
+    password: String,
     email: String,
 ) -> Result<String, String> {
     let trimmed_name = name.trim();
     let trimmed_email = email.trim();
 
-    // Hash the password using bcrypt
+    println!("Received username: {}", username);
+    println!("Received email: {}", email);
+
+    if username.is_empty() {
+        return Err("Username cannot be empty.".to_string());
+    }
+
     let hashed_password = match hash(password, DEFAULT_COST) {
         Ok(hashed) => hashed,
-        Err(e) => return Err(format!("Error hashing password: {}", e)),
+        Err(e) => {
+            println!("Error hashing password: {}", e);
+            return Err(format!("Error hashing password: {}", e));
+        }
     };
 
-    // Proceed with adding the user
     let users_collection = state
         .get_database("password_manager")
         .collection::<User>("users");
@@ -383,8 +402,10 @@ pub async fn add_user(
     hashed_password: &str,
     email: &str,
 ) -> mongodb::error::Result<String> {
+    println!("Inserting user with username: {}", username);
+
     let new_user = User {
-        user_id: ObjectId::new().to_hex(),
+        user_id: ObjectId::new().to_string(),
         username: username.to_string(),
         name: name.to_string(),
         hashed_password: hashed_password.to_string(),
@@ -394,12 +415,14 @@ pub async fn add_user(
         username_change_count: 0,
     };
 
+    println!("New user object: {:?}", new_user);
+
     match collection.insert_one(new_user).await {
-        Ok(result) => Ok(result.inserted_id.as_object_id().unwrap().to_hex()),
-        Err(e) => {
-            eprintln!("Error adding user to MongoDB: {}", e); // Log error
-            Err(e)
+        Ok(result) => {
+            println!("User Added Secuessfully");
+            Ok(result.inserted_id.as_object_id().unwrap().to_hex())
         }
+        Err(e) => Err(e),
     }
 }
 

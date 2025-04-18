@@ -7,14 +7,12 @@ use serde::{Deserialize, Serialize};
 pub struct User {
     #[serde(rename = "ui")]
     pub user_id: String, // Unique identifier for the user
-    #[serde(rename = "un")]
     pub username: String, // Encrypted username
     #[serde(rename = "n")]
     pub name: String, // Name
     #[serde(rename = "hp")]
     pub hashed_password: String, // Hashed password for authentication
-    #[serde(rename = "e")]
-    pub email: String, // Email address
+    pub email: String,    // Email address
     #[serde(rename = "c")]
     pub created_at: DateTime, // Account creation timestamp
     #[serde(rename = "l")]
@@ -41,20 +39,28 @@ pub struct DeletedUser {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PasswordEntry {
-    pub entry_id: String,     // Unique identifier for the entry
+    #[serde(rename = "aid")]
+    pub entry_id: String, // Unique identifier for the entry
+    #[serde(rename = "an")]
     pub account_name: String, // Encrypted account name
-    pub username: String,     // Encrypted username for the account
-    pub password: String,     // Encrypted password
+    #[serde(rename = "aun")]
+    pub username: String, // Encrypted username for the account
+    #[serde(rename = "ap")]
+    pub password: String, // Encrypted password
     pub custom_fields: Option<Vec<(String, String)>>, // Encrypted key-value pairs
+    #[serde(rename = "ac")]
     pub created_at: DateTime, // Entry creation timestamp
+    #[serde(rename = "aps")]
     pub password_strength: Option<u8>, // Password strength rating
-                              // Last update timestamp
-                              // Add ZKP [Zero Knowledge Proof]
+    #[serde(rename = "lup")]
+    pub last_update: DateTime, // Last update timestamp
+                                                      // Add ZKP [Zero Knowledge Proof]
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PasswordEntries {
-    pub user_id: String,             // Reference to the user
+    #[serde(rename = "ui")]
+    pub user_id: String, // Reference to the user
     pub entries: Vec<PasswordEntry>, // List of password entries for the user
 }
 
