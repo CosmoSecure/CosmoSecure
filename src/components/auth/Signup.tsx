@@ -105,19 +105,22 @@ const Signup: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 300 }}
             transition={{ duration: 0.6 }}
-            className="w-full h-full flex justify-center items-center bg-rich-black text-white rounded-md"
+            className="w-full h-full flex justify-center items-center bg-theme-background text-theme-text rounded-md"
         >
-            <div className="max-w-4xl w-full h-5/6 m-2 mx-auto border border-rich-black-2 rounded-lg shadow-lg bg-raisin-black grid grid-cols-[4fr,3fr]">
-                <div className="m-5 grid grid-rows-[0.5fr,3fr]">
-                    <div className="w-1/2 mx-auto">
+            <div className="max-w-4xl w-full h-5/6 m-2 mx-auto border border-theme-secondary-transparent rounded-lg shadow-lg bg-theme-primary-transparent grid grid-cols-[4fr,3fr]">
+                <div className="m-5 flex flex-col h-[95%] overflow-y-scroll">
+                    {/* Logo at the top */}
+                    <div className="w-2/3 mx-auto mb-6">
                         <img
                             src={Logo} // Replace with your image path
                             alt="Logo"
                             className="w-auto h-auto object-cover mx-auto"
                         />
                     </div>
-                    <div className="mx-8 flex flex-col justify-center min-h-[0px]">
-                        <h2 className="text-2xl font-bold text-center mb-6 text-african-violet">Create an Account</h2>
+
+                    {/* Form centered vertically */}
+                    <div className="mx-8 flex flex-col justify-center flex-grow pb-4 mb-4">
+                        <h2 className="text-2xl font-bold text-center mb-6 text-theme-text">Create an Account</h2>
                         <form onSubmit={handleSignup}>
                             <div className="mb-4">
                                 <input
@@ -127,7 +130,7 @@ const Signup: React.FC = () => {
                                     onChange={(e) => setUsername(e.target.value)}
                                     onKeyDown={handleKeyDown}
                                     required
-                                    className="w-full p-3 border border-paynes-gray rounded-lg bg-ultra-violet text-white"
+                                    className="w-full p-3 border border-theme-secondary-transparent rounded-lg bg-theme-background text-theme-text"
                                 />
                                 {usernameAvailable === null ? null : usernameAvailable ? (
                                     <p className="text-green-500">Username is available</p>
@@ -142,7 +145,7 @@ const Signup: React.FC = () => {
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     required
-                                    className="w-full p-3 border border-paynes-gray rounded-lg bg-ultra-violet text-white"
+                                    className="w-full p-3 border border-theme-secondary-transparent rounded-lg bg-theme-background text-theme-text"
                                 />
                             </div>
                             <div className="mb-4">
@@ -155,7 +158,7 @@ const Signup: React.FC = () => {
                                         setEmailTouched(true);
                                     }}
                                     required
-                                    className="w-full p-3 border border-paynes-gray rounded-lg bg-ultra-violet text-white"
+                                    className="w-full p-3 border border-theme-secondary-transparent rounded-lg bg-theme-background text-theme-text"
                                 />
                                 {emailTouched && (isEmailValid === null ? null : isEmailValid ? (
                                     <p className="text-green-500">Valid email address</p>
@@ -171,7 +174,7 @@ const Signup: React.FC = () => {
                                     onChange={(e) => setPassword(e.target.value)}
                                     onKeyDown={handleKeyDown}
                                     required
-                                    className="w-full p-3 border border-paynes-gray rounded-lg bg-ultra-violet text-white pr-10"
+                                    className="w-full p-3 border border-theme-secondary-transparent rounded-lg bg-theme-background text-theme-text pr-10"
                                 />
                                 <button
                                     type="button"
@@ -183,7 +186,7 @@ const Signup: React.FC = () => {
                             </div>
                             <button
                                 type="submit"
-                                className="w-full p-3 bg-glaucous text-white rounded-lg hover:bg-mauve"
+                                className="w-full p-3 bg-theme-primary text-theme-text font-bold rounded-lg hover:bg-theme-secondary"
                             >
                                 Signup
                             </button>
@@ -192,7 +195,7 @@ const Signup: React.FC = () => {
                             Already have an account?{" "}
                             <button
                                 onClick={() => navigate("/login")}
-                                className="text-persian-pink hover:underline"
+                                className="text-theme-accent hover:underline"
                             >
                                 Login
                             </button>
@@ -204,7 +207,7 @@ const Signup: React.FC = () => {
                     <img
                         src={Background} // Replace with your image path
                         alt="Login Illustration"
-                        className="w-full h-full object-cover rounded-md"
+                        className="w-full h-full object-cover rounded-md overflow-y-scroll"
                     />
                 </div>
             </div>

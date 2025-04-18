@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useAnimation } from 'framer-motion';
 import { invoke } from '@tauri-apps/api/core';
-import { Key, Old, Crow } from '../../assets';
+import { Key, Crow } from '../../assets';
 
 const Intro: React.FC = () => {
     const navigate = useNavigate();
@@ -37,14 +37,7 @@ const Intro: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
             transition={{ duration: 0.8 }}
-            className="flex flex-col justify-between items-center h-full w-full bg-[#f4e7c3] rounded-md p-8 pb-4"
-            style={{
-                backgroundImage: `url(${Old})`,
-                backgroundSize: 'cover',
-                backgroundBlendMode: 'multiply',
-                color: '#5b4636',
-                fontFamily: 'serif',
-            }}
+            className="flex flex-col justify-between items-center h-full w-full bg-theme-background text-theme-text rounded-md p-8 pb-4"
         >
             <div className="flex flex-col items-center">
                 <h1 className="text-4xl font-bold mb-4">Welcome to CosmoSecure!</h1>
@@ -57,7 +50,7 @@ const Intro: React.FC = () => {
                         Hi, I am <span className="font-bold">Akash</span> (GitHub:&nbsp;
                         <a
                             href="#"
-                            className="text-cyan-800 underline"
+                            className="text-theme-accent underline"
                             onClick={(e) => {
                                 e.preventDefault();
                                 handleExternalLink('https://github.com/akash2061');
@@ -68,7 +61,7 @@ const Intro: React.FC = () => {
                         I specialize in building secure, scalable, and efficient software solutions. Feel free to explore my&nbsp;
                         <a
                             href="#"
-                            className="text-cyan-800 underline"
+                            className="text-theme-accent underline"
                             onClick={(e) => {
                                 e.preventDefault();
                                 handleExternalLink('https://github.com/akash2061/Code_Canvas');
@@ -78,7 +71,7 @@ const Intro: React.FC = () => {
                         </a> and reach out for collaborations &&nbsp;
                         <a
                             href="#"
-                            className="text-cyan-800 underline"
+                            className="text-theme-accent underline"
                             onClick={(e) => {
                                 e.preventDefault();
                                 handleExternalLink('https://www.linkedin.com/in/akash-soni-01475924b/');
@@ -109,7 +102,7 @@ const Intro: React.FC = () => {
                 </h2>
                 <div className='flex justify-center items-center mb-6'>
                     <h2 className="text-2xl mr-10">
-                        Rotate the key:
+                        Give the key a turn and dive in!
                     </h2>
                     <motion.img
                         src={Key}
@@ -122,17 +115,7 @@ const Intro: React.FC = () => {
                     />
                 </div>
                 <p className="text-base mt-4">
-                    © 2024 CosmoSecure. All rights reserved.&nbsp;
-                    <a
-                        href="#"
-                        className="text-cyan-800 underline"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            handleExternalLink('https://github.com/CosmoSecure/CosmoSecure/blob/master/LICENSE');
-                        }}
-                    >
-                        License
-                    </a>
+                    © 2024 CosmoSecure. All rights reserved.
                 </p>
             </footer>
         </motion.div>
