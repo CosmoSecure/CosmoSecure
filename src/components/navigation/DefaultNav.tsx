@@ -12,8 +12,8 @@ const DefaultNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ toggleP
     useEffect(() => {
         try {
             const user = decryptUser();
-            if (user && user.name) {
-                setUsername(user.name);
+            if (user && user.n) {
+                setUsername(user.n);
             } else {
                 console.error('No user found in decrypted data');
             }

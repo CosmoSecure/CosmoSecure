@@ -44,7 +44,7 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
             }
         } catch (error) {
             console.error("Login failed:", error);
-            alert("Login failed. Invalid credentials. Please try again.");
+            alert("Login failed. Please try again.");
         }
     };
 
@@ -60,9 +60,9 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -300 }}
             transition={{ duration: 0.6 }}
-            className="w-full h-full flex justify-center items-center bg-rich-black text-white rounded-md"
+            className="w-full h-full flex justify-center items-center bg-theme-background text-theme-text rounded-md"
         >
-            <div className="max-w-4xl w-full h-5/6 m-2 mx-auto border border-rich-black-2 rounded-lg shadow-lg bg-raisin-black grid grid-cols-[3fr,4fr]">
+            <div className="max-w-4xl w-full h-5/6 m-2 mx-auto border border-theme-secondary-transparent rounded-lg shadow-lg bg-theme-primary-transparent grid grid-cols-[3fr,4fr]">
                 <div>
                     <img
                         src={Background} // Replace with your image path
@@ -73,13 +73,13 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
                 <div className="m-5 grid grid-rows-[1fr,2fr]">
                     <div className="w-1/2 mx-auto">
                         <img
-                            src={Logo} // Replace with your image path
+                            src={Logo}
                             alt="Logo"
-                            className="w-auto h-auto object-cover mx-auto"
+                            className="w-auto h-auto object-contain mx-auto"
                         />
                     </div>
                     <div className="mx-8">
-                        <h2 className="text-2xl font-bold text-center mb-6 text-african-violet">Welcome Back!</h2>
+                        <h2 className="text-2xl font-bold text-center mb-6 text-theme-text">Welcome Back!</h2>
                         <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
                             <div className="mb-4">
                                 <input
@@ -88,7 +88,7 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
                                     value={identifier}
                                     onChange={(e) => setIdentifier(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    className="w-full p-3 border border-paynes-gray rounded-lg bg-ultra-violet text-white"
+                                    className="w-full p-3 border border-theme-secondary-transparent rounded-lg bg-theme-background text-theme-text"
                                 />
                             </div>
                             <div className="mb-4 relative">
@@ -98,7 +98,7 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    className="w-full p-3 border border-paynes-gray rounded-lg bg-ultra-violet text-white pr-10"
+                                    className="w-full p-3 border border-theme-secondary-transparent rounded-lg bg-theme-background text-theme-text pr-10"
                                 />
                                 <button
                                     type="button"
@@ -110,7 +110,7 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
                             </div>
                             <button
                                 type="submit"
-                                className="w-full p-3 bg-glaucous text-white rounded-lg hover:bg-mauve"
+                                className="w-full p-3 bg-theme-primary text-theme-text font-bold rounded-lg hover:bg-theme-secondary"
                             >
                                 Login
                             </button>
@@ -119,7 +119,7 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
                             Don't have an account?{" "}
                             <button
                                 onClick={() => navigate("/signup")}
-                                className="text-persian-pink hover:underline"
+                                className="text-theme-accent hover:underline"
                             >
                                 Signup
                             </button>

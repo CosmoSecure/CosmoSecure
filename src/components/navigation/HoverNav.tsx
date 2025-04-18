@@ -35,8 +35,8 @@ const HoverNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ togglePro
     useEffect(() => {
         try {
             const user = decryptUser();
-            if (user?.name) {
-                setUsername(user.name);
+            if (user?.n) {
+                setUsername(user.n);
             }
         } catch (error) {
             console.error('Error decrypting user data:', error);

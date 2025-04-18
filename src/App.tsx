@@ -25,7 +25,7 @@ function App() {
       try {
         if (TEST_MODE) {
           // Simulate loading delay for testing
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          await new Promise(resolve => setTimeout(resolve, 4000));
         }
 
         const [encryptedToken, encryptedUser] = await invoke<[string, string]>('load_token_command');

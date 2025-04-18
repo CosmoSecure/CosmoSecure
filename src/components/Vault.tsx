@@ -26,47 +26,35 @@ const Vault = () => {
         return user;
     }, []);
 
-    // Update password strength check
-    const checkPasswordStrength = useCallback(async (entries: PasswordEntry[]) => {
-        const updatedEntries = await Promise.all(
-            entries.map(async (entry) => {
-                try {
-                    const strength = await invoke<{ score: number }>('check_password_strength', {
-                        password: entry.password
-                    });
-                    return { ...entry, strength: strength.score };
-                } catch (error) {
-                    console.error("Error checking password strength:", error);
-                    return entry;
-                }
-            })
-        );
-        return updatedEntries;
-    }, []);
-
-    // Optimized fetch passwords
+    // Fetch passwords from the backend
     const fetchPasswords = useCallback(async () => {
         try {
             setIsLoading(true);
             const user = await getUserData();
-            const entries = await invoke('get_password_entries', {
-                userId: user.user_id
-            }) as PasswordEntry[];
+            const entries = await invoke<any[]>('get_password_entries', {
+                ui: user.ui, // Pass `ui` as the user ID
+            });
 
-            const entriesWithStrength = await checkPasswordStrength(entries);
-            setPasswords(entriesWithStrength);
+            console.log("Fetched entries:", entries); // Debugging log
 
-            // Update weak passwords count
-            const weakPws = entriesWithStrength.filter(entry => (entry.strength ?? 0) < 3);
-            sessionStorage.setItem('weak_passwords', JSON.stringify(weakPws));
-            sessionStorage.setItem('p_count', entries.length.toString());
+            // Map backend fields to frontend structure
+            const mappedEntries: PasswordEntry[] = entries.map(entry => ({
+                entry_id: entry.aid,
+                account_name: entry.an,
+                username: entry.aun,
+                password: entry.ap,
+                strength: entry.aps,
+            }));
+
+            console.log("Mapped entries with strength:", mappedEntries); // Debugging log
+            setPasswords(mappedEntries);
         } catch (error) {
             setError("Error fetching passwords. Please try again.");
             console.error("Error fetching passwords:", error);
         } finally {
             setIsLoading(false);
         }
-    }, [getUserData, checkPasswordStrength]);
+    }, [getUserData]);
 
     useEffect(() => {
         fetchPasswords();
@@ -78,7 +66,7 @@ const Vault = () => {
     }, [fetchPasswords]);
 
     const handleAddPassword = useCallback(async () => {
-        if (!accountName || !username || !password) {
+        if (!accountName.trim() || !username.trim() || !password.trim()) {
             setError("Please fill in all fields");
             return;
         }
@@ -87,33 +75,49 @@ const Vault = () => {
             setIsLoading(true);
             const user = await getUserData();
 
+            if (!user || !user.ui) {
+                throw new Error("User data is missing or invalid");
+            }
+
             if (editId) {
+                // Update existing password entry
                 await invoke('update_password_entry', {
                     entryId: editId,
-                    accountName,
-                    username,
-                    password
+                    accountName: accountName.trim(),
+                    username: username.trim(),
+                    password: password.trim(),
                 });
 
-                setPasswords(prev => prev.map(entry =>
-                    entry.entry_id === editId
-                        ? { entry_id: editId, account_name: accountName, username, password }
-                        : entry
-                ));
+                setPasswords(prev =>
+                    prev.map(entry =>
+                        entry.entry_id === editId
+                            ? {
+                                entry_id: editId,
+                                account_name: accountName.trim(),
+                                username: username.trim(),
+                                password: password.trim(),
+                            }
+                            : entry
+                    )
+                );
             } else {
+                // Add new password entry
                 const entry_id = await invoke<string>('add_password_entry', {
-                    userId: user.user_id,
-                    accountName,
-                    username,
-                    password
+                    userId: user.ui, // Pass `ui` as `userId`
+                    accountName: accountName.trim(),
+                    username: username.trim(),
+                    password: password.trim(),
                 });
 
-                setPasswords(prev => [...prev, {
-                    entry_id,
-                    account_name: accountName,
-                    username,
-                    password
-                }]);
+                setPasswords(prev => [
+                    ...prev,
+                    {
+                        entry_id,
+                        account_name: accountName.trim(),
+                        username: username.trim(),
+                        password: password.trim(),
+                    },
+                ]);
             }
 
             // Reset form
@@ -148,8 +152,8 @@ const Vault = () => {
             setIsLoading(true);
             const user = await getUserData();
             await invoke('delete_password_entry', {
-                userId: user.user_id,
-                entryId
+                userId: user.ui,
+                entryId,
             });
 
             setPasswords(prev => prev.filter(entry => entry.entry_id !== entryId));
@@ -162,14 +166,14 @@ const Vault = () => {
         }
     }, [getUserData, fetchPasswords]);
 
-    // Memoize rendered list
     const getStrengthColor = (strength?: number) => {
-        if (!strength) return 'text-gray-500';
-        if (strength >= 4) return 'text-green-500';
-        if (strength >= 3) return 'text-yellow-500';
-        return 'text-red-500';
+        if (strength === undefined || strength === null) return 'text-gray-500'; // Default for undefined strength
+        if (strength >= 4) return 'text-green-500'; // Strong password
+        if (strength >= 2) return 'text-yellow-500'; // Medium password
+        return 'text-red-500'; // Weak password
     };
 
+    // Render password list
     const passwordList = useMemo(() => (
         <ul className="list-disc pl-5">
             {passwords.map((entry) => (
