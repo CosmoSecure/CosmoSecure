@@ -52,7 +52,7 @@ const ProcessCapture: React.FC = () => {
         fetchStats();
 
         // Set up interval for updates
-        const intervalId = setInterval(fetchStats, 1000);
+        const intervalId = setInterval(fetchStats, 2000);
 
         // Cleanup interval on component unmount
         return () => clearInterval(intervalId);
