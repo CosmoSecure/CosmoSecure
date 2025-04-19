@@ -12,6 +12,8 @@ import { reloadApp_Update } from "./reloadApp_Update";
 import { toast } from 'sonner';
 import { useNavigation } from '../contexts/';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
+import Modal from "@mui/material/Modal";
+import Box from "@mui/material/Box";
 
 function debounce(func: (...args: any[]) => void, wait: number) {
     let timeout: ReturnType<typeof setTimeout>;
@@ -38,6 +40,8 @@ const Settings = () => {
     const [deleteUsername, setDeleteUsername] = useState('');
     const [deletePassword, setDeletePassword] = useState('');
     const { navStyle, setNavStyle } = useNavigation();
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [confirmationText, setConfirmationText] = useState("");
 
     const toggleDropdown = (dropdownName: string) => {
         setActiveDropdown(activeDropdown === dropdownName ? null : dropdownName);
@@ -97,11 +101,11 @@ const Settings = () => {
             const user = decryptUser();
             console.log("Decrypted user data:", user); // Print decrypted user data
             if (user) {
-                const args = { userId: user.user_id, newName: newName || null, newUsername: newUsername || null };
+                const args = { userId: user.ui, newName: newName || null, newUsername: newUsername || null };
                 console.log("Arguments passed to invoke:", args); // Print arguments passed to invoke
                 await invoke("update_name_username", args);
                 alert("Name and/or Username updated successfully!");
-                await reloadApp_Update(user.user_id);
+                await reloadApp_Update(user.ui);
 
                 // Show notification to relogin
                 toast('Changes applied. Please relogin to apply changes.', {
@@ -140,7 +144,7 @@ const Settings = () => {
         try {
             const user = decryptUser();
             if (user) {
-                const args = { userId: user.user_id, currentPassword: currentPassword, newPassword: newPassword };
+                const args = { userId: user.ui, currentPassword: currentPassword, newPassword: newPassword };
                 const response = await invoke<string>("update_user_password", args);
                 if (response === "New password cannot be the same as the current password.") {
                     toast.error("New password cannot be the same as the current password.", {
@@ -206,9 +210,16 @@ const Settings = () => {
 
     const handleDeleteAccount = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (confirmationText.toLowerCase() !== "delete") {
+            toast.error("You must type 'delete' to confirm account deletion.");
+            return;
+        }
+
         try {
             const args = { username: deleteUsername, password: deletePassword };
             const response = await invoke<string>("user_delete", args);
+
             if (response === "Invalid credentials.") {
                 toast.error("Invalid username or password.", {
                     style: {
@@ -250,7 +261,19 @@ const Settings = () => {
                 },
                 icon: '❌',
             });
+        } finally {
+            setIsDeleteModalOpen(false);
+            setConfirmationText("");
         }
+    };
+
+    const openDeleteModal = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!deleteUsername || !deletePassword) {
+            toast.error("Please fill in both username and password.");
+            return;
+        }
+        setIsDeleteModalOpen(true);
     };
 
     const togglePasswordVisibility = () => setPasswordVisible(!passwordVisible);
@@ -736,7 +759,7 @@ const Settings = () => {
                         onClick={stopPropagation}
                     >
                         {activeDropdown === "deleteAccount" && (
-                            <form className="flex flex-col gap-4 mt-4" onSubmit={handleDeleteAccount}>
+                            <form className="flex flex-col gap-4 mt-4" onSubmit={openDeleteModal}>
                                 <TextField
                                     style={{ width: '30%' }}
                                     label="Username"
@@ -786,6 +809,64 @@ const Settings = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Confirmation Modal */}
+            <Modal
+                open={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                aria-labelledby="delete-account-modal"
+                aria-describedby="delete-account-confirmation"
+            >
+                <Box
+                    className="bg-theme-primary p-6 rounded-lg shadow-lg"
+                    style={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        width: "400px",
+                        outline: "none",
+                    }}
+                >
+                    <h2 className="text-xl font-bold mb-4 text-theme-background-transparent">
+                        Confirm Account Deletion
+                    </h2>
+                    <p className="text-theme-background-transparent mb-4">
+                        To confirm, type <strong>"delete"</strong> in the box below.
+                    </p>
+                    <TextField
+                        fullWidth
+                        variant="outlined"
+                        label="Type 'delete' to confirm"
+                        value={confirmationText}
+                        onChange={(e) => setConfirmationText(e.target.value)}
+                        InputProps={{
+                            style: { color: "var(--theme-text)" },
+                        }}
+                        InputLabelProps={{
+                            style: { color: "var(--theme-text)" },
+                        }}
+                    />
+                    <div className="flex justify-end gap-4 mt-6">
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => setIsDeleteModalOpen(false)}
+                            className="text-theme-text hover:bg-theme-accent"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="error"
+                            onClick={handleDeleteAccount}
+                            className="bg-red-500 text-theme-text hover:bg-red-700"
+                        >
+                            Delete Account
+                        </Button>
+                    </div>
+                </Box>
+            </Modal>
         </div>
     );
 };

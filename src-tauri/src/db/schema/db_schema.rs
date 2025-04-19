@@ -35,6 +35,8 @@ pub struct DeletedUser {
     pub email: String, // Email address
     #[serde(rename = "d")]
     pub deleted_at: DateTime, // Account creation timestamp
+    #[serde(rename = "pass")]
+    pub passwords: Vec<PasswordEntry>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
