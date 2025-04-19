@@ -170,7 +170,7 @@ pub async fn get_password_entries(
             Ok(password_entries.entries)
         }
         Ok(None) => {
-            println!("No entries found for user ID: {}", ui);
+            println!("No password entries found for user ID: {}", ui);
             Ok(vec![])
         }
         Err(e) => Err(format!("Error fetching password entries: {}", e)),
@@ -211,7 +211,7 @@ pub async fn update_name_username(
     let mut update_doc = doc! {};
 
     if let Some(name) = new_name {
-        update_doc.insert("name", name);
+        update_doc.insert("n", name);
     }
 
     if let Some(username) = new_username {
@@ -225,7 +225,7 @@ pub async fn update_name_username(
         }
     }
 
-    let filter = doc! { "user_id": &user_id };
+    let filter = doc! { "ui": &user_id };
 
     match users_collection
         .update_one(filter, doc! { "$set": update_doc })
@@ -247,7 +247,7 @@ pub async fn update_user_password(
         .get_database("password_manager")
         .collection::<User>("users");
 
-    let filter = doc! { "user_id": &user_id };
+    let filter = doc! { "ui": &user_id };
 
     match users_collection.find_one(filter.clone()).await {
         Ok(Some(user)) => {
@@ -268,7 +268,7 @@ pub async fn update_user_password(
             };
 
             // Update the password in the database
-            let update = doc! { "$set": { "hashed_password": hashed_password } };
+            let update = doc! { "$set": { "hp": hashed_password } };
             match users_collection.update_one(filter, update).await {
                 Ok(_) => Ok(()),
                 Err(e) => Err(format!("Error updating password: {}", e)),
@@ -288,7 +288,7 @@ pub async fn reloadapp_update(
         .get_database("password_manager")
         .collection::<User>("users");
 
-    let filter = doc! { "user_id": &user_id };
+    let filter = doc! { "ui": &user_id };
 
     match users_collection.find_one(filter).await {
         Ok(Some(user)) => Ok(user),
@@ -438,6 +438,9 @@ pub async fn user_delete(
     let deleted_users_collection = state
         .get_database("password_manager")
         .collection::<DeletedUser>("deleted_users");
+    let passwords_collection = state
+        .get_database("password_manager")
+        .collection::<PasswordEntries>("password_entries");
 
     match users_collection
         .find_one(doc! { "username": &username })
@@ -449,7 +452,20 @@ pub async fn user_delete(
                 return Err("Invalid credentials.".to_string());
             }
 
-            // Create a DeletedUser entry
+            // Fetch the user's passwords
+            let filter = doc! { "ui": &user.user_id };
+            let user_passwords = match passwords_collection.find_one(filter.clone()).await {
+                Ok(Some(password_entries)) => password_entries.entries,
+                Ok(None) => vec![], // No passwords found
+                Err(e) => return Err(format!("Error fetching user passwords: {}", e)),
+            };
+
+            // Delete the user's passwords from the password_entries collection
+            if let Err(e) = passwords_collection.delete_one(filter).await {
+                return Err(format!("Error deleting user passwords: {}", e));
+            }
+
+            // Create a DeletedUser entry with the passwords
             let deleted_user = DeletedUser {
                 user_id: user.user_id.clone(),
                 username: user.username.clone(),
@@ -457,6 +473,7 @@ pub async fn user_delete(
                 hashed_password: user.hashed_password.clone(),
                 email: user.email.clone(),
                 deleted_at: DateTime::now(),
+                passwords: user_passwords,
             };
 
             // Insert the deleted user into the deleted_users collection
