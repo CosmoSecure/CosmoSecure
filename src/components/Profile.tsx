@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Pro } from '../assets/';
 import { decryptUser } from './auth/token_secure';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import CakeIcon from '@mui/icons-material/Cake';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
@@ -21,7 +22,8 @@ const fetchTotalPasswords = async (userId: string): Promise<number> => {
 };
 
 const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisible, onClose }) => {
-    const [username, setUsername] = useState('');
+    const [name, setUsername] = useState('');
+    const [username, setUserName] = useState('');
     const [joinDate, setJoinDate] = useState('');
     const [email, setEmail] = useState('');
     const [totalPasswords, setTotalPasswords] = useState(0);
@@ -34,6 +36,7 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
                 const user = decryptUser();
                 if (user && user.n && user.c) {
                     setUsername(user.n);
+                    setUserName(user.username);
                     setEmail(user.email);
 
                     const createdAt = new Date(parseInt(user.c.$date.$numberLong));
@@ -76,7 +79,7 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
                         animate={{ x: 0 }}
                         exit={{ x: "100%" }}
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                        className="fixed top-0 right-0 rounded-xl w-2/5 bg-theme-background 
+                        className="fixed top-0 right-0 rounded-xl w-2/5 bg-theme-background opacity-90
                             shadow-lg z-30"
                     >
                         <motion.main className="relative h-full flex flex-col items-center rounded-xl mb-4">
@@ -132,7 +135,15 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
                                         transition={{ delay: 0.6 }}
                                         className="text-3xl font-bold mt-2"
                                     >
-                                        {username}
+                                        {name}
+                                    </motion.div>
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: 0.6 }}
+                                        className="text-xl mt-2 flex justify-center items-center break-all"
+                                    >
+                                        <AccountCircleIcon className="mr-2" /> {username}
                                     </motion.div>
 
                                     {/* Staggered info items */}
