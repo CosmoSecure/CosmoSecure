@@ -146,7 +146,7 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
                                             initial={{ opacity: 0, x: -20 }}
                                             animate={{ opacity: 1, x: 0 }}
                                             transition={{ delay: 0.7 + (index * 0.1) }}
-                                            className="text-xl mt-2 flex justify-center"
+                                            className="text-xl mt-2 flex justify-center break-all"
                                         >
                                             <Icon className="mr-2" /> {text}
                                         </motion.div>
