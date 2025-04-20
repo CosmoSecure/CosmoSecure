@@ -61,6 +61,8 @@ const Tools: React.FC = () => {
                         onClick={() => setSelectedTool('Password Generator')}
                         sx={{
                             borderRadius: '8px',
+                            margin: '0.4rem',
+                            padding: '8px',
                             transition: 'all 0.3s ease-in-out',
                             bgcolor: selectedTool === 'Password Generator' ? 'rgba(0, 0, 0, 0.1)' : 'transparent',
                             transform: selectedTool === 'Password Generator' ? 'scale(1.05)' : 'none',
@@ -83,6 +85,8 @@ const Tools: React.FC = () => {
                     <ListItemButton
                         sx={{
                             borderRadius: '8px',
+                            margin: '0.4rem',
+                            padding: '8px',
                             transition: 'all 0.3s ease-in-out',
                             bgcolor: selectedTool === 'Process Monitor' ? 'rgba(0, 0, 0, 0.1)' : 'transparent',
                             transform: selectedTool === 'Process Monitor' ? 'scale(1.05)' : 'none',
@@ -107,6 +111,8 @@ const Tools: React.FC = () => {
                         onClick={handleClick}
                         sx={{
                             borderRadius: '8px',
+                            margin: '0.4rem',
+                            padding: '8px',
                             transition: 'all 0.3s ease-in-out',
                             '&:hover': {
                                 bgcolor: 'rgba(0, 0, 0, 0.1)',
