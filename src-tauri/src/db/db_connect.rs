@@ -328,10 +328,10 @@ pub async fn authenticate_user(
     match get_user_by_username_or_email(&identifier, &users_collection).await {
         Ok(user) => {
             if verify(&password, &user.hashed_password).unwrap_or(false) {
-                let filter = doc! { "user_id": &user.user_id };
+                let filter = doc! { "ui": &user.user_id };
                 let update = doc! {
                     "$set": {
-                        "last_login": DateTime::now()
+                        "l": DateTime::now()
                     }
                 };
                 if let Err(e) = users_collection.update_one(filter, update).await {
