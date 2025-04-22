@@ -5,18 +5,19 @@ use crate::db::db_connect::{
     update_password_entry, update_user_password, user_delete,
 };
 use crate::db::token;
-use crate::extensions::pass_gen::generate_password;
-use crate::extensions::pass_strength::check_password_strength;
-use crate::extensions::process_capture::get_system_and_process_usage;
+use crate::extensions::{
+    email_breach::fetch_email_breach_info, pass_gen::generate_password,
+    pass_strength::check_password_strength, process_capture::get_system_and_process_usage,
+};
 use crate::version::get_version::get_version;
 use clap::Command;
 use config::delete_config;
 use openurl::open_url;
 use std::env;
 
-pub mod config;
+mod config;
 mod db;
-pub mod env_var;
+mod env_var;
 mod extensions;
 mod openurl;
 mod secure;
@@ -78,6 +79,7 @@ pub async fn run() {
             generate_password,
             get_version,
             get_system_and_process_usage,
+            fetch_email_breach_info,
         ])
         // .setup(|_app| {
         // // Use an asynchronous runtime to run the database connection
