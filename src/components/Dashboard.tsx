@@ -7,6 +7,7 @@ import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import PasswordIcon from '@mui/icons-material/Password';
 import { List, ListItemButton, ListItemIcon, ListItemText, Collapse } from '@mui/material';
 import { ExpandLess, ExpandMore, Warning as WarningIcon } from '@mui/icons-material';
+import DashboardEmailBreach from './tools/DashboardEmailBreach';
 
 // API Functions
 const fetchTotalPasswords = async (userId: string) => {
@@ -41,6 +42,7 @@ const fetchWeakPasswords = async (userId: string) => {
 
 // Dashboard Component
 const Dashboard: React.FC = () => {
+    const [email, setEmail] = useState('');
     const [userData, setUserData] = useState({
         username: '',
         email: '',
@@ -89,6 +91,8 @@ const Dashboard: React.FC = () => {
                     fetchTotalPasswords(userData.userId),
                     fetchWeakPasswords(userData.userId),
                 ]);
+
+                setEmail(userData.email);
 
                 setPasswordStats({
                     totalPasswords: total,
@@ -143,11 +147,12 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Future Features */}
-                    <div className="bg-theme-primary-transparent p-6 rounded-lg flex flex-col items-center justify-center h-full text-gray-500">
-                        <h1 className="text-2xl font-bold mb-4">Future Features</h1>
+                    <div className="bg-theme-primary-transparent p-6 rounded-lg flex flex-col items-center justify-center h-full overflow-scroll">
+                        {/* <h1 className="text-2xl font-bold mb-4">Future Features</h1>
                         <p className="text-center text-lg">
                             This section is reserved for upcoming features. Stay tuned for updates!
-                        </p>
+                        </p> */}
+                        <DashboardEmailBreach userEmail={email} />
                     </div>
                 </div>
 
