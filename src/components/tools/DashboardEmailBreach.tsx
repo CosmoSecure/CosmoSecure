@@ -160,12 +160,12 @@ const DashboardEmailBreach: React.FC<{ userEmail: string }> = ({ userEmail }) =>
                 aria-describedby="breach-details-description"
             >
                 <Box
-                    className="bg-theme-accent p-6 rounded-md shadow-lg max-w-3xl mx-auto mt-10 overflow-y-auto max-h-[90vh]"
+                    className="bg-theme-accent-transparent p-6 rounded-md shadow-lg max-w-5xl mx-auto mt-10 overflow-y-auto max-h-[90vh]"
                 >
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-bold">Breach Details</h2>
+                        <h2 className="text-xl font-bold bg-theme-primary p-2 rounded-md">Breach Details</h2>
                         <button
-                            className="text-red-500 font-bold"
+                            className="text-red-500 font-bold bg-theme-primary p-2 rounded-md"
                             onClick={() => setIsModalOpen(false)}
                         >
                             ESC
