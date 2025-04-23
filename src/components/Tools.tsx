@@ -11,7 +11,8 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import StarBorder from '@mui/icons-material/StarBorder';
 import MonitorIcon from '@mui/icons-material/Monitor';
-import { PasswordGenerator, ProcessCapture } from './tools';
+import MarkEmailUnreadIcon from '@mui/icons-material/MarkEmailUnread';
+import { PasswordGenerator, ProcessCapture, ToolsEmailBreach } from './tools';
 
 const Tools: React.FC = () => {
     const [selectedTool, setSelectedTool] = useState<string | null>(null);
@@ -27,6 +28,8 @@ const Tools: React.FC = () => {
                 return <PasswordGenerator />;
             case 'Process Monitor':  // Add this case
                 return <ProcessCapture />;
+            case 'Email Breach':
+                return <ToolsEmailBreach />;
             default:
                 return (
                     <div className="flex flex-col justify-center items-center font-extrabold text-theme-text-transparent text-black">
@@ -103,6 +106,30 @@ const Tools: React.FC = () => {
                         </ListItemIcon>
                         <ListItemText
                             primary={<span style={{ fontWeight: 'bold' }}>Process Monitor</span>}
+                        />
+                    </ListItemButton>
+
+                    <ListItemButton
+                        sx={{
+                            borderRadius: '8px',
+                            margin: '0.4rem',
+                            padding: '8px',
+                            transition: 'all 0.3s ease-in-out',
+                            bgcolor: selectedTool === 'Process Monitor' ? 'rgba(0, 0, 0, 0.1)' : 'transparent',
+                            transform: selectedTool === 'Process Monitor' ? 'scale(1.05)' : 'none',
+                            '&:hover': {
+                                bgcolor: 'rgba(0, 0, 0, 0.1)',
+                                transform: 'scale(1.05)',
+                            },
+                        }}
+                        className={`${selectedTool === 'Email Breach' ? 'text-theme-text' : 'hover:text-theme-text'}`}
+                        onClick={() => setSelectedTool('Email Breach')}
+                    >
+                        <ListItemIcon>
+                            <MarkEmailUnreadIcon /> {/* Import MarkEmailUnreadIcon from @mui/icons-material */}
+                        </ListItemIcon>
+                        <ListItemText
+                            primary={<span style={{ fontWeight: 'bold' }}>Email Breach</span>}
                         />
                     </ListItemButton>
 
