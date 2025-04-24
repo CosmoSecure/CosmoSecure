@@ -13,6 +13,7 @@ const StyledWrapper = styled.div`
     position: relative;
     font-family: sans-serif;
     font-size: 1em;
+    font-weight: 700;
     letter-spacing: 4px;
     overflow: hidden;
     background: linear-gradient(90deg, #fff 10%, #4d4d4d 20%);
