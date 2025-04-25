@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Skeleton, Modal, Box } from "@mui/material";
 import { invoke } from "@tauri-apps/api/core";
 import Email_Button from "./Email_Button";
+import Email_Loading from "./Email_Loading";
 
 interface BreachDetails {
     breach: string;
@@ -86,11 +87,8 @@ const DashboardEmailBreach: React.FC<{ userEmail: string }> = ({ userEmail }) =>
 
     if (loading) {
         return (
-            <div className="h-full w-full rounded-md">
-                <Skeleton variant="text" width="40%" height={40} />
-                <Skeleton variant="text" width="80%" height={40} />
-                <Skeleton variant="text" width="80%" height={40} />
-                <Skeleton variant="rounded" width="100%" height={200} className="font-bold text-2xl mt-2" />
+            <div className="h-full w-full rounded-md flex items-center justify-center">
+                <Email_Loading />
             </div>
         );
     }
