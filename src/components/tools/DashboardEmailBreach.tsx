@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Skeleton, Modal, Box } from "@mui/material";
+import { Modal, Box } from "@mui/material";
 import { invoke } from "@tauri-apps/api/core";
 import Email_Button from "./Email_Button";
 import Email_Loading from "./Email_Loading";
