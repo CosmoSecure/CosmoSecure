@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Skeleton, Modal, Box } from "@mui/material";
 import { invoke } from "@tauri-apps/api/core";
-import Button from "./Button";
+import Email_Button from "./Email_Button";
 
 interface BreachDetails {
     breach: string;
@@ -128,11 +128,6 @@ const DashboardEmailBreach: React.FC<{ userEmail: string }> = ({ userEmail }) =>
                     </div>
 
                     <div className="text-lg flex justify-between">
-                        <span className="text-theme-text font-medium">Total Records Exposed:</span>
-                        <span className="text-theme-accent">{summary.totalRecordsExposed}</span>
-                    </div>
-
-                    <div className="text-lg flex justify-between">
                         <span className="text-theme-text font-medium">Risk Level:</span>
                         <span className="text-theme-accent">{summary.risk.risk_label}</span>
                     </div>
@@ -147,7 +142,7 @@ const DashboardEmailBreach: React.FC<{ userEmail: string }> = ({ userEmail }) =>
                     className="mt-4 border-2 border-[#4d4d4d] rounded-lg p-3 w-fit flex items-center hover:scale-105 transition-all duration-300"
                     onClick={() => setIsModalOpen(true)}
                 >
-                    <Button />
+                    <Email_Button />
                 </button>
             </div>
 
