@@ -1,3 +1,4 @@
+use crate::config::update_config;
 use crate::db::schema::db_schema::{DeletedUser, PasswordEntries, PasswordEntry, User};
 use crate::db::token::generate_token;
 use crate::env_var::{get_env_key, get_env_vars};
@@ -329,15 +330,21 @@ pub async fn authenticate_user(
         Ok(user) => {
             if verify(&password, &user.hashed_password).unwrap_or(false) {
                 let filter = doc! { "ui": &user.user_id };
+                let last_login = DateTime::now(); // Get the current timestamp
                 let update = doc! {
                     "$set": {
-                        "l": DateTime::now()
+                        "l": &last_login
                     }
                 };
+
+                // Update the last login timestamp in the database
                 if let Err(e) = users_collection.update_one(filter, update).await {
                     eprintln!("Failed to update last login timestamp: {}", e);
                 }
 
+                update_config(&user, &last_login.to_string());
+
+                // Generate and return the token
                 let token_result = generate_token(&user.user_id);
                 match token_result {
                     Ok(token) => Ok(json!({
