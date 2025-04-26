@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-const Button = () => {
+const Email_Button = () => {
     return (
         <StyledWrapper>
             <p className="txt">Discover More!</p>
@@ -33,4 +33,4 @@ const StyledWrapper = styled.div`
     }
   }`;
 
-export default Button;
+export default Email_Button;
