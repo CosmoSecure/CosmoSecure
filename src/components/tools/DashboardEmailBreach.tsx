@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Skeleton, Modal, Box } from "@mui/material";
+import { Modal, Box } from "@mui/material";
 import { invoke } from "@tauri-apps/api/core";
-import Button from "./Button";
+import Email_Button from "./Email_Button";
+import Email_Loading from "./Email_Loading";
 
 interface BreachDetails {
     breach: string;
@@ -86,11 +87,8 @@ const DashboardEmailBreach: React.FC<{ userEmail: string }> = ({ userEmail }) =>
 
     if (loading) {
         return (
-            <div className="h-full w-full rounded-md">
-                <Skeleton variant="text" width="40%" height={40} />
-                <Skeleton variant="text" width="80%" height={40} />
-                <Skeleton variant="text" width="80%" height={40} />
-                <Skeleton variant="rounded" width="100%" height={200} className="font-bold text-2xl mt-2" />
+            <div className="h-full w-full rounded-md flex items-center justify-center">
+                <Email_Loading />
             </div>
         );
     }
@@ -128,11 +126,6 @@ const DashboardEmailBreach: React.FC<{ userEmail: string }> = ({ userEmail }) =>
                     </div>
 
                     <div className="text-lg flex justify-between">
-                        <span className="text-theme-text font-medium">Total Records Exposed:</span>
-                        <span className="text-theme-accent">{summary.totalRecordsExposed}</span>
-                    </div>
-
-                    <div className="text-lg flex justify-between">
                         <span className="text-theme-text font-medium">Risk Level:</span>
                         <span className="text-theme-accent">{summary.risk.risk_label}</span>
                     </div>
@@ -147,7 +140,7 @@ const DashboardEmailBreach: React.FC<{ userEmail: string }> = ({ userEmail }) =>
                     className="mt-4 border-2 border-[#4d4d4d] rounded-lg p-3 w-fit flex items-center hover:scale-105 transition-all duration-300"
                     onClick={() => setIsModalOpen(true)}
                 >
-                    <Button />
+                    <Email_Button />
                 </button>
             </div>
 
