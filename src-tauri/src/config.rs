@@ -5,6 +5,8 @@ use std::path::PathBuf;
 use std::process::Command;
 use tauri::AppHandle;
 
+use crate::db::schema::db_schema::User;
+
 pub fn get_config_file_path() -> PathBuf {
     let mut config_path = config_dir().expect("Failed to get config directory");
     config_path.push("CosmoSecure");
@@ -52,4 +54,26 @@ pub fn delete_config(_app: AppHandle) {
     std::process::exit(0);
 
     // app.restart();
+}
+
+pub fn update_config(user: &User, last_login: &str) {
+    // Save the updated user data to the config file
+    let config_path = get_config_file_path();
+    let updated_user_data = json!({
+        "user_id": user.user_id,
+        "username": user.username,
+        "name": user.name,
+        "email": user.email,
+        "last_login": last_login.to_string(),
+        "created_at": user.created_at.to_string()
+    });
+
+    if config_path.exists() {
+        let mut config_data: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&config_path).unwrap_or_default())
+                .unwrap_or_default();
+        config_data["user"] = updated_user_data; // Update the user data
+        fs::write(config_path, config_data.to_string())
+            .expect("Failed to update user data in config file");
+    }
 }

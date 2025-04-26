@@ -6,6 +6,7 @@ import CakeIcon from '@mui/icons-material/Cake';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import PasswordIcon from '@mui/icons-material/Password';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import { invoke } from '@tauri-apps/api/core';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -27,6 +28,7 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
     const [joinDate, setJoinDate] = useState('');
     const [email, setEmail] = useState('');
     const [totalPasswords, setTotalPasswords] = useState(0);
+    const [lastLogin, setLastLogin] = useState('');
 
     useEffect(() => {
         if (!isVisible) return; // Only fetch data when the profile is visible
@@ -39,9 +41,23 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
                     setUserName(user.username);
                     setEmail(user.email);
 
+                    // Format lastLogin
+                    const LastLogin = new Date(parseInt(user.l.$date.$numberLong));
+                    const formattedLastLoginDate = `${String(LastLogin.getDate()).padStart(2, '0')}-${String(
+                        LastLogin.getMonth() + 1
+                    ).padStart(2, '0')}-${LastLogin.getFullYear()}`;
+                    setLastLogin(formattedLastLoginDate);
+
                     const createdAt = new Date(parseInt(user.c.$date.$numberLong));
-                    const formattedDate = `${String(createdAt.getDate()).padStart(2, '0')}-${String(createdAt.getMonth() + 1).padStart(2, '0')}-${createdAt.getFullYear()}`;
+                    const formattedDate = `${String(createdAt.getDate()).padStart(2, '0')}-${String(
+                        createdAt.getMonth() + 1
+                    ).padStart(2, '0')}-${createdAt.getFullYear()}`;
                     setJoinDate(formattedDate);
+
+                    console.log('Last login date:', formattedLastLoginDate);
+                    console.log('Last login date:', user.l.$date.$numberLong);
+                    console.log('Created at date:', formattedDate);
+                    console.log('Created at date:', user.c.$date.$numberLong);
 
                     console.log('User data decrypted:', user);
 
@@ -150,7 +166,8 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
                                     {[
                                         { Icon: CakeIcon, text: joinDate },
                                         { Icon: AlternateEmailIcon, text: email },
-                                        { Icon: PasswordIcon, text: totalPasswords }
+                                        { Icon: PasswordIcon, text: totalPasswords },
+                                        { Icon: HourglassEmptyIcon, text: lastLogin }
                                     ].map(({ Icon, text }, index) => (
                                         <motion.div
                                             key={index}
