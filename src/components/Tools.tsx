@@ -44,7 +44,7 @@ const Tools: React.FC = () => {
     return (
         <div className="bg-theme-background h-full p-8 grid grid-cols-4 gap-4 text-theme-accent">
             {/* Sidebar using Material-UI List */}
-            <div className="col-span-1 bg-theme-primary-transparent p-4 rounded-md">
+            <div className="col-span-1 bg-theme-primary-transparent p-4 rounded-md overflow-y-scroll">
                 <List
                     sx={{ width: '100%' }}
                     component="nav"
