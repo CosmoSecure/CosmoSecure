@@ -124,7 +124,7 @@ const EmailBreach: React.FC = () => {
                             </div>
 
                             <button
-                                className="mt-4 border-2 border-[#4d4d4d] rounded-lg p-3 w-fit flex items-center hover:scale-105 transition-all duration-300"
+                                className="my-4 border-2 border-[#4d4d4d] rounded-lg p-3 w-fit flex items-center hover:scale-105 transition-all duration-300"
                                 onClick={() => setIsModalOpen(true)}
                             >
                                 <Email_Button />
