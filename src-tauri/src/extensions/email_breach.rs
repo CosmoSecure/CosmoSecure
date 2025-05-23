@@ -14,7 +14,7 @@ pub async fn fetch_email_breach_info(email: String) -> Result<Value, String> {
                 // Log the response body for debugging
                 match response.text().await {
                     Ok(body) => {
-                        println!("Response Body: {}", body); // Log the raw response body
+                        // println!("Response Body: {}", body); // Log the raw response body
                         match serde_json::from_str::<Value>(&body) {
                             Ok(json) => Ok(json), // Parse the JSON response
                             Err(err) => Err(format!("Failed to parse JSON: {}", err)),
