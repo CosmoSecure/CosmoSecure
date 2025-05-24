@@ -1,5 +1,3 @@
-// ! Add Tresh struct for deleted entries
-
 use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
 
@@ -49,14 +47,22 @@ pub struct PasswordEntry {
     pub username: String, // Encrypted username for the account
     #[serde(rename = "ap")]
     pub password: String, // Encrypted password
-    pub custom_fields: Option<Vec<(String, String)>>, // Encrypted key-value pairs
     #[serde(rename = "ac")]
     pub created_at: DateTime, // Entry creation timestamp
     #[serde(rename = "aps")]
     pub password_strength: Option<u8>, // Password strength rating
     #[serde(rename = "lup")]
     pub last_update: DateTime, // Last update timestamp
-                                                      // Add ZKP [Zero Knowledge Proof]
+    #[serde(rename = "d")]
+    pub deleted: Option<DeletedPasswordEntry>, // Is the entry deleted? & Timestamp of deletion
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DeletedPasswordEntry {
+    #[serde(rename = "del")]
+    pub deleted: bool,
+    #[serde(rename = "d_at")]
+    pub deleted_at: DateTime,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

@@ -1,12 +1,13 @@
 // import SensorOccupiedIcon from '@mui/icons-material/SensorOccupied';
 import { Route, Routes } from 'react-router-dom';
-import { AppLayout, Dashboard, Home, About, Vault, Profile, Settings, Tools } from '../components';
+import { AppLayout, Dashboard, Home, About, Vault, Profile, Settings, Trash, Tools } from '../components';
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
 import HomeIcon from '@mui/icons-material/Home';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
 import SecurityIcon from '@mui/icons-material/Security';
 import BuildIcon from '@mui/icons-material/Build';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 interface RoutesConfProps {
     setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean | null>>;
@@ -21,6 +22,7 @@ const RoutesConf: React.FC<RoutesConfProps> = ({ }) => {
                 {/* Dashboard as Entrypoint OR / */}
                 <Route index element={<Dashboard />} />
                 <Route path="vault" element={<Vault />} />
+                <Route path="trash" element={<Trash />} />
                 <Route path="home" element={<Home />} />
                 <Route path="about" element={<About />} />
                 <Route path="tools" element={<Tools />} />
@@ -42,6 +44,7 @@ export const routes = [
     //! Dashboard as Entrypoint OR /
     { path: '/', label: 'Dashboard', icon: <DashboardRoundedIcon fontSize="inherit" /> },
     { path: '/vault', label: 'Vault', icon: <SecurityIcon fontSize="inherit" /> },
+    { path: '/trash', label: 'Trash', icon: <DeleteIcon fontSize="inherit" /> },
     { path: '/home', label: 'Home', icon: <HomeIcon fontSize="inherit" /> },
     { path: '/about', label: 'About', icon: <InfoRoundedIcon fontSize="inherit" /> },
     { path: '/tools', label: 'Tools', icon: <BuildIcon fontSize="inherit" /> },

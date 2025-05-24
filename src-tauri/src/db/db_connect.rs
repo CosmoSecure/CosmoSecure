@@ -5,6 +5,7 @@ use crate::env_var::{get_env_key, get_env_vars};
 // use crate::secure::encrypt;
 use crate::secure::decrypt;
 use bcrypt::{hash, verify, DEFAULT_COST};
+use bson::Bson;
 // use futures_util::TryStreamExt;
 use mongodb::bson::DateTime;
 use mongodb::bson::{doc, oid::ObjectId};
@@ -65,10 +66,10 @@ pub async fn add_password_entry(
         account_name,
         username,
         password,
-        custom_fields: None,
         created_at: DateTime::now(),
         password_strength: Some(strength_score), // Store the strength score here
         last_update: DateTime::now(),
+        deleted: None,
     };
 
     let filter = doc! { "ui": &user_id };
@@ -168,13 +169,99 @@ pub async fn get_password_entries(
     match passwords_collection.find_one(filter).await {
         Ok(Some(password_entries)) => {
             // println!("Retrieved password entries: {:?}", password_entries.entries);
-            Ok(password_entries.entries)
+            let active_entries: Vec<PasswordEntry> = password_entries
+                .entries
+                .into_iter()
+                .filter(|entry| entry.deleted.is_none())
+                .collect();
+            println!("Active password entries: {:?}", active_entries);
+            Ok(active_entries)
         }
         Ok(None) => {
             println!("No password entries found for user ID: {}", ui);
             Ok(vec![])
         }
         Err(e) => Err(format!("Error fetching password entries: {}", e)),
+    }
+}
+
+#[tauri::command]
+pub async fn trash(
+    state: State<'_, MongoClientState>,
+    ui: String, // User ID
+) -> Result<Vec<PasswordEntry>, String> {
+    let passwords_collection = state
+        .get_database("password_manager")
+        .collection::<PasswordEntries>("password_entries");
+
+    let filter = doc! { "ui": &ui }; // Filter by user ID
+    println!("Filter : {:#}", filter);
+
+    match passwords_collection.find_one(filter).await {
+        Ok(Some(password_entries)) => {
+            // println!("Retrieved password entries: {:?}", password_entries.entries);
+            let deleted_entries: Vec<PasswordEntry> = password_entries
+                .entries
+                .into_iter()
+                .filter(|entry| entry.deleted.is_some())
+                .collect();
+            println!("Deleted password entries: {:?}", deleted_entries);
+            Ok(deleted_entries)
+        }
+        Ok(None) => {
+            println!("No password entries found for user ID: {}", ui);
+            Ok(vec![])
+        }
+        Err(e) => Err(format!("Error fetching password entries: {}", e)),
+    }
+}
+
+#[tauri::command]
+pub async fn add_to_trash(
+    state: State<'_, MongoClientState>,
+    entry_id: String,
+) -> Result<String, String> {
+    let passwords_collection = state
+        .get_database("password_manager")
+        .collection::<PasswordEntries>("password_entries");
+
+    let filter = doc! { "entries.aid": &entry_id };
+    let update = doc! {
+        "$set": {
+            "entries.$.d": {
+                "del": true,
+                "d_at": DateTime::now(),
+            }
+        }
+    };
+
+    match passwords_collection.update_one(filter, update).await {
+        Ok(_) => Ok(entry_id),
+        Err(e) => Err(format!("Error adding password entry to trash: {}", e)),
+    }
+}
+
+#[tauri::command]
+pub async fn restore_password(
+    state: State<'_, MongoClientState>,
+    entry_id: String,
+) -> Result<String, String> {
+    let passwords_collection = state
+        .get_database("password_manager")
+        .collection::<PasswordEntries>("password_entries");
+
+    let filter = doc! { "entries.aid": &entry_id };
+    println!("Filter : {:#}", filter);
+    let update = doc! {
+        "$set": {
+            "entries.$.d": Bson::Null
+        }
+    };
+    println!("Update : {:#}", update);
+
+    match passwords_collection.update_one(filter, update).await {
+        Ok(_) => Ok(entry_id),
+        Err(e) => Err(format!("Error restoring password: {}", e)),
     }
 }
 
