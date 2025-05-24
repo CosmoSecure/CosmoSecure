@@ -151,7 +151,7 @@ const Vault = () => {
         try {
             setIsLoading(true);
             const user = await getUserData();
-            await invoke('delete_password_entry', {
+            await invoke('add_to_trash', {
                 userId: user.ui,
                 entryId,
             });
