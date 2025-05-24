@@ -55,11 +55,40 @@ pub async fn add_password_entry(
     let passwords_collection = state
         .get_database("password_manager")
         .collection::<PasswordEntries>("password_entries");
+    let user_collection = state
+        .get_database("password_manager")
+        .collection::<User>("users");
 
-    // Get password strength score
+    // Fetch User document for password_count
+    let user_filter = doc! { "ui": &user_id };
+    let user_doc = user_collection
+        .find_one(user_filter.clone())
+        .await
+        .map_err(|e| e.to_string())?;
+
+    // Fetch current_count and max_count from User document
+    let (current_count, max_count) = if let Some(user) = user_doc {
+        (user.password_count[0], user.password_count[1])
+    } else {
+        return Err("User not found.".to_string());
+    };
+
+    if current_count >= max_count {
+        return Err(format!(
+            "Password limit reached ({}/{})",
+            current_count, max_count
+        ));
+    }
+
+    // Update the user's password_count in the users collection
+    let user_update = doc! {
+        "$inc": { "pc.0": 1 }
+    };
+    if let Err(e) = user_collection.update_one(user_filter, user_update).await {
+        eprintln!("Failed to update user's password_count: {}", e);
+    }
+
     let strength_score = get_password_strength(&password);
-
-    println!("Strength Score | add_password_entry: {}", strength_score);
 
     let new_entry = PasswordEntry {
         entry_id: ObjectId::new().to_hex(),
@@ -74,9 +103,7 @@ pub async fn add_password_entry(
 
     let filter = doc! { "ui": &user_id };
     let update = doc! {
-        "$push": {
-            "entries": bson::to_bson(&new_entry).unwrap()
-        }
+        "$push": { "entries": bson::to_bson(&new_entry).unwrap() },
     };
 
     match passwords_collection.update_one(filter, update).await {
@@ -219,11 +246,25 @@ pub async fn trash(
 #[tauri::command]
 pub async fn add_to_trash(
     state: State<'_, MongoClientState>,
+    user_id: String,
     entry_id: String,
 ) -> Result<String, String> {
     let passwords_collection = state
         .get_database("password_manager")
         .collection::<PasswordEntries>("password_entries");
+    let user_collection = state
+        .get_database("password_manager")
+        .collection::<User>("users");
+
+    let user_filter = doc! { "ui": &user_id };
+
+    // Update the user's password_count in the users collection
+    let user_update = doc! {
+        "$inc": { "pc.0": -1 }
+    };
+    if let Err(e) = user_collection.update_one(user_filter, user_update).await {
+        eprintln!("Failed to update user's password_count: {}", e);
+    }
 
     let filter = doc! { "entries.aid": &entry_id };
     let update = doc! {
@@ -244,11 +285,44 @@ pub async fn add_to_trash(
 #[tauri::command]
 pub async fn restore_password(
     state: State<'_, MongoClientState>,
+    user_id: String,
     entry_id: String,
 ) -> Result<String, String> {
     let passwords_collection = state
         .get_database("password_manager")
         .collection::<PasswordEntries>("password_entries");
+
+    let user_collection = state
+        .get_database("password_manager")
+        .collection::<User>("users");
+
+    let user_filter = doc! { "ui": &user_id };
+    let user_doc = user_collection
+        .find_one(user_filter.clone())
+        .await
+        .map_err(|e| e.to_string())?;
+
+    // Fetch current_count and max_count from User document
+    let (current_count, max_count) = if let Some(user) = user_doc {
+        (user.password_count[0], user.password_count[1])
+    } else {
+        return Err("User not found.".to_string());
+    };
+
+    if current_count >= max_count {
+        return Err(format!(
+            "Password limit reached ({}/{})",
+            current_count, max_count
+        ));
+    }
+
+    // Update the user's password_count in the users collection
+    let user_update = doc! {
+        "$inc": { "pc.0": 1 }
+    };
+    if let Err(e) = user_collection.update_one(user_filter, user_update).await {
+        eprintln!("Failed to update user's password_count: {}", e);
+    }
 
     let filter = doc! { "entries.aid": &entry_id };
     println!("Filter : {:#}", filter);
@@ -507,6 +581,7 @@ pub async fn add_user(
         created_at: DateTime::now(),
         last_login: None,
         username_change_count: 0,
+        password_count: [0, 25],
     };
 
     println!("New user object: {:?}", new_user);

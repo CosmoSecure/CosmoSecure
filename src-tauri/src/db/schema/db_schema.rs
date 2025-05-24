@@ -17,6 +17,9 @@ pub struct User {
     pub last_login: Option<DateTime>, // Last login timestamp
     #[serde(rename = "uc")]
     pub username_change_count: u8, // Username change count
+    // ! Start From u16, letter can be update to u32 [if Needed (Extreme Case > 65k passwords)]
+    #[serde(rename = "pc")]
+    pub password_count: [u16; 2], // Password count array [0: Current, 1: Max] [Default-Max: 25] : [Can be increased by Subscriptions 💸]
 }
 
 #[derive(Debug, Serialize, Deserialize)]
