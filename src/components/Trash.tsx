@@ -60,13 +60,17 @@ const Trash: React.FC = () => {
 
     //* Restore password function
     const restorePassword = async (entryId: string) => {
+        const user = decryptUser();
+        if (!user || !user.ui) {
+            throw new Error("Failed to decrypt user data or user ID is missing.");
+        }
         try {
-            await invoke("restore_password", { entryId: entryId });
+            await invoke("restore_password", { userId: user.ui, entryId: entryId });
             setDeletedPasswords((prev) =>
                 prev.filter((password) => password.entry_id !== entryId)
             );
         } catch (err) {
-            setError("Failed to restore the password.");
+            setError("Failed to restore the password.");  // replace setError with alert [toaster]
             console.error("Error restoring password:", err);
         }
     };

@@ -56,6 +56,7 @@ const Dashboard: React.FC = () => {
     });
 
     const [openWeakPasswords, setOpenWeakPasswords] = useState(false);
+    const [maxPasswordCount, setMaxPasswordCount] = useState(0);
 
     // Fetch user data once when the component is mounted
     useEffect(() => {
@@ -72,6 +73,8 @@ const Dashboard: React.FC = () => {
                         joinDate: formattedDate,
                         userId: user.ui,
                     });
+
+                    setMaxPasswordCount(user.pc[1]);
                 }
             } catch (error) {
                 console.error('Error decrypting user data:', error);
@@ -93,6 +96,7 @@ const Dashboard: React.FC = () => {
                 ]);
 
                 setEmail(userData.email);
+
 
                 setPasswordStats({
                     totalPasswords: total,
@@ -139,10 +143,10 @@ const Dashboard: React.FC = () => {
                             <div className="w-full bg-gray-300 rounded-full h-4 mt-2">
                                 <div
                                     className="bg-ultra-violet h-4 rounded-full"
-                                    style={{ width: `${(passwordStats.totalPasswords / 25) * 100}%` }}
+                                    style={{ width: `${(passwordStats.totalPasswords / maxPasswordCount) * 100}%` }}
                                 ></div>
                             </div>
-                            <p className="text-lg mt-2">{passwordStats.totalPasswords} / 25</p>
+                            <p className="text-lg mt-2">{passwordStats.totalPasswords} / {maxPasswordCount}</p>
                         </div>
                     </div>
 
