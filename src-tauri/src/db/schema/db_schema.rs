@@ -75,7 +75,7 @@ pub struct PasswordEntries {
     pub entries: Vec<PasswordEntry>, // List of password entries for the user
 }
 
-// ! Futore Feature
+// ! Future Feature
 // #[derive(Debug, Serialize, Deserialize)]
 // pub struct SecureNote {
 //     pub note_id: String,              // Unique identifier for the note
