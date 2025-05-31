@@ -6,7 +6,8 @@ use crate::env_var::{get_env_key, get_env_vars};
 use crate::secure::decrypt;
 use bcrypt::{hash, verify, DEFAULT_COST};
 use bson::Bson;
-// use futures_util::TryStreamExt;
+use chrono::{Duration, Utc};
+use futures_util::TryStreamExt;
 use mongodb::bson::DateTime;
 use mongodb::bson::{doc, oid::ObjectId};
 use mongodb::error::Error;
@@ -15,7 +16,7 @@ use mongodb::{Client, Collection, Database, IndexModel};
 use serde_json::json;
 use sha2::{Digest, Sha256};
 use tauri::State;
-use zxcvbn::zxcvbn;
+use zxcvbn::zxcvbn; // Add this at the top if not already imported
 
 pub struct MongoClientState {
     client: Client,
@@ -38,7 +39,7 @@ impl MongoClientState {
     }
 }
 
-// Add this function to get password strength score
+// ! Password Management
 fn get_password_strength(password: &str) -> u8 {
     let score = zxcvbn(password, &[]);
     score.score() as u8
@@ -212,6 +213,7 @@ pub async fn get_password_entries(
     }
 }
 
+// ! Trash Management
 #[tauri::command]
 pub async fn trash(
     state: State<'_, MongoClientState>,
@@ -339,7 +341,54 @@ pub async fn restore_password(
     }
 }
 
-// ! User
+#[tauri::command]
+pub async fn clean_old_trash(state: State<'_, MongoClientState>) -> Result<usize, String> {
+    let passwords_collection = state
+        .get_database("password_manager")
+        .collection::<PasswordEntries>("password_entries");
+
+    let now = Utc::now();
+    let threshold = now - Duration::days(30);
+
+    // Find all password_entries documents
+    let mut cursor = passwords_collection
+        .find(doc! {})
+        .await
+        .map_err(|e| format!("DB error: {}", e))?;
+
+    let mut total_deleted = 0;
+
+    while let Some(doc) = cursor
+        .try_next()
+        .await
+        .map_err(|e| format!("DB error: {}", e))?
+    {
+        for entry in &doc.entries {
+            if let Some(deleted) = &entry.deleted {
+                let d_at = deleted.deleted_at;
+                let deleted_at_chrono: chrono::DateTime<Utc> = d_at.to_chrono();
+
+                // ! logs:
+                println!(
+                    "\n\n\nChecking entry: {},\n deleted_at: {},\n threshold: {},\n now: {}\n\n\n",
+                    entry.entry_id, deleted_at_chrono, threshold, now
+                );
+
+                if deleted_at_chrono < threshold {
+                    // Call your delete_password_entry function for this entry
+                    // Ignore errors for individual deletes, but log them
+                    match delete_password_entry(state.clone(), entry.entry_id.clone()).await {
+                        Ok(_) => total_deleted += 1,
+                        Err(e) => eprintln!("Failed to delete entry {}: {}", entry.entry_id, e),
+                    }
+                }
+            }
+        }
+    }
+    Ok(total_deleted)
+}
+
+// ! User Management
 #[tauri::command]
 pub async fn check_username_availability(
     state: State<'_, MongoClientState>,
@@ -595,6 +644,7 @@ pub async fn add_user(
     }
 }
 
+// ? User Deletion
 #[tauri::command]
 pub async fn user_delete(
     state: State<'_, MongoClientState>,
@@ -665,6 +715,7 @@ pub async fn user_delete(
     }
 }
 
+// ! Database Indexing & Connection
 async fn create_unique_indexes(collection: &Collection<User>) -> mongodb::error::Result<()> {
     // Create unique index for username
     let username_index = IndexModel::builder()

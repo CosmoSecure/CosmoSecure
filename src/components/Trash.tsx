@@ -23,6 +23,9 @@ const Trash: React.FC = () => {
         try {
             setLoading(true);
 
+            //! Clean old trash before fetching
+            await invoke("clean_old_trash");
+
             const user = decryptUser();
             if (!user || !user.ui) {
                 throw new Error("Failed to decrypt user data or user ID is missing.");
