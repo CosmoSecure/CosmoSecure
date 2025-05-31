@@ -1,13 +1,17 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-use crate::db::db_connect::{
-    authenticate_user, check_username_availability, reloadapp_update, tauri_add_user,
-    update_name_username, update_user_password, user_delete,
+use crate::db::{
+    db_connect::{
+        authenticate_user, check_username_availability, reloadapp_update, tauri_add_user,
+        update_name_username, update_user_password, user_delete,
+    },
+    modules::{
+        passwords::{
+            add_password_entry, delete_password_entry, get_password_entries, update_password_entry,
+        },
+        trash::{add_to_trash, clean_old_trash, restore_password, trash},
+    },
+    token,
 };
-use crate::db::modules::passwords::{
-    add_password_entry, delete_password_entry, get_password_entries, update_password_entry,
-};
-use crate::db::modules::trash::{add_to_trash, clean_old_trash, restore_password, trash};
-use crate::db::token;
 use crate::extensions::{
     email_breach::fetch_email_breach_info, pass_gen::generate_password,
     pass_strength::check_password_strength, process_capture::get_system_and_process_usage,
