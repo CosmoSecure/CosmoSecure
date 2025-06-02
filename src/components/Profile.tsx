@@ -42,10 +42,13 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
                     setEmail(user.email);
 
                     // Format lastLogin
-                    const LastLogin = new Date(parseInt(user.l.$date.$numberLong));
-                    const formattedLastLoginDate = `${String(LastLogin.getDate()).padStart(2, '0')}-${String(
-                        LastLogin.getMonth() + 1
-                    ).padStart(2, '0')}-${LastLogin.getFullYear()}`;
+                    let formattedLastLoginDate = "Never";
+                    if (user.l && user.l.$date && user.l.$date.$numberLong) {
+                        const LastLogin = new Date(parseInt(user.l.$date.$numberLong));
+                        formattedLastLoginDate = `${String(LastLogin.getDate()).padStart(2, '0')}-${String(
+                            LastLogin.getMonth() + 1
+                        ).padStart(2, '0')}-${LastLogin.getFullYear()}`;
+                    }
                     setLastLogin(formattedLastLoginDate);
 
                     const createdAt = new Date(parseInt(user.c.$date.$numberLong));
