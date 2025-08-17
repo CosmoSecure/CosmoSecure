@@ -1,20 +1,40 @@
 use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
 
+// ! Zero-Knowledge Password Manager Schema
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MasterPasswordAuth {
+    #[serde(rename = "ph")]
+    pub password_hash: String, // Argon2 hash for authentication
+    #[serde(rename = "s")]
+    pub salt: String,
+    #[serde(rename = "c")]
+    pub created_at: DateTime,
+}
+// ! Email-Password & ZKP-Password Schema
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HashedPasswordEntry {
+    #[serde(rename = "ph")]
+    pub password_hash: String, // Email's password hash
+    #[serde(rename = "mp")]
+    pub master: MasterPasswordAuth, // Master password hash for ZKP
+}
+
+// ! User Schema
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
     #[serde(rename = "ui")]
     pub user_id: String, // Unique identifier for the user
-    pub username: String, // Encrypted username
+    pub username: String, // username : Unique
     #[serde(rename = "n")]
     pub name: String, // Name
     #[serde(rename = "hp")]
-    pub hashed_password: String, // Hashed password for authentication
-    pub email: String,    // Email address
+    pub hashed_password: Vec<HashedPasswordEntry>, // Hashed password for authentication
+    pub email: String,    // Email address : Unique
     #[serde(rename = "c")]
     pub created_at: DateTime, // Account creation timestamp
     #[serde(rename = "l")]
-    pub last_login: Option<DateTime>, // Last login timestamp
+    pub last_login: DateTime, // Last login timestamp
     #[serde(rename = "uc")]
     pub username_change_count: u8, // Username change count
     // ! Start From u16, letter can be update to u32 [if Needed (Extreme Case > 65k passwords)]
@@ -27,15 +47,15 @@ pub struct DeletedUser {
     #[serde(rename = "ui")]
     pub user_id: String, // Unique identifier for the user
     #[serde(rename = "un")]
-    pub username: String, // Encrypted username
+    pub username: String, // username
     #[serde(rename = "n")]
     pub name: String, // Name
     #[serde(rename = "hp")]
-    pub hashed_password: String, // Hashed password for authentication
+    pub hashed_password: Vec<HashedPasswordEntry>, 
     #[serde(rename = "e")]
     pub email: String, // Email address
     #[serde(rename = "d")]
-    pub deleted_at: DateTime, // Account creation timestamp
+    pub deleted_at: DateTime, 
     #[serde(rename = "pass")]
     pub passwords: Vec<PasswordEntry>,
 }
@@ -45,17 +65,17 @@ pub struct PasswordEntry {
     #[serde(rename = "aid")]
     pub entry_id: String, // Unique identifier for the entry
     #[serde(rename = "an")]
-    pub account_name: String, // Encrypted account name
+    pub account_name: String, 
     #[serde(rename = "aun")]
-    pub username: String, // Encrypted username for the account
+    pub username: String, 
     #[serde(rename = "ap")]
-    pub password: String, // Encrypted password
+    pub password: String, // ZKP-Encrypted password
     #[serde(rename = "ac")]
-    pub created_at: DateTime, // Entry creation timestamp
+    pub created_at: DateTime,
     #[serde(rename = "aps")]
-    pub password_strength: Option<u8>, // Password strength rating
+    pub password_strength: Option<u8>,
     #[serde(rename = "lup")]
-    pub last_update: DateTime, // Last update timestamp
+    pub last_update: DateTime,
     #[serde(rename = "d")]
     pub deleted: Option<DeletedPasswordEntry>, // Is the entry deleted? & Timestamp of deletion
 }
