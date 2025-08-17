@@ -5,6 +5,10 @@ use crate::db::{
         update_name_username, update_user_password, user_delete,
     },
     modules::{
+        master_password::{
+            generate_salt_base64, generate_salt_hex, setup_master_password, update_user_session,
+            verify_master_password,
+        },
         passwords::{
             add_password_entry, delete_password_entry, get_password_entries, update_password_entry,
         },
@@ -91,6 +95,11 @@ pub async fn run() {
             get_version,
             get_system_and_process_usage,
             fetch_email_breach_info,
+            setup_master_password,
+            verify_master_password,
+            generate_salt_base64,
+            generate_salt_hex,
+            update_user_session
         ])
         // .setup(|_app| {
         // // Use an asynchronous runtime to run the database connection

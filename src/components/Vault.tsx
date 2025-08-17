@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { decryptUser } from './auth/token_secure';
+import ZKPMasterPasswordPopup from "./auth/ZKPMasterPasswordPopup";
 
 interface PasswordEntry {
     entry_id: string;
@@ -18,6 +19,24 @@ const Vault = () => {
     const [editId, setEditId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [showZKPPopup, setShowZKPPopup] = useState(false);
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        const userData = decryptUser();
+        console.log("Vault Decrypted:", userData);
+        console.log("Vault master:", userData.hp);
+        console.log("Vault password:", userData.hp[0].ph);
+        console.log("Vault master:", userData.hp[0].mp);
+        console.log("Vault master:", userData.hp[0].mp.ph);
+        setUser(userData);
+
+        if (
+            userData.hp[0].mp.ph === ""
+        ) {
+            setShowZKPPopup(true);
+        }
+    }, []);
 
     // Memoize user data
     const getUserData = useCallback(async () => {
@@ -200,41 +219,49 @@ const Vault = () => {
     ), [passwords]);
 
     return (
-        <div className="p-4 h-full bg-light-background dark:bg-dark-background text-light-text dark:text-dark-text">
-            <h1 className="text-2xl font-bold mb-4">Vault</h1>
-            {error && <div className="text-red-500 mb-4">{error}</div>}
-            {isLoading && <div className="text-blue-500 mb-4">Loading...</div>}
-            <div className="mb-4">
-                <input
-                    type="text"
-                    placeholder="Account Name"
-                    value={accountName}
-                    onChange={(e) => setAccountName(e.target.value)}
-                    className="border p-2 mr-2 bg-light-background dark:bg-dark-background text-light-text dark:text-dark-text"
+        <>
+            {showZKPPopup && user && (
+                <ZKPMasterPasswordPopup
+                    user={user}
+                    onSetupComplete={() => setShowZKPPopup(false)}
                 />
-                <input
-                    type="text"
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="border p-2 mr-2 bg-light-background dark:bg-dark-background text-light-text dark:text-dark-text"
-                />
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="border p-2 mr-2 bg-light-background dark:bg-dark-background text-light-text dark:text-dark-text"
-                />
-                <button
-                    onClick={handleAddPassword}
-                    className="bg-light-primary dark:bg-dark-primary text-light-text dark:text-dark-text p-2 rounded"
-                >
-                    {editId !== null ? 'Update' : 'Add'}
-                </button>
+            )}
+            <div className="p-4 h-full bg-light-background dark:bg-dark-background text-light-text dark:text-dark-text">
+                <h1 className="text-2xl font-bold mb-4">Vault</h1>
+                {error && <div className="text-red-500 mb-4">{error}</div>}
+                {isLoading && <div className="text-blue-500 mb-4">Loading...</div>}
+                <div className="mb-4">
+                    <input
+                        type="text"
+                        placeholder="Account Name"
+                        value={accountName}
+                        onChange={(e) => setAccountName(e.target.value)}
+                        className="border p-2 mr-2 bg-light-background dark:bg-dark-background text-light-text dark:text-dark-text"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="border p-2 mr-2 bg-light-background dark:bg-dark-background text-light-text dark:text-dark-text"
+                    />
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="border p-2 mr-2 bg-light-background dark:bg-dark-background text-light-text dark:text-dark-text"
+                    />
+                    <button
+                        onClick={handleAddPassword}
+                        className="bg-light-primary dark:bg-dark-primary text-light-text dark:text-dark-text p-2 rounded"
+                    >
+                        {editId !== null ? 'Update' : 'Add'}
+                    </button>
+                </div>
+                {passwordList}
             </div>
-            {passwordList}
-        </div>
+        </>
     );
 };
 
