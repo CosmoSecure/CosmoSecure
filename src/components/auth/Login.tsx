@@ -5,6 +5,7 @@ import { VisibilityOffTwoToneIcon, VisibilityTwoToneIcon } from './passCSS';
 import { token_secure } from "./token_secure";
 import { Background, Logo } from "../../assets";
 import { motion } from 'framer-motion';
+import { useNotificationMiddleware, useQuickNotifications } from '../../utils/notifications';
 
 interface User {
     id: number;
@@ -24,27 +25,37 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
     const [password, setPassword] = useState("");
     const [passwordVisible, setPasswordVisible] = useState(false);
     const navigate = useNavigate();
+    const middleware = useNotificationMiddleware();
+    const quick = useQuickNotifications();
 
     const handleLogin = async () => {
         if (identifier.length < 3 || identifier.length > 50) {
-            alert('Identifier must be between 3 and 50 characters long.');
+            quick.warning('Invalid Input', 'Identifier must be between 3 and 50 characters long.');
             return;
         }
 
-        try {
+        const performLogin = async (): Promise<{ token: string; data: User }> => {
             const response = await invoke<{ token: string; data: User }>("authenticate_user", { identifier, password });
+            if (!response) {
+                throw new Error("Invalid credentials. Please try again.");
+            }
+            return response;
+        };
+
+        try {
+            const response = await middleware.auth.login(performLogin, identifier);
             if (response) {
                 token_secure(response);
-                await invoke('save_token_command', { token: sessionStorage.getItem('token'), user: sessionStorage.getItem('user') });
-                // alert("Login successful!");
+                await invoke('save_token_command', {
+                    token: sessionStorage.getItem('token'),
+                    user: sessionStorage.getItem('user')
+                });
                 setIsAuthenticated(true);
                 navigate("/");
-            } else {
-                alert("Invalid credentials. Please try again.");
             }
         } catch (error) {
             console.error("Login failed:", error);
-            alert("Login failed. Please try again.");
+            // Error is already handled by the middleware
         }
     };
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { toast } from 'sonner';
+import { useQuickNotifications } from '../../utils/notifications';
 import { TextField, Tooltip } from '@mui/material';
 import Zoom from '@mui/material/Zoom';
 import InfoIcon from '@mui/icons-material/Info';
@@ -8,20 +8,22 @@ import InfoIcon from '@mui/icons-material/Info';
 const PasswordGenerator: React.FC = () => {
     const [generatedPassword, setGeneratedPassword] = useState('');
     const [passLen, setPassLen] = useState(12);
+    const quick = useQuickNotifications();
 
     const handleGeneratePassword = async () => {
         try {
             const result = await invoke<{ password: string }>('generate_password', { length: passLen });
             setGeneratedPassword(result.password);
+            quick.passwordGenerated();
         } catch (error) {
             console.error('Failed to generate password:', error);
-            toast.error(`Failed to generate password. Try again! :: ${error}`);
+            quick.error('Failed to generate password', `Please try again! Error: ${error}`);
         }
     };
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(generatedPassword).then(() => {
-            toast.success('Password copied to clipboard!');
+            quick.passwordCopied();
         });
     };
 
