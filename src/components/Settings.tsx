@@ -9,8 +9,9 @@ import { ThemeToggle } from "../themes";
 import { decryptUser } from './auth/token_secure';
 import { VisibilityOffTwoToneIcon, VisibilityTwoToneIcon } from './auth/passCSS';
 import { reloadApp_Update } from "./reloadApp_Update";
-import { toast } from 'sonner';
+import { useNotificationMiddleware, useQuickNotifications } from '../utils/notifications';
 import { useNavigation } from '../contexts/';
+import { toast } from 'sonner';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
@@ -42,6 +43,10 @@ const Settings = () => {
     const { navStyle, setNavStyle } = useNavigation();
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [confirmationText, setConfirmationText] = useState("");
+
+    // Notification hooks
+    const middleware = useNotificationMiddleware();
+    const quick = useQuickNotifications();
 
     const toggleDropdown = (dropdownName: string) => {
         setActiveDropdown(activeDropdown === dropdownName ? null : dropdownName);
@@ -94,7 +99,7 @@ const Settings = () => {
     const handleUpdateNameUsername = async (e: React.FormEvent) => {
         e.preventDefault();
         if (usernameAvailable === false) {
-            alert("Username is already taken. Please choose a unique username.");
+            quick.error("Username is already taken. Please choose a unique username.");
             return;
         }
         try {
@@ -104,7 +109,7 @@ const Settings = () => {
                 const args = { userId: user.ui, newName: newName || null, newUsername: newUsername || null };
                 console.log("Arguments passed to invoke:", args); // Print arguments passed to invoke
                 await invoke("update_name_username", args);
-                alert("Name and/or Username updated successfully!");
+                quick.success("Name and/or Username updated successfully!");
                 await reloadApp_Update(user.ui);
 
                 // Show notification to relogin
@@ -128,17 +133,7 @@ const Settings = () => {
     const handleUpdatePassword = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!passwordsMatch) {
-            toast.error("New password and confirm password do not match.", {
-                style: {
-                    background: '#f8d7da',
-                    color: '#721c24',
-                    border: '1px solid #f5c6cb',
-                    borderRadius: '8px',
-                    padding: '16px',
-                    fontSize: '16px',
-                },
-                icon: '❌',
-            });
+            quick.error("Password Mismatch", "New password and confirm password do not match.");
             return;
         }
         try {
@@ -147,17 +142,7 @@ const Settings = () => {
                 const args = { userId: user.ui, currentPassword: currentPassword, newPassword: newPassword };
                 const response = await invoke<string>("update_user_password", args);
                 if (response === "New password cannot be the same as the current password.") {
-                    toast.error("New password cannot be the same as the current password.", {
-                        style: {
-                            background: '#f8d7da',
-                            color: '#721c24',
-                            border: '1px solid #f5c6cb',
-                            borderRadius: '8px',
-                            padding: '16px',
-                            fontSize: '16px',
-                        },
-                        icon: '❌',
-                    });
+                    quick.error("Invalid Password", "New password cannot be the same as the current password.");
                     return;
                 }
                 // toast.success("Password updated successfully!", {
@@ -171,24 +156,7 @@ const Settings = () => {
                 //     },
                 //     icon: '✅',
                 // });
-                toast('Password updated successfully! Changes applied. Please relogin to apply changes.', {
-                    action: {
-                        label: 'Relogin',
-                        onClick: async () => {
-                            await invoke('delete_config');
-                        },
-                    },
-                    style: {
-                        background: '#d4edda',
-                        color: '#155724',
-                        border: '1px solid #c3e6cb',
-                        borderRadius: '8px',
-                        padding: '16px',
-                        fontSize: '16px',
-                    },
-                    // icon: '🔄',
-                    icon: '✅',
-                });
+                quick.success('Password updated successfully!', 'Changes applied. Please relogin to apply changes.');
             } else {
                 console.error("Failed to decrypt user data");
             }
