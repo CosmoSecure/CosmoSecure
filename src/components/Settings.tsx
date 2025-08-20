@@ -9,7 +9,7 @@ import { ThemeToggle } from "../themes";
 import { decryptUser } from './auth/token_secure';
 import { VisibilityOffTwoToneIcon, VisibilityTwoToneIcon } from './auth/passCSS';
 import { reloadApp_Update } from "./reloadApp_Update";
-import { useNotificationMiddleware, useQuickNotifications } from '../utils/notifications';
+import { useQuickNotifications } from '../utils/notifications';
 import { useNavigation } from '../contexts/';
 import { toast } from 'sonner';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
@@ -45,7 +45,6 @@ const Settings = () => {
     const [confirmationText, setConfirmationText] = useState("");
 
     // Notification hooks
-    const middleware = useNotificationMiddleware();
     const quick = useQuickNotifications();
 
     const toggleDropdown = (dropdownName: string) => {
