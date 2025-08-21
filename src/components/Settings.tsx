@@ -15,6 +15,20 @@ import { toast } from 'sonner';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
+// Additional icons for better UI
+import PersonIcon from '@mui/icons-material/Person';
+import LockIcon from '@mui/icons-material/Lock';
+import PaletteIcon from '@mui/icons-material/Palette';
+import NavigationIcon from '@mui/icons-material/Navigation';
+import BackupIcon from '@mui/icons-material/Backup';
+import InfoIcon from '@mui/icons-material/Info';
+import DeleteIcon from '@mui/icons-material/Delete';
+import WarningIcon from '@mui/icons-material/Warning';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import HomeIcon from '@mui/icons-material/Home';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 function debounce(func: (...args: any[]) => void, wait: number) {
     let timeout: ReturnType<typeof setTimeout>;
@@ -284,13 +298,13 @@ const Settings = () => {
                         <div className="relative w-24 h-30 bg-theme-background-transparent rounded-md p-1 flex items-start gap-2">
                             <div className="w-10 flex flex-col gap-2">
                                 <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-center">
-                                    <span className={commonIconClass}>🏠</span>
+                                    <span className={commonIconClass}><HomeIcon /></span>
                                 </div>
                                 <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-center">
-                                    <span className={commonIconClass}>📊</span>
+                                    <span className={commonIconClass}><BarChartIcon /></span>
                                 </div>
                                 <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-center">
-                                    <span className={commonIconClass}>⚙️</span>
+                                    <span className={commonIconClass}><SettingsIcon /></span>
                                 </div>
                             </div>
                             <div className="w-12 h-8 bg-theme-accent-transparent rounded flex items-center justify-center text-xs">
@@ -306,13 +320,13 @@ const Settings = () => {
                     <div className="flex flex-col gap-2 items-center">
                         <div className="w-12 h-30 bg-theme-background-transparent rounded-md p-1 flex flex-col gap-2">
                             <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-center">
-                                <span className={commonIconClass}>🏠</span>
+                                <span className={commonIconClass}><HomeIcon /></span>
                             </div>
                             <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-center">
-                                <span className={commonIconClass}>📊</span>
+                                <span className={commonIconClass}><BarChartIcon /></span>
                             </div>
                             <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-center">
-                                <span className={commonIconClass}>⚙️</span>
+                                <span className={commonIconClass}><SettingsIcon /></span>
                             </div>
                         </div>
                         <span className="text-sm font-medium">Compact Mode</span>
@@ -324,18 +338,18 @@ const Settings = () => {
                     <div className="flex flex-col gap-2 items-center">
                         <div className="w-32 h-30 bg-theme-background-transparent rounded-md p-1 flex flex-col gap-2">
                             <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-between px-2">
-                                <span className={commonIconClass}>🏠</span>
+                                <span className={commonIconClass}><HomeIcon /></span>
                                 <span className="text-xs">Home</span>
                             </div>
                             <div className="absolute ml-28 mt-5 w-6 h-6 bg-theme-accent rounded-full flex items-center justify-center cursor-pointer z-10 shadow-md hover:scale-110 transition-transform">
                                 <MenuOpenIcon className="text-white text-sm font-bold" />
                             </div>
                             <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-between px-2">
-                                <span className={commonIconClass}>📊</span>
+                                <span className={commonIconClass}><BarChartIcon /></span>
                                 <span className="text-xs">Stats</span>
                             </div>
                             <div className="w-full h-8 bg-theme-accent-transparent rounded flex items-center justify-between px-2">
-                                <span className={commonIconClass}>⚙️</span>
+                                <span className={commonIconClass}><SettingsIcon /></span>
                                 <span className="text-xs">Settings</span>
                             </div>
                         </div>
@@ -348,33 +362,49 @@ const Settings = () => {
     // Update the navigation section
     const navigationSection = (
         <div
-            className="hover:text-theme-text cursor-pointer p-6 bg-theme-secondary rounded-lg h-auto shadow-md transition duration-300 ease-in-out hover:shadow-lg hover:scale-[101%]"
+            className="group hover:text-theme-text cursor-pointer p-8 bg-gradient-to-r from-theme-secondary-transparent to-theme-primary-transparent border border-theme-accent-transparent rounded-2xl h-auto shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl hover:scale-[101%] hover:border-theme-accent backdrop-blur-sm"
             onClick={() => toggleDropdown("navigation")}
         >
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Navigation Style</h1>
-                {activeDropdown === "navigation" ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-theme-accent rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                        <NavigationIcon />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-theme-text group-hover:text-theme-accent transition-colors">Navigation Style</h1>
+                        <p className="text-theme-accent text-sm">Choose your preferred navigation layout</p>
+                    </div>
+                </div>
+                <div className="p-2 rounded-full bg-theme-accent-transparent group-hover:bg-theme-accent transition-colors">
+                    {activeDropdown === "navigation" ? (
+                        <ExpandLessIcon className="text-theme-accent group-hover:text-white" />
+                    ) : (
+                        <ExpandMoreIcon className="text-theme-accent group-hover:text-white" />
+                    )}
+                </div>
             </div>
             <div
-                className={`transition-[max-height] duration-300 ease-in-out overflow-hidden 
+                className={`transition-[max-height] duration-500 ease-in-out overflow-hidden 
                     ${activeDropdown === "navigation" ? "max-h-[300px]" : "max-h-0"}`}
                 onClick={stopPropagation}
             >
                 {activeDropdown === "navigation" && (
-                    <div className="mt-4 grid grid-cols-3 gap-8">
-                        {(['default', 'compact', 'expanded'] as const).map((style) => (
-                            <button
-                                key={style}
-                                onClick={() => setNavStyle(style)}
-                                className={`p-4 rounded-lg border-2 transition-all duration-200 
-                                    flex flex-col items-center gap-4
-                                    ${navStyle === style
-                                        ? 'border-theme-accent bg-theme-accent-transparent'
-                                        : 'border-transparent hover:border-theme-accent-transparent'}`}
-                            >
-                                <NavigationPreview type={style} />
-                            </button>
-                        ))}
+                    <div className="pt-6 border-t border-theme-accent-transparent">
+                        <div className="grid grid-cols-3 gap-6 p-4 bg-theme-background-transparent rounded-xl">
+                            {(['default', 'compact', 'expanded'] as const).map((style) => (
+                                <button
+                                    key={style}
+                                    onClick={() => setNavStyle(style)}
+                                    className={`p-6 rounded-xl border-2 transition-all duration-300 
+                                        flex flex-col items-center gap-4 hover:shadow-lg transform hover:scale-105
+                                        ${navStyle === style
+                                            ? 'border-theme-accent bg-theme-accent-transparent shadow-lg scale-105'
+                                            : 'border-theme-secondary-transparent hover:border-theme-accent-transparent bg-theme-background-transparent'}`}
+                                >
+                                    <NavigationPreview type={style} />
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 )}
             </div>
@@ -382,225 +412,318 @@ const Settings = () => {
     );
 
     return (
-        <div className="bg-theme-background h-full p-8 flex flex-col justify-center items-center text-theme-accent">
+        <div className="bg-theme-background h-full p-6 flex flex-col justify-center items-center text-theme-text">
+            {/* Settings Header */}
+            <div className="w-[95%] mb-6">
+                <h1 className="text-4xl font-bold text-theme-text text-center mb-2">Settings</h1>
+                <p className="text-theme-accent text-center text-lg">Customize your CosmoSecure experience</p>
+            </div>
+
             {/* Settings Container */}
-            <div className="bg-theme-primary p-6 rounded-lg overflow-auto shadow-theme-primary-transparent h-[95%] w-[95%] flex flex-col gap-6 transition duration-300 ease-in-out transform animated-scrollbar">
+            <div className="bg-theme-primary border border-theme-secondary-transparent p-8 rounded-2xl overflow-auto shadow-2xl h-[85%] w-[95%] flex flex-col gap-8 transition duration-300 ease-in-out transform animated-scrollbar backdrop-blur-sm">
                 {/* Name & Username Update/Change Section */}
                 <div
-                    className="hover:text-theme-text cursor-pointer h-auto bg-theme-secondary-transparent rounded-lg p-6 shadow-md transition duration-300 ease-in-out hover:shadow-lg hover:scale-[101%]"
+                    className="group hover:text-theme-text cursor-pointer h-auto bg-gradient-to-r from-theme-secondary-transparent to-theme-primary-transparent border border-theme-accent-transparent rounded-2xl p-8 shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl hover:scale-[101%] hover:border-theme-accent backdrop-blur-sm"
                     onClick={() => toggleDropdown("nameUsernameChange")}
                 >
-                    <div className="flex items-center justify-between">
-                        <h1 className="text-xl font-bold">Name & Username Update/Change</h1>
-                        {activeDropdown === "nameUsernameChange" ? (
-                            <ExpandLessIcon />
-                        ) : (
-                            <ExpandMoreIcon />
-                        )}
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-theme-accent rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                                <PersonIcon />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-theme-text group-hover:text-theme-accent transition-colors">Name & Username Update</h1>
+                                <p className="text-theme-accent text-sm">Manage your personal information</p>
+                            </div>
+                        </div>
+                        <div className="p-2 rounded-full bg-theme-accent-transparent group-hover:bg-theme-accent transition-colors">
+                            {activeDropdown === "nameUsernameChange" ? (
+                                <ExpandLessIcon className="text-theme-accent group-hover:text-white" />
+                            ) : (
+                                <ExpandMoreIcon className="text-theme-accent group-hover:text-white" />
+                            )}
+                        </div>
                     </div>
                     <div
-                        className={`transition-[max-height] duration-300 ease-in-out overflow-hidden ${activeDropdown === "nameUsernameChange" ? "max-h-[300px]" : "max-h-0"
+                        className={`transition-[max-height] duration-500 ease-in-out overflow-hidden ${activeDropdown === "nameUsernameChange" ? "max-h-[300px]" : "max-h-0"
                             }`}
                         onClick={stopPropagation}
                     >
                         {activeDropdown === "nameUsernameChange" && (
-                            <form className="flex flex-col gap-4 mt-4" onSubmit={handleUpdateNameUsername}>
-                                <div className="flex items-center gap-4">
-                                    <TextField
-                                        style={{ width: '30%' }}
-                                        label="New Name"
-                                        variant="standard"
-                                        InputProps={{
-                                            style: { color: 'var(--theme-text)' },
-                                        }}
-                                        InputLabelProps={{
-                                            style: { color: 'var(--theme-text)' },
-                                        }}
-                                        value={newName}
-                                        onChange={(e) => setNewName(e.target.value)}
-                                    />
-                                    <Button
-                                        type="submit"
-                                        variant="contained"
-                                        color="primary"
-                                        className="py-2 px-4 bg-theme-accent text-white rounded-md hover:bg-theme-accent-dark transition duration-300 ease-in-out transform hover:scale-[101%] shadow-md hover:shadow-lg"
-                                    >
-                                        Save
-                                    </Button>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <TextField
-                                        style={{ width: '30%' }}
-                                        label="New Username"
-                                        variant="standard"
-                                        InputProps={{
-                                            style: { color: 'var(--theme-text)' },
-                                        }}
-                                        InputLabelProps={{
-                                            style: { color: 'var(--theme-text)' },
-                                        }}
-                                        value={newUsername}
-                                        onChange={(e) => setNewUsername(e.target.value)}
-                                    />
-                                    <Button
-                                        type="submit"
-                                        variant="contained"
-                                        color="primary"
-                                        className="py-2 px-4 bg-theme-accent text-white rounded-md hover:bg-theme-accent-dark transition duration-300 ease-in-out transform hover:scale-[101%] shadow-md hover:shadow-lg"
-                                    >
-                                        Save
-                                    </Button>
-                                </div>
-                                {usernameAvailable === null ? null : usernameAvailable ? (
-                                    <p className="text-green-500">Username is available</p>
-                                ) : (
-                                    <p className="text-red-500">Username is already taken</p>
-                                )}
-                                <p className="text-sm font-bold text-theme-text mt-2">
-                                    Note: You can only change your username 3 times.
-                                </p>
-                            </form>
+                            <div className="pt-6 border-t border-theme-accent-transparent">
+                                <form className="flex flex-col gap-6" onSubmit={handleUpdateNameUsername}>
+                                    <div className="flex items-center gap-6">
+                                        <div className="flex-1">
+                                            <TextField
+                                                fullWidth
+                                                label="New Name"
+                                                variant="outlined"
+                                                size="medium"
+                                                InputProps={{
+                                                    style: {
+                                                        color: 'var(--theme-text)',
+                                                        backgroundColor: 'var(--theme-background-transparent)',
+                                                        borderRadius: '12px'
+                                                    },
+                                                }}
+                                                InputLabelProps={{
+                                                    style: { color: 'var(--theme-accent)' },
+                                                }}
+                                                value={newName}
+                                                onChange={(e) => setNewName(e.target.value)}
+                                                className="bg-theme-background-transparent rounded-xl"
+                                            />
+                                        </div>
+                                        <Button
+                                            type="submit"
+                                            variant="contained"
+                                            size="large"
+                                            className="px-8 py-3 bg-gradient-to-r from-theme-accent to-theme-secondary text-white rounded-xl hover:from-theme-secondary hover:to-theme-accent transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg hover:shadow-xl font-semibold"
+                                        >
+                                            Save Name
+                                        </Button>
+                                    </div>
+                                    <div className="flex items-center gap-6">
+                                        <div className="flex-1">
+                                            <TextField
+                                                fullWidth
+                                                label="New Username"
+                                                variant="outlined"
+                                                size="medium"
+                                                InputProps={{
+                                                    style: {
+                                                        color: 'var(--theme-text)',
+                                                        backgroundColor: 'var(--theme-background-transparent)',
+                                                        borderRadius: '12px'
+                                                    },
+                                                }}
+                                                InputLabelProps={{
+                                                    style: { color: 'var(--theme-accent)' },
+                                                }}
+                                                value={newUsername}
+                                                onChange={(e) => setNewUsername(e.target.value)}
+                                                className="bg-theme-background-transparent rounded-xl"
+                                            />
+                                        </div>
+                                        <Button
+                                            type="submit"
+                                            variant="contained"
+                                            size="large"
+                                            className="px-8 py-3 bg-gradient-to-r from-theme-accent to-theme-secondary text-white rounded-xl hover:from-theme-secondary hover:to-theme-accent transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg hover:shadow-xl font-semibold"
+                                        >
+                                            Save Username
+                                        </Button>
+                                    </div>
+                                    {usernameAvailable === null ? null : usernameAvailable ? (
+                                        <div className="flex items-center gap-2 text-green-500 bg-green-100 p-3 rounded-xl">
+                                            <span className="text-lg">✅</span>
+                                            <p className="font-medium">Username is available</p>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2 text-red-500 bg-red-100 p-3 rounded-xl">
+                                            <span className="text-lg">❌</span>
+                                            <p className="font-medium">Username is already taken</p>
+                                        </div>
+                                    )}
+                                    <div className="bg-theme-accent-transparent border-l-4 border-theme-accent p-4 rounded-r-xl">
+                                        <p className="text-sm font-semibold text-theme-text">
+                                            <WarningIcon className="inline mr-1 text-amber-500" />
+                                            Note: You can only change your username 3 times.
+                                        </p>
+                                    </div>
+                                </form>
+                            </div>
                         )}
                     </div>
                 </div>
                 {/* Password Change Section */}
                 <div
-                    className="hover:text-theme-text cursor-pointer h-auto bg-theme-secondary-transparent rounded-lg p-6 shadow-md transition duration-300 ease-in-out hover:shadow-lg hover:scale-[101%]"
+                    className="group hover:text-theme-text cursor-pointer h-auto bg-gradient-to-r from-theme-secondary-transparent to-theme-primary-transparent border border-theme-accent-transparent rounded-2xl p-8 shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl hover:scale-[101%] hover:border-theme-accent backdrop-blur-sm"
                     onClick={() => toggleDropdown("passwordChange")}
                 >
-                    <div className="flex items-center justify-between">
-                        <h1 className="text-xl font-bold">Password Change</h1>
-                        {activeDropdown === "passwordChange" ? (
-                            <ExpandLessIcon />
-                        ) : (
-                            <ExpandMoreIcon />
-                        )}
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-theme-accent rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                                <LockIcon />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-theme-text group-hover:text-theme-accent transition-colors">Password Change</h1>
+                                <p className="text-theme-accent text-sm">Update your account security</p>
+                            </div>
+                        </div>
+                        <div className="p-2 rounded-full bg-theme-accent-transparent group-hover:bg-theme-accent transition-colors">
+                            {activeDropdown === "passwordChange" ? (
+                                <ExpandLessIcon className="text-theme-accent group-hover:text-white" />
+                            ) : (
+                                <ExpandMoreIcon className="text-theme-accent group-hover:text-white" />
+                            )}
+                        </div>
                     </div>
                     <div
-                        className={`transition-[max-height] duration-300 ease-in-out overflow-hidden ${activeDropdown === "passwordChange" ? "max-h-[400px]" : "max-h-0"
+                        className={`transition-[max-height] duration-500 ease-in-out overflow-hidden ${activeDropdown === "passwordChange" ? "max-h-[500px]" : "max-h-0"
                             }`}
                         onClick={stopPropagation}
                     >
                         {activeDropdown === "passwordChange" && (
-                            <form className="flex flex-col gap-4 mt-4" onSubmit={handleUpdatePassword}>
-                                <div className="relative">
-                                    <TextField
-                                        style={{ width: '30%' }}
-                                        label="Current Password"
-                                        type={passwordVisible ? "text" : "password"}
-                                        variant="standard"
-                                        InputProps={{
-                                            style: { color: 'var(--theme-text)' },
-                                        }}
-                                        InputLabelProps={{
-                                            style: { color: 'var(--theme-text)' },
-                                        }}
-                                        value={currentPassword}
-                                        onChange={(e) => setCurrentPassword(e.target.value)}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={togglePasswordVisibility}
-                                        className="absolute inset-y-0 px-3 py-2 text-gray-400"
-                                    >
-                                        {passwordVisible ? <VisibilityOffTwoToneIcon /> : <VisibilityTwoToneIcon />}
-                                    </button>
-                                </div>
-                                <div className="relative">
-                                    <TextField
-                                        style={{ width: '30%' }}
-                                        label="New Password"
-                                        type={newPasswordVisible ? "text" : "password"}
-                                        variant="standard"
-                                        InputProps={{
-                                            style: { color: 'var(--theme-text)' },
-                                        }}
-                                        InputLabelProps={{
-                                            style: { color: 'var(--theme-text)' },
-                                        }}
-                                        value={newPassword}
-                                        onChange={(e) => setNewPassword(e.target.value)}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={toggleNewPasswordVisibility}
-                                        className="absolute inset-y-0 px-3 py-2 mb-5 text-gray-400"
-                                    >
-                                        {newPasswordVisible ? <VisibilityOffTwoToneIcon /> : <VisibilityTwoToneIcon />}
-                                    </button>
-                                    {newPassword && (
-                                        <div className="mt-2">
-                                            <div
-                                                className="h-2 rounded-full"
-                                                style={{
-                                                    backgroundColor: getPasswordStrengthColor(passwordStrength.score),
-                                                    width: passwordStrength.score === 0 ? '4%' : `${(passwordStrength.score / 4) * 30}%`,
-                                                }}
-                                            />
-                                            <p className="mt-2 text-sm text-theme-text font-bold">{passwordStrength.feedback}</p>
+                            <div className="pt-6 border-t border-theme-accent-transparent">
+                                <form className="flex flex-col gap-6" onSubmit={handleUpdatePassword}>
+                                    <div className="relative">
+                                        <TextField
+                                            fullWidth
+                                            label="Current Password"
+                                            type={passwordVisible ? "text" : "password"}
+                                            variant="outlined"
+                                            size="medium"
+                                            InputProps={{
+                                                style: {
+                                                    color: 'var(--theme-text)',
+                                                    backgroundColor: 'var(--theme-background-transparent)',
+                                                    borderRadius: '12px'
+                                                },
+                                            }}
+                                            InputLabelProps={{
+                                                style: { color: 'var(--theme-accent)' },
+                                            }}
+                                            value={currentPassword}
+                                            onChange={(e) => setCurrentPassword(e.target.value)}
+                                            className="bg-theme-background-transparent rounded-xl"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={togglePasswordVisibility}
+                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-theme-accent hover:text-theme-text transition-colors p-2 rounded-lg hover:bg-theme-accent-transparent"
+                                        >
+                                            {passwordVisible ? <VisibilityOffTwoToneIcon /> : <VisibilityTwoToneIcon />}
+                                        </button>
+                                    </div>
+                                    <div className="relative">
+                                        <TextField
+                                            fullWidth
+                                            label="New Password"
+                                            type={newPasswordVisible ? "text" : "password"}
+                                            variant="outlined"
+                                            size="medium"
+                                            InputProps={{
+                                                style: {
+                                                    color: 'var(--theme-text)',
+                                                    backgroundColor: 'var(--theme-background-transparent)',
+                                                    borderRadius: '12px'
+                                                },
+                                            }}
+                                            InputLabelProps={{
+                                                style: { color: 'var(--theme-accent)' },
+                                            }}
+                                            value={newPassword}
+                                            onChange={(e) => setNewPassword(e.target.value)}
+                                            className="bg-theme-background-transparent rounded-xl"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={toggleNewPasswordVisibility}
+                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-theme-accent hover:text-theme-text transition-colors p-2 rounded-lg hover:bg-theme-accent-transparent"
+                                        >
+                                            {newPasswordVisible ? <VisibilityOffTwoToneIcon /> : <VisibilityTwoToneIcon />}
+                                        </button>
+                                        {newPassword && (
+                                            <div className="mt-4 p-4 bg-theme-accent-transparent rounded-xl">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <span className="text-sm font-semibold text-theme-text">Password Strength:</span>
+                                                    <div className="flex-1 bg-theme-background rounded-full h-3 overflow-hidden">
+                                                        <div
+                                                            className="h-full rounded-full transition-all duration-300 ease-in-out"
+                                                            style={{
+                                                                backgroundColor: getPasswordStrengthColor(passwordStrength.score),
+                                                                width: passwordStrength.score === 0 ? '10%' : `${(passwordStrength.score / 4) * 100}%`,
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <p className="text-sm text-theme-text font-medium">{passwordStrength.feedback}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="relative">
+                                        <TextField
+                                            fullWidth
+                                            label="Confirm Password"
+                                            type={confirmPasswordVisible ? "text" : "password"}
+                                            variant="outlined"
+                                            size="medium"
+                                            InputProps={{
+                                                style: {
+                                                    color: 'var(--theme-text)',
+                                                    backgroundColor: 'var(--theme-background-transparent)',
+                                                    borderRadius: '12px'
+                                                },
+                                            }}
+                                            InputLabelProps={{
+                                                style: { color: 'var(--theme-accent)' },
+                                            }}
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            className="bg-theme-background-transparent rounded-xl"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={toggleConfirmPasswordVisibility}
+                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-theme-accent hover:text-theme-text transition-colors p-2 rounded-lg hover:bg-theme-accent-transparent"
+                                        >
+                                            {confirmPasswordVisible ? <VisibilityOffTwoToneIcon /> : <VisibilityTwoToneIcon />}
+                                        </button>
+                                    </div>
+                                    {!passwordsMatch && (
+                                        <div className="flex items-center gap-2 text-red-500 bg-red-100 p-3 rounded-xl">
+                                            <span className="text-lg">❌</span>
+                                            <p className="font-medium">New password and confirm password do not match.</p>
                                         </div>
                                     )}
-                                </div>
-                                <div className="relative">
-                                    <TextField
-                                        style={{ width: '30%' }}
-                                        label="Confirm Password"
-                                        type={confirmPasswordVisible ? "text" : "password"}
-                                        variant="standard"
-                                        InputProps={{
-                                            style: { color: 'var(--theme-text)' },
-                                        }}
-                                        InputLabelProps={{
-                                            style: { color: 'var(--theme-text)' },
-                                        }}
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={toggleConfirmPasswordVisibility}
-                                        className="absolute inset-y-0 px-3 py-2 text-gray-400"
+                                    <Button
+                                        type="submit"
+                                        variant="contained"
+                                        size="large"
+                                        className="self-start px-8 py-3 bg-gradient-to-r from-theme-accent to-theme-secondary text-white rounded-xl hover:from-theme-secondary hover:to-theme-accent transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg hover:shadow-xl font-semibold"
                                     >
-                                        {confirmPasswordVisible ? <VisibilityOffTwoToneIcon /> : <VisibilityTwoToneIcon />}
-                                    </button>
-                                </div>
-                                {!passwordsMatch && (
-                                    <p className="text-red-500">New password and confirm password do not match.</p>
-                                )}
-                                <Button
-                                    type="submit"
-                                    variant="contained"
-                                    color="primary"
-                                    className="py-2 px-4 w-fit bg-theme-accent text-white rounded-md hover:bg-theme-accent-dark transition duration-300 ease-in-out transform hover:scale-[101%] shadow-md hover:shadow-lg"
-                                >
-                                    Update Password
-                                </Button>
-                            </form>
+                                        Update Password
+                                    </Button>
+                                </form>
+                            </div>
                         )}
                     </div>
                 </div>
 
                 {/* Theme Toggle Section */}
                 <div
-                    className="hover:text-theme-text cursor-pointer p-6 bg-theme-secondary rounded-lg h-auto shadow-md transition duration-300 ease-in-out hover:shadow-lg hover:scale-[101%]"
+                    className="group hover:text-theme-text cursor-pointer p-8 bg-gradient-to-r from-theme-secondary-transparent to-theme-primary-transparent border border-theme-accent-transparent rounded-2xl h-auto shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl hover:scale-[101%] hover:border-theme-accent backdrop-blur-sm"
                     onClick={() => toggleDropdown("themes")}
                 >
-                    <div className="flex items-center justify-between">
-                        <h1 className="text-2xl font-bold">Themes</h1>
-                        {activeDropdown === "themes" ? (
-                            <ExpandLessIcon />
-                        ) : (
-                            <ExpandMoreIcon />
-                        )}
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-theme-accent rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                                <PaletteIcon />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-theme-text group-hover:text-theme-accent transition-colors">Themes</h1>
+                                <p className="text-theme-accent text-sm">Customize your visual experience</p>
+                            </div>
+                        </div>
+                        <div className="p-2 rounded-full bg-theme-accent-transparent group-hover:bg-theme-accent transition-colors">
+                            {activeDropdown === "themes" ? (
+                                <ExpandLessIcon className="text-theme-accent group-hover:text-white" />
+                            ) : (
+                                <ExpandMoreIcon className="text-theme-accent group-hover:text-white" />
+                            )}
+                        </div>
                     </div>
                     <div
-                        className={`transition-[max-height] duration-300 ease-in-out overflow-hidden ${activeDropdown === "themes" ? "max-h-[200px]" : "max-h-0"
+                        className={`transition-[max-height] duration-500 ease-in-out overflow-hidden ${activeDropdown === "themes" ? "max-h-[200px]" : "max-h-0"
                             }`}
                         onClick={stopPropagation}
                     >
                         {activeDropdown === "themes" && (
-                            <div className="mt-4">
-                                <ThemeToggle />
+                            <div className="pt-6 border-t border-theme-accent-transparent">
+                                <div className="p-4 bg-theme-background-transparent rounded-xl">
+                                    <ThemeToggle />
+                                </div>
                             </div>
                         )}
                     </div>
@@ -611,38 +734,52 @@ const Settings = () => {
 
                 {/* Backup & Restore Section */}
                 <div
-                    className="hover:text-theme-text cursor-pointer p-6 bg-theme-secondary rounded-lg h-auto shadow-md transition duration-300 ease-in-out hover:shadow-lg hover:scale-[101%]"
+                    className="group hover:text-theme-text cursor-pointer p-8 bg-gradient-to-r from-theme-secondary-transparent to-theme-primary-transparent border border-theme-accent-transparent rounded-2xl h-auto shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl hover:scale-[101%] hover:border-theme-accent backdrop-blur-sm"
                     onClick={() => toggleDropdown("backupRestore")}
                 >
-                    <div className="flex items-center justify-between">
-                        <h1 className="text-xl font-bold">Backup & Restore</h1>
-                        {activeDropdown === "backupRestore" ? (
-                            <ExpandLessIcon />
-                        ) : (
-                            <ExpandMoreIcon />
-                        )}
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-theme-accent rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                                <BackupIcon />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-theme-text group-hover:text-theme-accent transition-colors">Backup & Restore</h1>
+                                <p className="text-theme-accent text-sm">Secure your data with backups</p>
+                            </div>
+                        </div>
+                        <div className="p-2 rounded-full bg-theme-accent-transparent group-hover:bg-theme-accent transition-colors">
+                            {activeDropdown === "backupRestore" ? (
+                                <ExpandLessIcon className="text-theme-accent group-hover:text-white" />
+                            ) : (
+                                <ExpandMoreIcon className="text-theme-accent group-hover:text-white" />
+                            )}
+                        </div>
                     </div>
                     <div
-                        className={`transition-[max-height] flex justify-center duration-300 ease-in-out overflow-hidden ${activeDropdown === "backupRestore" ? "max-h-[200px]" : "max-h-0"
+                        className={`transition-[max-height] duration-500 ease-in-out overflow-hidden ${activeDropdown === "backupRestore" ? "max-h-[200px]" : "max-h-0"
                             }`}
                         onClick={stopPropagation}
                     >
                         {activeDropdown === "backupRestore" && (
-                            <div className="mt-4 flex flex-col gap-4 w-1/2">
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    className="py-2 px-4 w-fit bg-theme-accent text-white rounded-md hover:bg-theme-accent-dark transition duration-300 ease-in-out transform hover:scale-[101%] shadow-md hover:shadow-lg"
-                                >
-                                    Backup
-                                </Button>
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    className="py-2 px-4 w-fit bg-theme-accent text-white rounded-md hover:bg-theme-accent-dark transition duration-300 ease-in-out transform hover:scale-[101%] shadow-md hover:shadow-lg"
-                                >
-                                    Restore
-                                </Button>
+                            <div className="pt-6 border-t border-theme-accent-transparent">
+                                <div className="flex flex-col gap-4 p-4 bg-theme-background-transparent rounded-xl">
+                                    <Button
+                                        variant="contained"
+                                        size="large"
+                                        className="px-8 py-3 bg-gradient-to-r from-theme-accent to-theme-secondary text-white rounded-xl hover:from-theme-secondary hover:to-theme-accent transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg hover:shadow-xl font-semibold"
+                                    >
+                                        <CloudUploadIcon className="mr-2" />
+                                        Create Backup
+                                    </Button>
+                                    <Button
+                                        variant="contained"
+                                        size="large"
+                                        className="px-8 py-3 bg-gradient-to-r from-theme-secondary to-theme-accent text-white rounded-xl hover:from-theme-accent hover:to-theme-secondary transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg hover:shadow-xl font-semibold"
+                                    >
+                                        <CloudDownloadIcon className="mr-2" />
+                                        Restore Backup
+                                    </Button>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -650,57 +787,69 @@ const Settings = () => {
 
                 {/* About Us Section */}
                 <div
-                    className="hover:text-theme-text cursor-pointer p-6 bg-theme-secondary rounded-lg h-auto shadow-md transition duration-300 ease-in-out hover:shadow-lg hover:scale-[101%]"
+                    className="group hover:text-theme-text cursor-pointer p-8 bg-gradient-to-r from-theme-secondary-transparent to-theme-primary-transparent border border-theme-accent-transparent rounded-2xl h-auto shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl hover:scale-[101%] hover:border-theme-accent backdrop-blur-sm"
                     onClick={() => toggleDropdown("aboutUs")}
                 >
-                    <div className="flex items-center justify-between">
-                        <h1 className="text-xl font-bold">About Us</h1>
-                        {activeDropdown === "aboutUs" ? (
-                            <ExpandLessIcon />
-                        ) : (
-                            <ExpandMoreIcon />
-                        )}
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-theme-accent rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                                <InfoIcon />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-theme-text group-hover:text-theme-accent transition-colors">About Us</h1>
+                                <p className="text-theme-accent text-sm">Learn about the developer</p>
+                            </div>
+                        </div>
+                        <div className="p-2 rounded-full bg-theme-accent-transparent group-hover:bg-theme-accent transition-colors">
+                            {activeDropdown === "aboutUs" ? (
+                                <ExpandLessIcon className="text-theme-accent group-hover:text-white" />
+                            ) : (
+                                <ExpandMoreIcon className="text-theme-accent group-hover:text-white" />
+                            )}
+                        </div>
                     </div>
                     <div
-                        className={`transition-[max-height] duration-300 ease-in-out overflow-hidden ${activeDropdown === "aboutUs" ? "max-h-[200px]" : "max-h-0"
+                        className={`transition-[max-height] duration-500 ease-in-out overflow-hidden ${activeDropdown === "aboutUs" ? "max-h-[200px]" : "max-h-0"
                             }`}
                         onClick={stopPropagation}
                     >
                         {activeDropdown === "aboutUs" && (
-                            <div className="mt-4">
-                                <p className="text-xl font-medium">
-                                    Hi, I am <span className="font-bold">Akash</span> (GitHub:&nbsp;
-                                    <a
-                                        href="#"
-                                        className="text-cyan-800 underline"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            handleExternalLink('https://github.com/akash2061');
-                                        }}
-                                    >
-                                        akash2061
-                                    </a>), a passionate Full Stack Developer and Rustacean. <br />I  specialize in building secure, scalable, and efficient software solutions. Feel free to explore my&nbsp;
-                                    <a
-                                        href="#"
-                                        className="text-cyan-800 underline"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            handleExternalLink('https://github.com/akash2061/Code_Canvas');
-                                        }}
-                                    >
-                                        projects
-                                    </a> and reach out for collaborations &&nbsp;
-                                    <a
-                                        href="#"
-                                        className="text-cyan-800 underline"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            handleExternalLink('https://www.linkedin.com/in/akash-soni-01475924b/');
-                                        }}
-                                    >
-                                        connection
-                                    </a>.
-                                </p>
+                            <div className="pt-6 border-t border-theme-accent-transparent">
+                                <div className="p-6 bg-theme-background-transparent rounded-xl">
+                                    <p className="text-lg leading-relaxed text-theme-text">
+                                        Hi, I am <span className="font-bold text-theme-accent">Akash</span> (GitHub:&nbsp;
+                                        <a
+                                            href="#"
+                                            className="text-theme-accent hover:text-theme-secondary underline decoration-2 underline-offset-2 font-semibold transition-colors"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handleExternalLink('https://github.com/akash2061');
+                                            }}
+                                        >
+                                            akash2061
+                                        </a>), a passionate Full Stack Developer and Rustacean. <br /><br />I specialize in building secure, scalable, and efficient software solutions. Feel free to explore my&nbsp;
+                                        <a
+                                            href="#"
+                                            className="text-theme-accent hover:text-theme-secondary underline decoration-2 underline-offset-2 font-semibold transition-colors"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handleExternalLink('https://github.com/akash2061/Code_Canvas');
+                                            }}
+                                        >
+                                            projects
+                                        </a> and reach out for collaborations &nbsp;
+                                        <a
+                                            href="#"
+                                            className="text-theme-accent hover:text-theme-secondary underline decoration-2 underline-offset-2 font-semibold transition-colors"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handleExternalLink('https://www.linkedin.com/in/akash-soni-01475924b/');
+                                            }}
+                                        >
+                                            connection
+                                        </a>.
+                                    </p>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -708,69 +857,100 @@ const Settings = () => {
 
                 {/* Delete Account Section */}
                 <div
-                    className="hover:text-theme-text cursor-pointer h-auto bg-theme-secondary-transparent rounded-lg p-6 shadow-md transition duration-300 ease-in-out hover:shadow-lg hover:scale-[101%]"
+                    className="group hover:text-theme-text cursor-pointer h-auto bg-gradient-to-r from-red-500/20 to-red-600/20 border border-red-500/30 rounded-2xl p-8 shadow-lg transition-all duration-300 ease-in-out hover:shadow-2xl hover:scale-[101%] hover:border-red-500 backdrop-blur-sm"
                     onClick={() => toggleDropdown("deleteAccount")}
                 >
-                    <div className="flex items-center justify-between">
-                        <h1 className="text-xl font-bold">Delete Account</h1>
-                        {activeDropdown === "deleteAccount" ? (
-                            <ExpandLessIcon />
-                        ) : (
-                            <ExpandMoreIcon />
-                        )}
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                                <DeleteIcon />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-red-500 group-hover:text-red-400 transition-colors">Delete Account</h1>
+                                <p className="text-red-400 text-sm">Permanently remove your account</p>
+                            </div>
+                        </div>
+                        <div className="p-2 rounded-full bg-red-500/20 group-hover:bg-red-500 transition-colors">
+                            {activeDropdown === "deleteAccount" ? (
+                                <ExpandLessIcon className="text-red-500 group-hover:text-white" />
+                            ) : (
+                                <ExpandMoreIcon className="text-red-500 group-hover:text-white" />
+                            )}
+                        </div>
                     </div>
                     <div
-                        className={`transition-[max-height] duration-300 ease-in-out overflow-hidden ${activeDropdown === "deleteAccount" ? "max-h-[300px]" : "max-h-0"
+                        className={`transition-[max-height] duration-500 ease-in-out overflow-hidden ${activeDropdown === "deleteAccount" ? "max-h-[400px]" : "max-h-0"
                             }`}
                         onClick={stopPropagation}
                     >
                         {activeDropdown === "deleteAccount" && (
-                            <form className="flex flex-col gap-4 mt-4" onSubmit={openDeleteModal}>
-                                <TextField
-                                    style={{ width: '30%' }}
-                                    label="Username"
-                                    variant="standard"
-                                    InputProps={{
-                                        style: { color: 'var(--theme-text)' },
-                                    }}
-                                    InputLabelProps={{
-                                        style: { color: 'var(--theme-text)' },
-                                    }}
-                                    value={deleteUsername}
-                                    onChange={(e) => setDeleteUsername(e.target.value)}
-                                />
-                                <div className="relative">
+                            <div className="pt-6 border-t border-red-500/30">
+                                <div className="p-4 bg-red-50/10 border border-red-500/20 rounded-xl mb-4">
+                                    <p className="text-red-400 text-sm font-semibold">
+                                        <WarningIcon className="inline mr-2 text-red-500" />
+                                        Warning: This action cannot be undone. All your data will be permanently deleted.
+                                    </p>
+                                </div>
+                                <form className="flex flex-col gap-6" onSubmit={openDeleteModal}>
                                     <TextField
-                                        style={{ width: '30%' }}
-                                        label="Password"
-                                        type={passwordVisible ? "text" : "password"}
-                                        variant="standard"
+                                        fullWidth
+                                        label="Username"
+                                        variant="outlined"
+                                        size="medium"
                                         InputProps={{
-                                            style: { color: 'var(--theme-text)' },
+                                            style: {
+                                                color: 'var(--theme-text)',
+                                                backgroundColor: 'var(--theme-background-transparent)',
+                                                borderRadius: '12px'
+                                            },
                                         }}
                                         InputLabelProps={{
-                                            style: { color: 'var(--theme-text)' },
+                                            style: { color: 'var(--theme-accent)' },
                                         }}
-                                        value={deletePassword}
-                                        onChange={(e) => setDeletePassword(e.target.value)}
+                                        value={deleteUsername}
+                                        onChange={(e) => setDeleteUsername(e.target.value)}
+                                        className="bg-theme-background-transparent rounded-xl"
                                     />
-                                    <button
-                                        type="button"
-                                        onClick={togglePasswordVisibility}
-                                        className="absolute inset-y-0 px-3 py-2 text-gray-400"
+                                    <div className="relative">
+                                        <TextField
+                                            fullWidth
+                                            label="Password"
+                                            type={passwordVisible ? "text" : "password"}
+                                            variant="outlined"
+                                            size="medium"
+                                            InputProps={{
+                                                style: {
+                                                    color: 'var(--theme-text)',
+                                                    backgroundColor: 'var(--theme-background-transparent)',
+                                                    borderRadius: '12px'
+                                                },
+                                            }}
+                                            InputLabelProps={{
+                                                style: { color: 'var(--theme-accent)' },
+                                            }}
+                                            value={deletePassword}
+                                            onChange={(e) => setDeletePassword(e.target.value)}
+                                            className="bg-theme-background-transparent rounded-xl"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={togglePasswordVisibility}
+                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-theme-accent hover:text-theme-text transition-colors p-2 rounded-lg hover:bg-theme-accent-transparent"
+                                        >
+                                            {passwordVisible ? <VisibilityOffTwoToneIcon /> : <VisibilityTwoToneIcon />}
+                                        </button>
+                                    </div>
+                                    <Button
+                                        type="submit"
+                                        variant="contained"
+                                        size="large"
+                                        className="self-start px-8 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg hover:shadow-xl font-semibold"
                                     >
-                                        {passwordVisible ? <VisibilityOffTwoToneIcon /> : <VisibilityTwoToneIcon />}
-                                    </button>
-                                </div>
-                                <Button
-                                    type="submit"
-                                    variant="contained"
-                                    color="error"
-                                    className="py-2 px-4 w-fit bg-red-500 text-white rounded-md hover:bg-red-700 transition duration-100 ease-in-out transform hover:scale-[101%] shadow-md hover:shadow-lg"
-                                >
-                                    Delete Account
-                                </Button>
-                            </form>
+                                        <DeleteIcon className="mr-2" />
+                                        Delete Account
+                                    </Button>
+                                </form>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -784,22 +964,32 @@ const Settings = () => {
                 aria-describedby="delete-account-confirmation"
             >
                 <Box
-                    className="bg-theme-primary p-6 rounded-lg shadow-lg"
+                    className="bg-theme-primary border border-theme-accent-transparent p-8 rounded-2xl shadow-2xl backdrop-blur-sm"
                     style={{
                         position: "absolute",
                         top: "50%",
                         left: "50%",
                         transform: "translate(-50%, -50%)",
-                        width: "400px",
+                        width: "500px",
                         outline: "none",
                     }}
                 >
-                    <h2 className="text-xl font-bold mb-4 text-theme-background-transparent">
-                        Confirm Account Deletion
-                    </h2>
-                    <p className="text-theme-background-transparent mb-4">
-                        To confirm, type <strong>"delete"</strong> in the box below.
-                    </p>
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                            <WarningIcon className="text-red-500 text-5xl mb-4" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-theme-text">
+                            Confirm Account Deletion
+                        </h2>
+                    </div>
+                    <div className="bg-red-50/10 border border-red-500/20 rounded-xl p-4 mb-6">
+                        <p className="text-theme-text mb-2">
+                            To confirm, type <strong className="text-red-500">"delete"</strong> in the box below.
+                        </p>
+                        <p className="text-red-400 text-sm font-semibold">
+                            This action cannot be undone!
+                        </p>
+                    </div>
                     <TextField
                         fullWidth
                         variant="outlined"
@@ -807,26 +997,31 @@ const Settings = () => {
                         value={confirmationText}
                         onChange={(e) => setConfirmationText(e.target.value)}
                         InputProps={{
-                            style: { color: "var(--theme-text)" },
+                            style: {
+                                color: "var(--theme-text)",
+                                backgroundColor: 'var(--theme-background-transparent)',
+                                borderRadius: '12px'
+                            },
                         }}
                         InputLabelProps={{
-                            style: { color: "var(--theme-text)" },
+                            style: { color: "var(--theme-accent)" },
                         }}
+                        className="mb-6 bg-theme-background-transparent rounded-xl"
                     />
                     <div className="flex justify-end gap-4 mt-6">
                         <Button
-                            variant="contained"
-                            color="primary"
+                            variant="outlined"
+                            size="large"
                             onClick={() => setIsDeleteModalOpen(false)}
-                            className="text-theme-text hover:bg-theme-accent"
+                            className="px-6 py-2 text-theme-text border-theme-accent hover:bg-theme-accent-transparent rounded-xl transition-all duration-300"
                         >
                             Cancel
                         </Button>
                         <Button
                             variant="contained"
-                            color="error"
+                            size="large"
                             onClick={handleDeleteAccount}
-                            className="bg-red-500 text-theme-text hover:bg-red-700"
+                            className="px-6 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl font-semibold"
                         >
                             Delete Account
                         </Button>
