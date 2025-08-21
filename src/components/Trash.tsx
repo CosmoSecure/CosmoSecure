@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { decryptUser } from "./auth/token_secure";
+import { useUser } from "../contexts/UserContext";
 
 interface DeletedPasswordEntry {
     deleted_at: string;
@@ -14,24 +14,32 @@ interface PasswordEntry {
 }
 
 const Trash: React.FC = () => {
+    const { user, isLoading: userLoading } = useUser();
     const [deletedPasswords, setDeletedPasswords] = useState<PasswordEntry[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [initialLoadDone, setInitialLoadDone] = useState(false);
 
     //* Fetch deleted passwords function
     const fetchDeletedPasswords = async () => {
+        // Don't fetch if user data is not available or still loading
+        if (!user?.userId || userLoading) {
+            console.log("User data not available yet, skipping trash fetch", {
+                hasUserId: !!user?.userId,
+                userLoading
+            });
+            return;
+        }
+
         try {
+            console.log("Fetching deleted passwords for user:", user.userId);
             setLoading(true);
+            setError(null);
 
             //! Clean old trash before fetching
             await invoke("clean_old_trash");
 
-            const user = decryptUser();
-            if (!user || !user.ui) {
-                throw new Error("Failed to decrypt user data or user ID is missing.");
-            }
-
-            const response = await invoke<any[]>("trash", { ui: user.ui });
+            const response = await invoke<any[]>("trash", { ui: user.userId });
             console.log("Fetched deleted passwords:", response); //! Debugging log
 
             const mappedPasswords: PasswordEntry[] = response.map((entry) => {
@@ -53,6 +61,7 @@ const Trash: React.FC = () => {
             });
 
             setDeletedPasswords(mappedPasswords);
+            setInitialLoadDone(true);
         } catch (err) {
             setError("Failed to fetch deleted passwords.");
             console.error("Error fetching deleted passwords:", err);
@@ -63,12 +72,11 @@ const Trash: React.FC = () => {
 
     //* Restore password function
     const restorePassword = async (entryId: string) => {
-        const user = decryptUser();
-        if (!user || !user.ui) {
-            throw new Error("Failed to decrypt user data or user ID is missing.");
+        if (!user?.userId) {
+            throw new Error("Failed to get user data or user ID is missing.");
         }
         try {
-            await invoke("restore_password", { userId: user.ui, entryId: entryId });
+            await invoke("restore_password", { userId: user.userId, entryId: entryId });
             setDeletedPasswords((prev) =>
                 prev.filter((password) => password.entry_id !== entryId)
             );
@@ -92,17 +100,47 @@ const Trash: React.FC = () => {
     };
 
     useEffect(() => {
-        fetchDeletedPasswords();
-    }, []);
+        // Reset state when user changes
+        if (!user?.userId) {
+            setDeletedPasswords([]);
+            setError(null);
+            setInitialLoadDone(false);
+            return;
+        }
 
-    if (loading) return <p>Loading deleted passwords...</p>;
-    if (error) return <p>{error}</p>;
+        // Only fetch deleted passwords if user data is available and not currently loading
+        if (user?.userId && !userLoading && !initialLoadDone) {
+            console.log("User data available, fetching deleted passwords");
+            fetchDeletedPasswords();
+        }
+    }, [user?.userId, userLoading, initialLoadDone]);
+
+    // Show loading state when user data is still loading
+    if (userLoading) {
+        return <p>Loading user data...</p>;
+    }
+
+    // Show error if user data failed to load
+    if (!userLoading && !user) {
+        return <p>Failed to load user data. Please refresh the page.</p>;
+    }
+
+    // Show password loading only when user data is available
+    if (loading && user) {
+        return <p>Loading deleted passwords...</p>;
+    }
+
+    if (error) {
+        return <p>{error}</p>;
+    }
 
     return (
         <div>
             <h1>Trash</h1>
-            {deletedPasswords.length === 0 ? (
+            {deletedPasswords.length === 0 && initialLoadDone ? (
                 <p>No deleted passwords found.</p>
+            ) : deletedPasswords.length === 0 ? (
+                <p>Loading...</p>
             ) : (
                 <table>
                     <thead>

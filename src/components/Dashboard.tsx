@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Pro } from '../assets/';
-import { decryptUser } from './auth/token_secure';
+import { useUser } from '../contexts/UserContext';
 import { invoke } from '@tauri-apps/api/core';
 import CakeIcon from '@mui/icons-material/Cake';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
@@ -42,13 +42,10 @@ const fetchWeakPasswords = async (userId: string) => {
 
 // Dashboard Component
 const Dashboard: React.FC = () => {
+    const { user, isLoading } = useUser();
     const [email, setEmail] = useState('');
-    const [userData, setUserData] = useState({
-        username: '',
-        email: '',
-        joinDate: '',
-        userId: '',
-    });
+
+    console.log("User: ", user);
 
     const [passwordStats, setPasswordStats] = useState({
         totalPasswords: 0,
@@ -56,47 +53,19 @@ const Dashboard: React.FC = () => {
     });
 
     const [openWeakPasswords, setOpenWeakPasswords] = useState(false);
-    const [maxPasswordCount, setMaxPasswordCount] = useState(0);
 
-    // Fetch user data once when the component is mounted
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const user = decryptUser();
-                if (user && user.n && user.c) {
-                    const formattedDate = new Date(parseInt(user.c.$date.$numberLong))
-                        .toLocaleDateString('en-GB');
-
-                    setUserData({
-                        username: user.n,
-                        email: user.email,
-                        joinDate: formattedDate,
-                        userId: user.ui,
-                    });
-
-                    setMaxPasswordCount(user.pc[1]);
-                }
-            } catch (error) {
-                console.error('Error decrypting user data:', error);
-            }
-        };
-
-        fetchUserData();
-    }, []);
-
-    // Fetch password statistics when the component is opened
+    // Fetch password statistics when user data is available
     useEffect(() => {
         const fetchPasswordStats = async () => {
-            if (!userData.userId) return;
+            if (!user?.userId) return;
 
             try {
                 const [total, weak] = await Promise.all([
-                    fetchTotalPasswords(userData.userId),
-                    fetchWeakPasswords(userData.userId),
+                    fetchTotalPasswords(user.userId),
+                    fetchWeakPasswords(user.userId),
                 ]);
 
-                setEmail(userData.email);
-
+                setEmail(user.email);
 
                 setPasswordStats({
                     totalPasswords: total,
@@ -108,7 +77,23 @@ const Dashboard: React.FC = () => {
         };
 
         fetchPasswordStats();
-    }, [userData.userId]); // Fetch stats only when `userId` is available
+    }, [user?.userId]); // Fetch stats only when `userId` is available
+
+    if (isLoading) {
+        return (
+            <div className="bg-theme-background flex items-center justify-center h-full w-full p-6 rounded-md">
+                <div className="text-xl">Loading...</div>
+            </div>
+        );
+    }
+
+    if (!user) {
+        return (
+            <div className="bg-theme-background flex items-center justify-center h-full w-full p-6 rounded-md">
+                <div className="text-xl text-red-500">Unable to load user data</div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-theme-background flex flex-col h-full w-full p-6 rounded-md">
@@ -121,14 +106,14 @@ const Dashboard: React.FC = () => {
                         <div className="flex flex-row gap-5 bg-gradient-to-r from-theme-secondary-transparent via-theme-primary to-theme-secondary-transparent py-4 px-0 rounded-lg items-center">
                             <img src={Pro} alt="Profile" className="rounded-full h-24 w-24 hidden xl:block ml-6" />
                             <div className="ml-4 col-span-2">
-                                <div className="text-2xl font-bold">{userData.username}</div>
+                                <div className="text-2xl font-bold">{user.name}</div>
                                 <div className="flex flex-col gap-2 mt-2">
                                     <div className="text-lg flex items-center">
-                                        <CakeIcon className="mr-1" /> {userData.joinDate}
+                                        <CakeIcon className="mr-1" /> {user.joinDate}
                                     </div>
                                     <div className="text-lg flex items-center break-all">
                                         <AlternateEmailIcon className="mr-1" />
-                                        <span className="break-all">{userData.email}</span>
+                                        <span className="break-all">{user.email}</span>
                                     </div>
                                     <div className="text-lg flex items-center">
                                         <PasswordIcon className="mr-1" /> {passwordStats.totalPasswords}
@@ -143,10 +128,10 @@ const Dashboard: React.FC = () => {
                             <div className="w-full bg-gray-300 rounded-full h-4 mt-2">
                                 <div
                                     className="bg-ultra-violet h-4 rounded-full"
-                                    style={{ width: `${(passwordStats.totalPasswords / maxPasswordCount) * 100}%` }}
+                                    style={{ width: `${(passwordStats.totalPasswords / user.maxPasswordCount) * 100}%` }}
                                 ></div>
                             </div>
-                            <p className="text-lg mt-2">{passwordStats.totalPasswords} / {maxPasswordCount}</p>
+                            <p className="text-lg mt-2">{passwordStats.totalPasswords} / {user.maxPasswordCount}</p>
                         </div>
                     </div>
 

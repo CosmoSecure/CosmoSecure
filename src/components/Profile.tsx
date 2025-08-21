@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Pro } from '../assets/';
-import { decryptUser } from './auth/token_secure';
+import { useUser } from '../contexts/UserContext';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import CakeIcon from '@mui/icons-material/Cake';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
@@ -23,60 +23,46 @@ const fetchTotalPasswords = async (userId: string): Promise<number> => {
 };
 
 const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisible, onClose }) => {
-    const [name, setUsername] = useState('');
-    const [username, setUserName] = useState('');
-    const [joinDate, setJoinDate] = useState('');
-    const [email, setEmail] = useState('');
+    const { user, isLoading, refreshUserFromBackend } = useUser();
     const [totalPasswords, setTotalPasswords] = useState(0);
-    const [lastLogin, setLastLogin] = useState('');
+    const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
-        if (!isVisible) return; // Only fetch data when the profile is visible
+        if (!isVisible || !user?.userId) return; // Only fetch data when the profile is visible and user is available
 
         const initializeData = async () => {
             try {
-                const user = decryptUser();
-                if (user && user.n && user.c) {
-                    setUsername(user.n);
-                    setUserName(user.username);
-                    setEmail(user.email);
-
-                    // Format lastLogin
-                    let formattedLastLoginDate = "Never";
-                    if (user.l && user.l.$date && user.l.$date.$numberLong) {
-                        const LastLogin = new Date(parseInt(user.l.$date.$numberLong));
-                        formattedLastLoginDate = `${String(LastLogin.getDate()).padStart(2, '0')}-${String(
-                            LastLogin.getMonth() + 1
-                        ).padStart(2, '0')}-${LastLogin.getFullYear()}`;
-                    }
-                    setLastLogin(formattedLastLoginDate);
-
-                    const createdAt = new Date(parseInt(user.c.$date.$numberLong));
-                    const formattedDate = `${String(createdAt.getDate()).padStart(2, '0')}-${String(
-                        createdAt.getMonth() + 1
-                    ).padStart(2, '0')}-${createdAt.getFullYear()}`;
-                    setJoinDate(formattedDate);
-
-                    console.log('Last login date:', formattedLastLoginDate);
-                    console.log('Last login date:', user.l.$date.$numberLong);
-                    console.log('Created at date:', formattedDate);
-                    console.log('Created at date:', user.c.$date.$numberLong);
-
-                    console.log('User data decrypted:', user);
-
-                    // Fetch total passwords directly from the backend
-                    const total = await fetchTotalPasswords(user.ui);
-                    setTotalPasswords(total);
-                } else {
-                    console.error('No user found in decrypted data: ', user);
-                }
+                // Fetch total passwords directly from the backend
+                const total = await fetchTotalPasswords(user.userId);
+                setTotalPasswords(total);
             } catch (error) {
-                console.error('Error decrypting or parsing user data:', error);
+                console.error('Error fetching user data:', error);
             }
         };
 
         initializeData();
-    }, [isVisible]); // Run this effect only when `isVisible` changes
+    }, [isVisible, user?.userId]); // Run this effect when `isVisible` or `user.userId` changes
+
+    // Refresh user data function
+    const handleRefreshUserData = async () => {
+        if (!user?.userId) return;
+
+        setRefreshing(true);
+        try {
+            await refreshUserFromBackend();
+            // Refresh total passwords as well
+            const total = await fetchTotalPasswords(user.userId);
+            setTotalPasswords(total);
+        } catch (error) {
+            console.error('Error refreshing user data:', error);
+        } finally {
+            setRefreshing(false);
+        }
+    };
+
+    if (!user && !isLoading) {
+        return null; // Don't render if user data is not available
+    }
 
     return (
         <AnimatePresence>
@@ -151,10 +137,10 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
                                     <motion.div
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
-                                        transition={{ delay: 0.6 }}
-                                        className="text-3xl font-bold mt-2"
+                                        transition={{ delay: 0.5 }}
+                                        className="text-3xl font-bold text-center"
                                     >
-                                        {name}
+                                        {user?.name || 'User'}
                                     </motion.div>
                                     <motion.div
                                         initial={{ opacity: 0 }}
@@ -162,15 +148,15 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
                                         transition={{ delay: 0.6 }}
                                         className="text-xl mt-2 flex justify-center items-center break-all"
                                     >
-                                        <AccountCircleIcon className="mr-2" /> {username}
+                                        <AccountCircleIcon className="mr-2" /> {user?.username || 'N/A'}
                                     </motion.div>
 
                                     {/* Staggered info items */}
                                     {[
-                                        { Icon: CakeIcon, text: joinDate },
-                                        { Icon: AlternateEmailIcon, text: email },
+                                        { Icon: CakeIcon, text: user?.joinDate || 'N/A' },
+                                        { Icon: AlternateEmailIcon, text: user?.email || 'N/A' },
                                         { Icon: PasswordIcon, text: totalPasswords },
-                                        { Icon: HourglassEmptyIcon, text: lastLogin }
+                                        { Icon: HourglassEmptyIcon, text: user?.lastLogin || 'N/A' }
                                     ].map(({ Icon, text }, index) => (
                                         <motion.div
                                             key={index}

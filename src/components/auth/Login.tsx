@@ -6,6 +6,7 @@ import { token_secure } from "./token_secure";
 import { Background, Logo } from "../../assets";
 import { motion } from 'framer-motion';
 import { useNotificationMiddleware, useQuickNotifications } from '../../utils/notifications';
+import { useUser } from '../../contexts/UserContext';
 
 interface User {
     id: number;
@@ -27,6 +28,7 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
     const navigate = useNavigate();
     const middleware = useNotificationMiddleware();
     const quick = useQuickNotifications();
+    const { refreshUserFromBackend } = useUser();
 
     const handleLogin = async () => {
         if (identifier.length < 3 || identifier.length > 50) {
@@ -50,6 +52,34 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
                     token: sessionStorage.getItem('token'),
                     user: sessionStorage.getItem('user')
                 });
+
+                // Get updated user session with fresh last_login time
+                try {
+                    console.log("Fetching updated user session after login...");
+                    const updatedResponse = await invoke<{ token: string; data: User }>('update_user_session', {
+                        userId: response.data.id.toString(),
+                        tokenData: sessionStorage.getItem('token'),
+                    });
+
+                    if (updatedResponse) {
+                        console.log("Updated user session received:", updatedResponse);
+                        token_secure(updatedResponse);
+                        await invoke('save_token_command', {
+                            token: sessionStorage.getItem('token'),
+                            user: sessionStorage.getItem('user')
+                        });
+                    }
+                } catch (updateError) {
+                    console.warn("Failed to get updated user session:", updateError);
+                    // Continue with original login flow even if update fails
+                }
+
+                // Dispatch custom event to notify UserContext of data change
+                window.dispatchEvent(new CustomEvent('userDataChanged'));
+
+                // Refresh UserContext with fresh user data from backend (includes updated last_login)
+                await refreshUserFromBackend();
+
                 setIsAuthenticated(true);
                 navigate("/");
             }

@@ -1,26 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { routes, bottomRoutes } from '../../routes';
-import { decryptUser } from '../auth/token_secure';
+import { useUser } from '../../contexts/UserContext';
 import { Pro } from '../../assets';
 // import SensorOccupiedIcon from '@mui/icons-material/SensorOccupied';
 
 const DefaultNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ toggleProfileVisibility }) => {
     const navigate = useNavigate();
+    const { user } = useUser();
     const [username, setUsername] = useState('');
 
     useEffect(() => {
-        try {
-            const user = decryptUser();
-            if (user && user.n) {
-                setUsername(user.n);
-            } else {
-                console.error('No user found in decrypted data');
-            }
-        } catch (error) {
-            console.error('Error decrypting or parsing user data:', error);
+        if (user?.name) {
+            setUsername(user.name);
         }
-    }, []);
+    }, [user]);
 
     // Add cleanup for transitions
     useEffect(() => {
