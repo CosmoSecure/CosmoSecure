@@ -6,7 +6,7 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import { ThemeToggle } from "../themes";
-import { decryptUser } from './auth/token_secure';
+import { useUser } from '../contexts/UserContext';
 import { VisibilityOffTwoToneIcon, VisibilityTwoToneIcon } from './auth/passCSS';
 import { reloadApp_Update } from "./reloadApp_Update";
 import { useQuickNotifications } from '../utils/notifications';
@@ -25,6 +25,7 @@ function debounce(func: (...args: any[]) => void, wait: number) {
 }
 
 const Settings = () => {
+    const { user, refreshUser } = useUser();
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [newName, setNewName] = useState('');
     const [newUsername, setNewUsername] = useState('');
@@ -102,14 +103,13 @@ const Settings = () => {
             return;
         }
         try {
-            const user = decryptUser();
-            console.log("Decrypted user data:", user); // Print decrypted user data
             if (user) {
-                const args = { userId: user.ui, newName: newName || null, newUsername: newUsername || null };
+                const args = { userId: user.userId, newName: newName || null, newUsername: newUsername || null };
                 console.log("Arguments passed to invoke:", args); // Print arguments passed to invoke
                 await invoke("update_name_username", args);
                 quick.success("Name and/or Username updated successfully!");
-                await reloadApp_Update(user.ui);
+                await reloadApp_Update(user.userId);
+                await refreshUser(); // Refresh user context
 
                 // Show notification to relogin
                 toast('Changes applied. Please relogin to apply changes.', {
@@ -136,9 +136,8 @@ const Settings = () => {
             return;
         }
         try {
-            const user = decryptUser();
             if (user) {
-                const args = { userId: user.ui, currentPassword: currentPassword, newPassword: newPassword };
+                const args = { userId: user.userId, currentPassword: currentPassword, newPassword: newPassword };
                 const response = await invoke<string>("update_user_password", args);
                 if (response === "New password cannot be the same as the current password.") {
                     quick.error("Invalid Password", "New password cannot be the same as the current password.");

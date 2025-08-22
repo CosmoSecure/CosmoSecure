@@ -3,9 +3,9 @@ import { invoke } from '@tauri-apps/api/core';
 import { toast } from 'sonner';
 import { Lock, Shield, Eye, EyeOff, Check, AlertCircle } from 'lucide-react';
 import { token_secure } from "./token_secure";
+import { useUser } from '../../contexts/UserContext';
 
 interface ZKPMasterPasswordPopupProps {
-    user: any;
     onSetupComplete: () => void;
 }
 
@@ -19,9 +19,9 @@ interface User {
 }
 
 const ZKPMasterPasswordPopup: React.FC<ZKPMasterPasswordPopupProps> = ({
-    user,
     onSetupComplete
 }) => {
+    const { user } = useUser();
     const [isOpen, setIsOpen] = useState(false);
     const [pin, setPin] = useState(['', '', '', '']);
     const [confirmPin, setConfirmPin] = useState(['', '', '', '']);
@@ -32,10 +32,15 @@ const ZKPMasterPasswordPopup: React.FC<ZKPMasterPasswordPopupProps> = ({
 
     // Check if master password needs to be set up
     useEffect(() => {
-        if (user && user.hp[0].mp && user.hp[0].mp.ph === '') {
+        if (user && !user.masterPassword?.isSet) {
             setIsOpen(true);
         }
     }, [user]);
+
+    // Don't render if user data is not available yet
+    if (!user) {
+        return null;
+    }
 
     const handlePinChange = (index: number, value: string) => {
         if (!/^\d*$/.test(value)) return; // Only allow digits
@@ -88,6 +93,11 @@ const ZKPMasterPasswordPopup: React.FC<ZKPMasterPasswordPopupProps> = ({
             return;
         }
 
+        if (!user?.userId) {
+            setError('User data not available');
+            return;
+        }
+
         setIsLoading(true);
         try {
             // Generate salt for the master password
@@ -100,19 +110,22 @@ const ZKPMasterPasswordPopup: React.FC<ZKPMasterPasswordPopupProps> = ({
 
             // Setup master password via Tauri
             await invoke('setup_master_password', {
-                userId: user.ui,
+                userId: user.userId,
                 masterPasswordHash: hashedPin,
                 salt: salt
             });
 
             const response = await invoke<{ token: string; data: User }>('update_user_session', {
-                userId: user.ui,
+                userId: user.userId,
                 tokenData: sessionStorage.getItem('token'),
             });
 
             if (response) {
                 token_secure(response);
                 await invoke('save_token_command', { token: sessionStorage.getItem('token'), user: sessionStorage.getItem('user') });
+
+                // Dispatch custom event to notify UserContext of data change
+                window.dispatchEvent(new CustomEvent('userDataChanged'));
             } else {
                 alert("Invalid credentials. Please try again.");
             }

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { routes, bottomRoutes } from '../../routes';
-import { decryptUser } from '../auth/token_secure';
+import { useUser } from '../../contexts/UserContext';
 import { Pro } from '../../assets/';
 
 const NavButton = ({ icon, label, onClick }: { icon: React.ReactNode, label: string, onClick: () => void }) => (
@@ -30,18 +30,14 @@ const NavButton = ({ icon, label, onClick }: { icon: React.ReactNode, label: str
 
 const HoverNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ toggleProfileVisibility }) => {
     const navigate = useNavigate();
+    const { user } = useUser();
     const [username, setUsername] = useState('');
 
     useEffect(() => {
-        try {
-            const user = decryptUser();
-            if (user?.n) {
-                setUsername(user.n);
-            }
-        } catch (error) {
-            console.error('Error decrypting user data:', error);
+        if (user?.name) {
+            setUsername(user.name);
         }
-    }, []);
+    }, [user]);
 
     // Add cleanup for transitions
     useEffect(() => {

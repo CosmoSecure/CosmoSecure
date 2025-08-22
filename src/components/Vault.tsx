@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { decryptUser } from './auth/token_secure';
+import { useUser } from '../contexts/UserContext';
 import ZKPMasterPasswordPopup from "./auth/ZKPMasterPasswordPopup";
 
 interface PasswordEntry {
@@ -12,6 +12,7 @@ interface PasswordEntry {
 }
 
 const Vault = () => {
+    const { user, isLoading: userLoading, refreshUser } = useUser();
     const [passwords, setPasswords] = useState<PasswordEntry[]>([]);
     const [accountName, setAccountName] = useState('');
     const [username, setUsername] = useState('');
@@ -20,38 +21,47 @@ const Vault = () => {
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [showZKPPopup, setShowZKPPopup] = useState(false);
-    const [user, setUser] = useState<any>(null);
+    const [initialLoadDone, setInitialLoadDone] = useState(false);
 
     useEffect(() => {
-        const userData = decryptUser();
-        console.log("Vault Decrypted:", userData);
-        console.log("Vault master:", userData.hp);
-        console.log("Vault password:", userData.hp[0].ph);
-        console.log("Vault master:", userData.hp[0].mp);
-        console.log("Vault master:", userData.hp[0].mp.ph);
-        setUser(userData);
-
-        if (
-            userData.hp[0].mp.ph === ""
-        ) {
-            setShowZKPPopup(true);
+        if (!user) {
+            setShowZKPPopup(false);
+            return;
         }
-    }, []);
 
-    // Memoize user data
-    const getUserData = useCallback(async () => {
-        const user = decryptUser();
-        if (!user) throw new Error("Failed to decrypt user data");
-        return user;
-    }, []);
+        console.log("Vault user data:", user);
+        console.log("Vault password:", user.isSecureVault);
+        console.log("Vault master:", user.masterPassword);
+        console.log("Vault master isSet:", user.masterPassword?.isSet);
+
+        // Show ZKP popup only if master password is not set
+        if (!user.masterPassword?.isSet) {
+            console.log("Master password not set, showing ZKP popup");
+            setShowZKPPopup(true);
+        } else {
+            console.log("Master password is set, hiding ZKP popup");
+            setShowZKPPopup(false);
+        }
+    }, [user, user?.masterPassword?.isSet]);
 
     // Fetch passwords from the backend
     const fetchPasswords = useCallback(async () => {
+        // Don't fetch if user data is not available or still loading
+        if (!user?.userId || userLoading) {
+            console.log("User data not available yet, skipping password fetch", {
+                hasUserId: !!user?.userId,
+                userLoading
+            });
+            return;
+        }
+
         try {
+            console.log("Fetching passwords for user:", user.userId);
             setIsLoading(true);
-            const user = await getUserData();
+            setError(null);
+
             const entries = await invoke<any[]>('get_password_entries', {
-                ui: user.ui, // Pass `ui` as the user ID
+                ui: user.userId, // Pass `userId` as the user ID
             });
 
             console.log("Fetched entries:", entries); // Debugging log
@@ -67,24 +77,37 @@ const Vault = () => {
 
             console.log("Mapped entries with strength:", mappedEntries); // Debugging log
             setPasswords(mappedEntries);
+            setInitialLoadDone(true);
         } catch (error) {
             setError("Error fetching passwords. Please try again.");
             console.error("Error fetching passwords:", error);
         } finally {
             setIsLoading(false);
         }
-    }, [getUserData]);
+    }, [user?.userId, userLoading]);
 
     useEffect(() => {
-        fetchPasswords();
-        return () => {
-            // Cleanup
+        // Reset state when user changes
+        if (!user?.userId) {
             setPasswords([]);
             setError(null);
-        };
-    }, [fetchPasswords]);
+            setInitialLoadDone(false);
+            return;
+        }
+
+        // Only fetch passwords if user data is available and not currently loading
+        if (user?.userId && !userLoading && !initialLoadDone) {
+            console.log("User data available, fetching passwords");
+            fetchPasswords();
+        }
+    }, [user?.userId, userLoading, fetchPasswords, initialLoadDone]);
 
     const handleAddPassword = useCallback(async () => {
+        if (!user?.userId) {
+            setError("User data not available. Please try again.");
+            return;
+        }
+
         if (!accountName.trim() || !username.trim() || !password.trim()) {
             setError("Please fill in all fields");
             return;
@@ -92,11 +115,6 @@ const Vault = () => {
 
         try {
             setIsLoading(true);
-            const user = await getUserData();
-
-            if (!user || !user.ui) {
-                throw new Error("User data is missing or invalid");
-            }
 
             if (editId) {
                 // Update existing password entry
@@ -122,7 +140,7 @@ const Vault = () => {
             } else {
                 // Add new password entry
                 const entry_id = await invoke<string>('add_password_entry', {
-                    userId: user.ui, // Pass `ui` as `userId`
+                    userId: user.userId, // Pass `userId` as `userId`
                     accountName: accountName.trim(),
                     username: username.trim(),
                     password: password.trim(),
@@ -154,7 +172,7 @@ const Vault = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [accountName, username, password, editId, getUserData, fetchPasswords]);
+    }, [accountName, username, password, editId, user?.userId, fetchPasswords]);
 
     const handleEditPassword = (entryId: string) => {
         const entry = passwords.find(entry => entry.entry_id === entryId);
@@ -167,11 +185,15 @@ const Vault = () => {
     };
 
     const handleDeletePassword = useCallback(async (entryId: string) => {
+        if (!user?.userId) {
+            setError("User data not available. Please try again.");
+            return;
+        }
+
         try {
             setIsLoading(true);
-            const user = await getUserData();
             await invoke('add_to_trash', {
-                userId: user.ui,
+                userId: user.userId,
                 entryId,
             });
 
@@ -183,7 +205,7 @@ const Vault = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [getUserData, fetchPasswords]);
+    }, [user?.userId, fetchPasswords]);
 
     const getStrengthColor = (strength?: number) => {
         if (strength === undefined || strength === null) return 'text-gray-500'; // Default for undefined strength
@@ -220,46 +242,77 @@ const Vault = () => {
 
     return (
         <>
-            {showZKPPopup && user && (
+            {showZKPPopup && (
                 <ZKPMasterPasswordPopup
-                    user={user}
-                    onSetupComplete={() => setShowZKPPopup(false)}
+                    onSetupComplete={async () => {
+                        console.log("Master password setup completed, refreshing user data");
+                        setShowZKPPopup(false);
+                        // Refresh user context to get updated master password status
+                        await refreshUser();
+                    }}
                 />
             )}
             <div className="p-4 h-full bg-light-background dark:bg-dark-background text-light-text dark:text-dark-text">
                 <h1 className="text-2xl font-bold mb-4">Vault</h1>
-                {error && <div className="text-red-500 mb-4">{error}</div>}
-                {isLoading && <div className="text-blue-500 mb-4">Loading...</div>}
-                <div className="mb-4">
-                    <input
-                        type="text"
-                        placeholder="Account Name"
-                        value={accountName}
-                        onChange={(e) => setAccountName(e.target.value)}
-                        className="border p-2 mr-2 bg-light-background dark:bg-dark-background text-light-text dark:text-dark-text"
-                    />
-                    <input
-                        type="text"
-                        placeholder="Username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        className="border p-2 mr-2 bg-light-background dark:bg-dark-background text-light-text dark:text-dark-text"
-                    />
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="border p-2 mr-2 bg-light-background dark:bg-dark-background text-light-text dark:text-dark-text"
-                    />
-                    <button
-                        onClick={handleAddPassword}
-                        className="bg-light-primary dark:bg-dark-primary text-light-text dark:text-dark-text p-2 rounded"
-                    >
-                        {editId !== null ? 'Update' : 'Add'}
-                    </button>
-                </div>
-                {passwordList}
+
+                {/* Show loading state when user data is still loading */}
+                {userLoading && (
+                    <div className="text-blue-500 mb-4">Loading user data...</div>
+                )}
+
+                {/* Show error if user data failed to load */}
+                {!userLoading && !user && (
+                    <div className="text-red-500 mb-4">Failed to load user data. Please refresh the page.</div>
+                )}
+
+                {/* Show password-related content only when user data is available */}
+                {!userLoading && user && (
+                    <>
+                        {error && <div className="text-red-500 mb-4">{error}</div>}
+                        {isLoading && <div className="text-blue-500 mb-4">Loading passwords...</div>}
+
+                        <div className="mb-4">
+                            <input
+                                type="text"
+                                placeholder="Account Name"
+                                value={accountName}
+                                onChange={(e) => setAccountName(e.target.value)}
+                                className="border p-2 mr-2 bg-light-background dark:bg-dark-background text-light-text dark:text-dark-text"
+                                disabled={!user?.userId || isLoading}
+                            />
+                            <input
+                                type="text"
+                                placeholder="Username"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                className="border p-2 mr-2 bg-light-background dark:bg-dark-background text-light-text dark:text-dark-text"
+                                disabled={!user?.userId || isLoading}
+                            />
+                            <input
+                                type="password"
+                                placeholder="Password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="border p-2 mr-2 bg-light-background dark:bg-dark-background text-light-text dark:text-dark-text"
+                                disabled={!user?.userId || isLoading}
+                            />
+                            <button
+                                onClick={handleAddPassword}
+                                disabled={!user?.userId || isLoading}
+                                className="bg-light-primary dark:bg-dark-primary text-light-text dark:text-dark-text p-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {editId !== null ? 'Update' : 'Add'}
+                            </button>
+                        </div>
+
+                        {/* Show password list or empty state */}
+                        {!isLoading && passwords.length === 0 && initialLoadDone && (
+                            <div className="text-gray-500 mb-4">No passwords found. Add your first password above.</div>
+                        )}
+
+                        {passwords.length > 0 && passwordList}
+                    </>
+                )}
             </div>
         </>
     );

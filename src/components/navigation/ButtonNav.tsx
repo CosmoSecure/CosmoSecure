@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { routes, bottomRoutes } from '../../routes';
-import { decryptUser } from '../auth/token_secure';
+import { useUser } from '../../contexts/UserContext';
 // import { Pro } from '../../assets/';
 import SensorOccupiedIcon from '@mui/icons-material/SensorOccupied';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
@@ -9,19 +9,15 @@ import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 
 const ButtonNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ }) => {
     const navigate = useNavigate();
+    const { user } = useUser();
     const [, setUsername] = useState('');
     const [isExpanded, setIsExpanded] = useState(false);
 
     useEffect(() => {
-        try {
-            const user = decryptUser();
-            if (user && user.name) {
-                setUsername(user.name);
-            }
-        } catch (error) {
-            console.error('Error decrypting user data:', error);
+        if (user?.name) {
+            setUsername(user.name);
         }
-    }, []);
+    }, [user]);
 
     // Add cleanup for transitions
     useEffect(() => {
