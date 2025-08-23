@@ -10,12 +10,16 @@ import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import { invoke } from '@tauri-apps/api/core';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Fetch total passwords
+// Fetch total passwords using the new stats function
 const fetchTotalPasswords = async (userId: string): Promise<number> => {
     try {
         console.log("userID : ", userId);
-        const entries: { entry_id: string }[] = await invoke('get_password_entries', { ui: userId }); // Pass `ui`
-        return entries.length;
+        const stats = await invoke<{
+            total_passwords: number;
+            weak_passwords_count: number;
+            weak_entries: Array<any>;
+        }>('get_password_stats', { ui: userId });
+        return stats.total_passwords;
     } catch (error) {
         console.error('Error fetching total passwords:', error);
         return 0;

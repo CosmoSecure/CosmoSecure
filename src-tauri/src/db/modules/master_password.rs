@@ -94,6 +94,33 @@ pub async fn verify_master_password(
     }
 }
 
+// Get master password salt for a user (for encryption/decryption operations)
+#[tauri::command]
+pub async fn get_master_salt(
+    state: State<'_, MongoClientState>,
+    user_id: String,
+) -> Result<String, String> {
+    let user_collection = state
+        .get_database("password_manager")
+        .collection::<User>("users");
+
+    let user_filter = doc! { "ui": &user_id };
+    let user_doc = user_collection
+        .find_one(user_filter)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if let Some(user) = user_doc {
+        if let Some(master_auth) = user.hashed_password.get(0).map(|hp| &hp.master) {
+            Ok(master_auth.salt.clone())
+        } else {
+            Err("No master password set for user.".to_string())
+        }
+    } else {
+        Err("User not found.".to_string())
+    }
+}
+
 // This provides better entropy and is more compact
 #[tauri::command]
 pub fn generate_salt_base64(byte_length: Option<usize>) -> Result<String, String> {

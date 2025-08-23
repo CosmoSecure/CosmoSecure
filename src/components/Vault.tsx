@@ -11,6 +11,115 @@ interface PasswordEntry {
     strength?: number;
 }
 
+// Simple client-side PIN hashing function
+const hashPin = async (pin: string, salt: string): Promise<string> => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(pin + salt);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
+// Master Password Prompt Component
+const MasterPasswordPrompt = ({ onPasswordProvided }: { onPasswordProvided: (password: string) => void }) => {
+    const [pin, setPin] = useState(['', '', '', '']);
+    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const { user } = useUser();
+
+    const handlePinChange = (index: number, value: string) => {
+        if (!/^\d*$/.test(value)) return;
+
+        const newPin = [...pin];
+        newPin[index] = value.slice(-1);
+        setPin(newPin);
+
+        if (value && index < 3) {
+            const nextInput = document.getElementById(`master-pin-${index + 1}`);
+            nextInput?.focus();
+        }
+    };
+
+    const handleSubmit = async () => {
+        const masterPin = pin.join('');
+        if (masterPin.length !== 4) {
+            setError('Please enter a 4-digit PIN');
+            return;
+        }
+
+        if (!user?.userId) {
+            setError('User data not available');
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            // Get the salt for this user
+            const salt = await invoke<string>('get_master_salt', { userId: user.userId });
+
+            // Hash the PIN with the same method used during setup
+            const hashedPin = await hashPin(masterPin, salt);
+
+            // Verify the master password
+            const isValid = await invoke<boolean>('verify_master_password', {
+                userId: user.userId,
+                providedHash: hashedPin
+            });
+
+            if (isValid) {
+                onPasswordProvided(masterPin);
+                setError('');
+            } else {
+                setError('Incorrect PIN. Please try again.');
+                setPin(['', '', '', '']);
+            }
+        } catch (error) {
+            console.error('Master password verification failed:', error);
+            setError('Failed to verify PIN. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-700">
+                <div className="text-center mb-8">
+                    <h2 className="text-2xl font-bold text-white mb-2">Enter Master PIN</h2>
+                    <p className="text-slate-400 text-sm">Enter your 4-digit PIN to access your passwords</p>
+                </div>
+
+                <div className="flex justify-center gap-3 mb-6">
+                    {pin.map((digit, index) => (
+                        <input
+                            key={index}
+                            id={`master-pin-${index}`}
+                            type="text"
+                            value={digit}
+                            onChange={(e) => handlePinChange(index, e.target.value)}
+                            className="w-12 h-12 text-center text-xl font-bold bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+                            maxLength={1}
+                            disabled={isLoading}
+                        />
+                    ))}
+                </div>
+
+                {error && (
+                    <div className="text-red-400 text-sm text-center mb-4">{error}</div>
+                )}
+
+                <button
+                    onClick={handleSubmit}
+                    disabled={isLoading || pin.join('').length !== 4}
+                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                >
+                    {isLoading ? 'Verifying...' : 'Unlock Vault'}
+                </button>
+            </div>
+        </div>
+    );
+};
+
 const Vault = () => {
     const { user, isLoading: userLoading, refreshUser } = useUser();
     const [passwords, setPasswords] = useState<PasswordEntry[]>([]);
@@ -22,10 +131,13 @@ const Vault = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [showZKPPopup, setShowZKPPopup] = useState(false);
     const [initialLoadDone, setInitialLoadDone] = useState(false);
+    const [masterPassword, setMasterPassword] = useState<string | null>(null);
+    const [showMasterPasswordPrompt, setShowMasterPasswordPrompt] = useState(false);
 
     useEffect(() => {
         if (!user) {
             setShowZKPPopup(false);
+            setMasterPassword(null);
             return;
         }
 
@@ -41,16 +153,21 @@ const Vault = () => {
         } else {
             console.log("Master password is set, hiding ZKP popup");
             setShowZKPPopup(false);
+            // If master password is set but we don't have it in memory, prompt for it
+            if (!masterPassword) {
+                setShowMasterPasswordPrompt(true);
+            }
         }
-    }, [user, user?.masterPassword?.isSet]);
+    }, [user, user?.masterPassword?.isSet, masterPassword]);
 
     // Fetch passwords from the backend
     const fetchPasswords = useCallback(async () => {
-        // Don't fetch if user data is not available or still loading
-        if (!user?.userId || userLoading) {
-            console.log("User data not available yet, skipping password fetch", {
+        // Don't fetch if user data is not available, still loading, or no master password
+        if (!user?.userId || userLoading || !masterPassword) {
+            console.log("Cannot fetch passwords yet", {
                 hasUserId: !!user?.userId,
-                userLoading
+                userLoading,
+                hasMasterPassword: !!masterPassword
             });
             return;
         }
@@ -61,10 +178,11 @@ const Vault = () => {
             setError(null);
 
             const entries = await invoke<any[]>('get_password_entries', {
-                ui: user.userId, // Pass `userId` as the user ID
+                ui: user.userId,
+                masterPassword: masterPassword, // Pass master password for decryption
             });
 
-            console.log("Fetched entries:", entries); // Debugging log
+            console.log("Fetched entries:", entries);
 
             // Map backend fields to frontend structure
             const mappedEntries: PasswordEntry[] = entries.map(entry => ({
@@ -75,7 +193,7 @@ const Vault = () => {
                 strength: entry.aps,
             }));
 
-            console.log("Mapped entries with strength:", mappedEntries); // Debugging log
+            console.log("Mapped entries with strength:", mappedEntries);
             setPasswords(mappedEntries);
             setInitialLoadDone(true);
         } catch (error) {
@@ -84,7 +202,7 @@ const Vault = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [user?.userId, userLoading]);
+    }, [user?.userId, userLoading, masterPassword]);
 
     useEffect(() => {
         // Reset state when user changes
@@ -92,19 +210,20 @@ const Vault = () => {
             setPasswords([]);
             setError(null);
             setInitialLoadDone(false);
+            setMasterPassword(null);
             return;
         }
 
-        // Only fetch passwords if user data is available and not currently loading
-        if (user?.userId && !userLoading && !initialLoadDone) {
-            console.log("User data available, fetching passwords");
+        // Only fetch passwords if user data is available, not currently loading, and we have master password
+        if (user?.userId && !userLoading && masterPassword && !initialLoadDone) {
+            console.log("User data and master password available, fetching passwords");
             fetchPasswords();
         }
-    }, [user?.userId, userLoading, fetchPasswords, initialLoadDone]);
+    }, [user?.userId, userLoading, masterPassword, fetchPasswords, initialLoadDone]);
 
     const handleAddPassword = useCallback(async () => {
-        if (!user?.userId) {
-            setError("User data not available. Please try again.");
+        if (!user?.userId || !masterPassword) {
+            setError("User data or master password not available. Please try again.");
             return;
         }
 
@@ -119,10 +238,12 @@ const Vault = () => {
             if (editId) {
                 // Update existing password entry
                 await invoke('update_password_entry', {
+                    userId: user.userId,
                     entryId: editId,
                     accountName: accountName.trim(),
                     username: username.trim(),
                     password: password.trim(),
+                    masterPassword: masterPassword, // Pass master password for encryption
                 });
 
                 setPasswords(prev =>
@@ -140,10 +261,11 @@ const Vault = () => {
             } else {
                 // Add new password entry
                 const entry_id = await invoke<string>('add_password_entry', {
-                    userId: user.userId, // Pass `userId` as `userId`
+                    userId: user.userId,
                     accountName: accountName.trim(),
                     username: username.trim(),
                     password: password.trim(),
+                    masterPassword: masterPassword, // Pass master password for encryption
                 });
 
                 setPasswords(prev => [
@@ -172,7 +294,7 @@ const Vault = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [accountName, username, password, editId, user?.userId, fetchPasswords]);
+    }, [accountName, username, password, editId, user?.userId, masterPassword, fetchPasswords]);
 
     const handleEditPassword = (entryId: string) => {
         const entry = passwords.find(entry => entry.entry_id === entryId);
@@ -207,6 +329,12 @@ const Vault = () => {
         }
     }, [user?.userId, fetchPasswords]);
 
+    const handleMasterPasswordProvided = (providedPassword: string) => {
+        setMasterPassword(providedPassword);
+        setShowMasterPasswordPrompt(false);
+        setError(null);
+    };
+
     const getStrengthColor = (strength?: number) => {
         if (strength === undefined || strength === null) return 'text-gray-500'; // Default for undefined strength
         if (strength >= 4) return 'text-green-500'; // Strong password
@@ -238,7 +366,7 @@ const Vault = () => {
                 </li>
             ))}
         </ul>
-    ), [passwords]);
+    ), [passwords, handleDeletePassword]);
 
     return (
         <>
@@ -252,6 +380,11 @@ const Vault = () => {
                     }}
                 />
             )}
+
+            {showMasterPasswordPrompt && (
+                <MasterPasswordPrompt onPasswordProvided={handleMasterPasswordProvided} />
+            )}
+
             <div className="p-4 h-full bg-light-background dark:bg-dark-background text-light-text dark:text-dark-text">
                 <h1 className="text-2xl font-bold mb-4">Vault</h1>
 
@@ -265,8 +398,13 @@ const Vault = () => {
                     <div className="text-red-500 mb-4">Failed to load user data. Please refresh the page.</div>
                 )}
 
-                {/* Show password-related content only when user data is available */}
-                {!userLoading && user && (
+                {/* Show master password prompt message */}
+                {!userLoading && user && user.masterPassword?.isSet && !masterPassword && (
+                    <div className="text-yellow-500 mb-4">Please enter your master PIN to access your passwords.</div>
+                )}
+
+                {/* Show password-related content only when user data and master password are available */}
+                {!userLoading && user && masterPassword && (
                     <>
                         {error && <div className="text-red-500 mb-4">{error}</div>}
                         {isLoading && <div className="text-blue-500 mb-4">Loading passwords...</div>}
@@ -298,7 +436,7 @@ const Vault = () => {
                             />
                             <button
                                 onClick={handleAddPassword}
-                                disabled={!user?.userId || isLoading}
+                                disabled={!user?.userId || isLoading || !masterPassword}
                                 className="bg-light-primary dark:bg-dark-primary text-light-text dark:text-dark-text p-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {editId !== null ? 'Update' : 'Add'}

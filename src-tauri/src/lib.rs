@@ -6,11 +6,12 @@ use crate::db::{
     },
     modules::{
         master_password::{
-            generate_salt_base64, generate_salt_hex, setup_master_password, update_user_session,
-            verify_master_password,
+            generate_salt_base64, generate_salt_hex, get_master_salt, setup_master_password,
+            update_user_session, verify_master_password,
         },
         passwords::{
-            add_password_entry, delete_password_entry, get_password_entries, update_password_entry,
+            add_password_entry, delete_password_entry, get_password_entries, get_password_stats,
+            update_password_entry,
         },
         trash::{add_to_trash, clean_old_trash, restore_password, trash},
     },
@@ -31,6 +32,7 @@ mod db;
 mod env_var;
 mod extensions;
 mod openurl;
+mod password_crypto;
 mod secure;
 mod version;
 
@@ -77,6 +79,7 @@ pub async fn run() {
             load_token_command,
             delete_token_command,
             get_password_entries,
+            get_password_stats,
             add_password_entry,
             delete_password_entry,
             update_password_entry,
@@ -99,7 +102,8 @@ pub async fn run() {
             verify_master_password,
             generate_salt_base64,
             generate_salt_hex,
-            update_user_session
+            update_user_session,
+            get_master_salt
         ])
         // .setup(|_app| {
         // // Use an asynchronous runtime to run the database connection
