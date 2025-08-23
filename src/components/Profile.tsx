@@ -10,12 +10,16 @@ import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import { invoke } from '@tauri-apps/api/core';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Fetch total passwords
+// Fetch total passwords using the new stats function
 const fetchTotalPasswords = async (userId: string): Promise<number> => {
     try {
         console.log("userID : ", userId);
-        const entries: { entry_id: string }[] = await invoke('get_password_entries', { ui: userId }); // Pass `ui`
-        return entries.length;
+        const stats = await invoke<{
+            total_passwords: number;
+            weak_passwords_count: number;
+            weak_entries: Array<any>;
+        }>('get_password_stats', { ui: userId });
+        return stats.total_passwords;
     } catch (error) {
         console.error('Error fetching total passwords:', error);
         return 0;
@@ -23,9 +27,8 @@ const fetchTotalPasswords = async (userId: string): Promise<number> => {
 };
 
 const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisible, onClose }) => {
-    const { user, isLoading, refreshUserFromBackend } = useUser();
+    const { user, isLoading } = useUser();
     const [totalPasswords, setTotalPasswords] = useState(0);
-    const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
         if (!isVisible || !user?.userId) return; // Only fetch data when the profile is visible and user is available
@@ -42,23 +45,6 @@ const Profile: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisi
 
         initializeData();
     }, [isVisible, user?.userId]); // Run this effect when `isVisible` or `user.userId` changes
-
-    // Refresh user data function
-    const handleRefreshUserData = async () => {
-        if (!user?.userId) return;
-
-        setRefreshing(true);
-        try {
-            await refreshUserFromBackend();
-            // Refresh total passwords as well
-            const total = await fetchTotalPasswords(user.userId);
-            setTotalPasswords(total);
-        } catch (error) {
-            console.error('Error refreshing user data:', error);
-        } finally {
-            setRefreshing(false);
-        }
-    };
 
     if (!user && !isLoading) {
         return null; // Don't render if user data is not available

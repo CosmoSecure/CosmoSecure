@@ -10,33 +10,32 @@ import { ExpandLess, ExpandMore, Warning as WarningIcon } from '@mui/icons-mater
 import DashboardEmailBreach from './tools/DashboardEmailBreach';
 
 // API Functions
-const fetchTotalPasswords = async (userId: string) => {
+const fetchPasswordStats = async (userId: string) => {
     try {
-        const entries = await invoke<{ entry_id: string }[]>('get_password_entries', { ui: userId });
-        return entries.length;
-    } catch (error) {
-        console.error('Error fetching total passwords:', error);
-        return 0;
-    }
-};
+        const stats = await invoke<{
+            total_passwords: number;
+            weak_passwords_count: number;
+            weak_entries: Array<{
+                aid: string;
+                an: string;
+                aun: string;
+                aps: number;
+            }>;
+        }>('get_password_stats', { ui: userId });
 
-const fetchWeakPasswords = async (userId: string) => {
-    try {
-        const entries = await invoke<{ aid: string; ap: string; aps: number }[]>('get_password_entries', { ui: userId });
-
-        // Filter weak passwords directly based on `aps` (strength score)
-        const weakPasswords = entries
-            .filter(entry => entry.aps < 3) // Weak passwords have a strength score less than 3
-            .map(entry => ({
-                password: entry.ap,
+        return {
+            totalPasswords: stats.total_passwords,
+            weakPasswords: stats.weak_entries.map(entry => ({
+                password: `${entry.an} (${entry.aun})`, // Show account name and username instead of actual password
                 score: entry.aps,
-            }));
-
-        console.log("Weak passwords:", weakPasswords); // Debugging log
-        return weakPasswords;
+            }))
+        };
     } catch (error) {
-        console.error('Error fetching weak passwords:', error);
-        return [];
+        console.error('Error fetching password stats:', error);
+        return {
+            totalPasswords: 0,
+            weakPasswords: []
+        };
     }
 };
 
@@ -56,27 +55,19 @@ const Dashboard: React.FC = () => {
 
     // Fetch password statistics when user data is available
     useEffect(() => {
-        const fetchPasswordStats = async () => {
+        const fetchStats = async () => {
             if (!user?.userId) return;
 
             try {
-                const [total, weak] = await Promise.all([
-                    fetchTotalPasswords(user.userId),
-                    fetchWeakPasswords(user.userId),
-                ]);
-
+                const stats = await fetchPasswordStats(user.userId);
                 setEmail(user.email);
-
-                setPasswordStats({
-                    totalPasswords: total,
-                    weakPasswords: weak.filter((entry): entry is { password: string; score: number } => entry !== null),
-                });
+                setPasswordStats(stats);
             } catch (error) {
                 console.error('Error fetching password stats:', error);
             }
         };
 
-        fetchPasswordStats();
+        fetchStats();
     }, [user?.userId]); // Fetch stats only when `userId` is available
 
     if (isLoading) {
