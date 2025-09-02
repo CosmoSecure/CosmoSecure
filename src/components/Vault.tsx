@@ -176,6 +176,7 @@ const PasswordCard = ({
     const [editPassword, setEditPassword] = useState(entry.password);
     const [editPlatform, setEditPlatform] = useState(entry.platform || 'other');
     const [showPlatformDropdown, setShowPlatformDropdown] = useState(false);
+    const [showEditPassword, setShowEditPassword] = useState(false);
 
     // Reset form when switching to edit mode
     useEffect(() => {
@@ -254,12 +255,22 @@ const PasswordCard = ({
                 {/* Password */}
                 <div className="mb-4">
                     <label className="block text-xs text-theme-text-transparent mb-1">Password</label>
-                    <input
-                        type="password"
-                        value={editPassword}
-                        onChange={(e) => setEditPassword(e.target.value)}
-                        className="w-full px-3 py-2 border border-theme-secondary rounded-md focus:ring-2 focus:ring-theme-primary focus:border-transparent bg-theme-background text-theme-text text-md"
-                    />
+                    <div className="relative">
+                        <input
+                            type={showEditPassword ? "text" : "password"}
+                            value={editPassword}
+                            onChange={(e) => setEditPassword(e.target.value)}
+                            className="w-full px-3 py-2 pr-10 border border-theme-secondary rounded-md focus:ring-2 focus:ring-theme-primary focus:border-transparent bg-theme-background text-theme-text text-md"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowEditPassword(!showEditPassword)}
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-theme-text-transparent hover:text-theme-text"
+                            title={showEditPassword ? 'Hide password' : 'Show password'}
+                        >
+                            {showEditPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                    </div>
                 </div>
 
                 {/* Actions */}
@@ -302,10 +313,9 @@ const PasswordCard = ({
             </div>
 
             {/* Card Content */}
-            <div className="space-y-3">
-                <div>
-                    <label className="text-xs text-theme-text-transparent">Username</label>
-                    <div className="flex items-center gap-2 mt-1">
+            <div>
+                <div className="border border-theme-accent-transparent bg-theme-secondary-transparent p-1 rounded-t-lg">
+                    <div className="flex items-center gap-2 mt-1 mx-1">
                         <p className="text-md text-theme-text flex-1 truncate">{entry.username}</p>
                         <button
                             onClick={() => onCopy(entry.username, 'Username')}
@@ -317,10 +327,9 @@ const PasswordCard = ({
                     </div>
                 </div>
 
-                <div>
-                    <label className="text-xs text-theme-text-transparent">Password</label>
-                    <div className="flex items-center gap-2 mt-1">
-                        <p className="text-md text-theme-text flex-1 font-mono">
+                <div className="border border-theme-accent-transparent bg-theme-secondary-transparent p-1 rounded-b-lg">
+                    <div className="flex items-center gap-2 mt-1 mx-1">
+                        <p className="text-md text-theme-text flex-1 font-mono overflow-scroll">
                             {isVisible ? entry.password : '••••••••'}
                         </p>
                         <button
@@ -342,7 +351,7 @@ const PasswordCard = ({
             </div>
 
             {/* Card Actions */}
-            <div className="flex gap-2 mt-4 pt-3 border-t border-theme-secondary">
+            <div className="flex justify-between gap-2 mt-4 pt-3 border-t border-theme-secondary">
                 <button
                     onClick={onEdit}
                     className="flex items-center gap-1 bg-theme-primary hover:bg-theme-primary-transparent text-theme-text px-3 py-1.5 rounded-md text-md transition-colors"
@@ -380,6 +389,7 @@ const Vault = () => {
     const [showAddForm, setShowAddForm] = useState(false);
     const [showPlatformDropdown, setShowPlatformDropdown] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [showPasswordInForm, setShowPasswordInForm] = useState(false);
 
     // Helper function to get platform info
     const getPlatformInfo = (platformValue?: string) => {
@@ -972,13 +982,23 @@ const Vault = () => {
                             {/* Password */}
                             <div>
                                 <label className="block text-md font-medium text-theme-text mb-1">Password</label>
-                                <input
-                                    type="password"
-                                    placeholder="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full px-4 py-2 border border-theme-secondary rounded-lg focus:ring-2 focus:ring-theme-primary focus:border-transparent bg-theme-background text-theme-text"
-                                />
+                                <div className="relative">
+                                    <input
+                                        type={showPasswordInForm ? "text" : "password"}
+                                        placeholder="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="w-full px-4 py-2 pr-10 border border-theme-secondary rounded-lg focus:ring-2 focus:ring-theme-primary focus:border-transparent bg-theme-background text-theme-text"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPasswordInForm(!showPasswordInForm)}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-theme-text-transparent hover:text-theme-text"
+                                        title={showPasswordInForm ? 'Hide password' : 'Show password'}
+                                    >
+                                        {showPasswordInForm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
