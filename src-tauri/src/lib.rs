@@ -10,7 +10,8 @@ use crate::db::{
             update_user_session, verify_master_password,
         },
         passwords::{
-            add_password_entry, delete_password_entry, get_password_entries, get_password_stats,
+            add_password_entry, decrypt_single_password, delete_password_entry,
+            get_password_entries, get_password_entries_encrypted, get_password_stats,
             update_password_entry,
         },
         trash::{add_to_trash, clean_old_trash, restore_password, trash},
@@ -79,6 +80,8 @@ pub async fn run() {
             load_token_command,
             delete_token_command,
             get_password_entries,
+            get_password_entries_encrypted,
+            decrypt_single_password,
             get_password_stats,
             add_password_entry,
             delete_password_entry,

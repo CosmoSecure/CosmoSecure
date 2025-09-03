@@ -1,12 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { useUser } from '../contexts/UserContext';
 import ZKPMasterPasswordPopup from "./auth/ZKPMasterPasswordPopup";
-import { Eye, EyeOff, Copy, Edit2, Trash2, Plus, Lock, ChevronDown, Search, X } from 'lucide-react';
+import { Eye, EyeOff, Copy, Edit2, Trash2, Plus, Lock, ChevronDown, Search, X, RotateCcw } from 'lucide-react';
 
 interface PasswordEntry {
     entry_id: string;
-    account_name: string;
     username: string;
     password: string;
     strength?: number;
@@ -143,7 +142,7 @@ const MasterPasswordPrompt = ({ onPasswordProvided }: { onPasswordProvided: (pas
 };
 
 // Individual Password Card Component with inline editing
-const PasswordCard = ({
+const PasswordCard = React.memo(({
     entry,
     platformInfo,
     isVisible,
@@ -156,7 +155,10 @@ const PasswordCard = ({
     onCancelEdit,
     onDelete,
     getStrengthColor,
-    platforms
+    platforms,
+    decryptedPassword,
+    isDecrypting,
+    onRetryDecryption
 }: {
     entry: PasswordEntry;
     platformInfo: any;
@@ -171,6 +173,9 @@ const PasswordCard = ({
     onDelete: () => void;
     getStrengthColor: (strength?: number) => string;
     platforms: any[];
+    decryptedPassword?: string;
+    isDecrypting?: boolean;
+    onRetryDecryption?: (entryId: string) => void;
 }) => {
     const [editUsername, setEditUsername] = useState(entry.username);
     const [editPassword, setEditPassword] = useState(entry.password);
@@ -182,10 +187,11 @@ const PasswordCard = ({
     useEffect(() => {
         if (isEditing) {
             setEditUsername(entry.username);
-            setEditPassword(entry.password);
+            // Use decrypted password if available, otherwise use the encrypted one
+            setEditPassword(decryptedPassword || entry.password);
             setEditPlatform(entry.platform || 'other');
         }
-    }, [isEditing, entry]);
+    }, [isEditing, entry, decryptedPassword]);
 
     const handleSave = () => {
         onSaveEdit(entry.entry_id, editUsername, editPassword, editPlatform);
@@ -303,8 +309,9 @@ const PasswordCard = ({
                         {platformInfo.icon}
                     </div>
                     <div>
-                        <h3 className="font-semibold text-theme-text truncate">{entry.account_name}</h3>
-                        <p className="text-md text-theme-text-transparent">{platformInfo.name}</p>
+                        <h3 className="font-semibold text-theme-text truncate">
+                            {platforms.find(p => p.value === entry.platform)?.name || entry.platform || 'Account'}
+                        </h3>
                     </div>
                 </div>
                 <span className={`text-md font-medium ${getStrengthColor(entry.strength)}`}>
@@ -330,22 +337,48 @@ const PasswordCard = ({
                 <div className="border border-theme-accent-transparent bg-theme-secondary-transparent p-1 rounded-b-lg">
                     <div className="flex items-center gap-2 mt-1 mx-1">
                         <p className="text-md text-theme-text flex-1 font-mono overflow-scroll">
-                            {isVisible ? entry.password : '••••••••'}
+                            {isVisible ? (
+                                isDecrypting ? (
+                                    <span className="flex items-center gap-2">
+                                        <div className="inline-block animate-spin rounded-full h-3 w-3 border-b-2 border-theme-primary"></div>
+                                        Decrypting...
+                                    </span>
+                                ) : decryptedPassword === '[DECRYPTION_FAILED]' ? (
+                                    <span className="text-red-500 text-sm">Failed to decrypt</span>
+                                ) : (
+                                    decryptedPassword || '••••••••'
+                                )
+                            ) : '••••••••'}
                         </p>
                         <button
                             onClick={onToggleVisibility}
                             className="text-theme-text-transparent hover:text-theme-text p-1"
                             title={isVisible ? 'Hide password' : 'Show password'}
+                            disabled={isDecrypting}
                         >
                             {isVisible ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                         </button>
                         <button
-                            onClick={() => onCopy(entry.password, 'Password')}
+                            onClick={() => {
+                                if (decryptedPassword && decryptedPassword !== '[DECRYPTION_FAILED]') {
+                                    onCopy(decryptedPassword, 'Password');
+                                }
+                            }}
                             className="text-theme-text-transparent hover:text-theme-text p-1"
                             title="Copy password"
+                            disabled={!isVisible || isDecrypting || decryptedPassword === '[DECRYPTION_FAILED]'}
                         >
                             <Copy className="w-3 h-3" />
                         </button>
+                        {decryptedPassword === '[DECRYPTION_FAILED]' && onRetryDecryption && (
+                            <button
+                                onClick={() => onRetryDecryption(entry.entry_id)}
+                                className="text-theme-primary hover:text-theme-primary-transparent p-1"
+                                title="Retry decryption"
+                            >
+                                <RotateCcw className="w-3 h-3" />
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -370,14 +403,14 @@ const PasswordCard = ({
             </div>
         </div>
     );
-};
+});
 
 const Vault = () => {
     const { user, isLoading: userLoading, refreshUser } = useUser();
     const [passwords, setPasswords] = useState<PasswordEntry[]>([]);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [platform, setPlatform] = useState('other');
+    const [platform, setPlatform] = useState('google');
     const [editId, setEditId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -390,11 +423,53 @@ const Vault = () => {
     const [showPlatformDropdown, setShowPlatformDropdown] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [showPasswordInForm, setShowPasswordInForm] = useState(false);
+    const [decryptedPasswords, setDecryptedPasswords] = useState<Map<string, string>>(new Map());
+    const [decryptingPasswords, setDecryptingPasswords] = useState<Set<string>>(new Set());
 
-    // Helper function to get platform info
-    const getPlatformInfo = (platformValue?: string) => {
-        return PLATFORMS.find(p => p.value === platformValue) || PLATFORMS.find(p => p.value === 'other')!;
-    };
+    // Memoized helper functions
+    const getPlatformInfo = useCallback((platformValue?: string, username?: string) => {
+        // First try to find by explicit platform value
+        if (platformValue) {
+            const platform = PLATFORMS.find(p => p.value === platformValue);
+            if (platform) return platform;
+        }
+
+        // If no platform value or not found, try to guess from username
+        if (username) {
+            const usernameLower = username.toLowerCase();
+            const platform = PLATFORMS.find(p =>
+                usernameLower.includes(p.name.toLowerCase()) ||
+                usernameLower.includes(`@${p.value}.`) || // email patterns
+                usernameLower.includes(p.value)
+            );
+            if (platform && platform.value !== 'google') return platform;
+        }
+
+        // Default fallback - use platform name as display name
+        if (platformValue) {
+            return {
+                value: platformValue,
+                name: platformValue.charAt(0).toUpperCase() + platformValue.slice(1),
+                icon: '🔐',
+                color: 'bg-gray-600'
+            };
+        }
+
+        // Last resort - use generic platform
+        return {
+            value: 'generic',
+            name: 'Account',
+            icon: '🔐',
+            color: 'bg-gray-600'
+        };
+    }, []);
+
+    const getStrengthColor = useCallback((strength?: number) => {
+        if (!strength || strength <= 1) return 'text-red-500';
+        if (strength === 2) return 'text-orange-500';
+        if (strength === 3) return 'text-yellow-500';
+        return 'text-green-500';
+    }, []);
 
     // Copy to clipboard function
     const copyToClipboard = async (text: string, type: string) => {
@@ -407,16 +482,133 @@ const Vault = () => {
         }
     };
 
-    // Toggle password visibility
-    const togglePasswordVisibility = (entryId: string) => {
-        const newVisible = new Set(visiblePasswords);
-        if (newVisible.has(entryId)) {
-            newVisible.delete(entryId);
-        } else {
-            newVisible.add(entryId);
+    // Decrypt individual password on demand
+    const decryptPassword = useCallback(async (entryId: string, retryCount = 0) => {
+        if (!user?.userId || !masterPassword) {
+            console.error("Cannot decrypt: missing user ID or master password");
+            return;
         }
-        setVisiblePasswords(newVisible);
-    };
+
+        // Check if already decrypted
+        if (decryptedPasswords.has(entryId)) {
+            return;
+        }
+
+        // Check if currently decrypting (but allow retries)
+        if (decryptingPasswords.has(entryId) && retryCount === 0) {
+            return;
+        }
+
+        try {
+            setDecryptingPasswords(prev => new Set([...prev, entryId]));
+
+            console.log(`Attempting to decrypt password for entry ${entryId} (attempt ${retryCount + 1})`);
+
+            const decryptedPassword = await invoke<string>('decrypt_single_password', {
+                ui: user.userId,
+                entryId: entryId,
+                masterPassword: masterPassword
+            });
+
+            if (decryptedPassword && decryptedPassword.trim() !== '') {
+                console.log(`Successfully decrypted password for entry ${entryId}`);
+                setDecryptedPasswords(prev => new Map([...prev, [entryId, decryptedPassword]]));
+            } else {
+                throw new Error('Decrypted password is empty or invalid');
+            }
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error(`Error decrypting password for entry ${entryId} (attempt ${retryCount + 1}):`, {
+                error: errorMessage,
+                entryId,
+                retryCount,
+                hasUserId: !!user?.userId,
+                hasMasterPassword: !!masterPassword
+            });
+
+            // Retry logic with exponential backoff
+            if (retryCount < 2) { // Max 3 attempts (0, 1, 2)
+                const delay = Math.pow(2, retryCount) * 500; // 500ms, 1s, 2s
+                console.log(`Retrying decryption for entry ${entryId} in ${delay}ms... (retry ${retryCount + 1}/2)`);
+
+                setTimeout(() => {
+                    decryptPassword(entryId, retryCount + 1);
+                }, delay);
+            } else {
+                console.error(`Failed to decrypt password for entry ${entryId} after ${retryCount + 1} attempts. Final error:`, errorMessage);
+                // Set a placeholder to indicate decryption failed
+                setDecryptedPasswords(prev => new Map([...prev, [entryId, '[DECRYPTION_FAILED]']]));
+            }
+        } finally {
+            // Only remove from decrypting set if this is the final attempt or success
+            if (retryCount === 0 || retryCount >= 2) {
+                setDecryptingPasswords(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(entryId);
+                    return newSet;
+                });
+            }
+        }
+    }, [user?.userId, masterPassword]);
+
+    // Retry function for failed decryptions with debounce
+    const retryDecryption = useCallback((entryId: string) => {
+        console.log(`Manual retry requested for entry: ${entryId}`);
+
+        // Clear the failed state
+        setDecryptedPasswords(prev => {
+            const newMap = new Map(prev);
+            newMap.delete(entryId);
+            return newMap;
+        });
+
+        // Clear any ongoing decryption attempts
+        setDecryptingPasswords(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(entryId);
+            return newSet;
+        });
+
+        // Small delay to prevent rapid retries, then attempt decryption
+        setTimeout(() => {
+            console.log(`Executing manual retry for entry: ${entryId}`);
+            decryptPassword(entryId, 0); // Start from attempt 0
+        }, 100);
+    }, [decryptPassword]);
+
+    // Toggle password visibility and decrypt on demand
+    const togglePasswordVisibility = useCallback(async (entryId: string) => {
+        console.log(`Toggle visibility for entry: ${entryId}, current visible count: ${visiblePasswords.size}`);
+
+        // Prevent rapid clicking during decryption
+        if (decryptingPasswords.has(entryId)) {
+            console.log(`Ignoring toggle - entry ${entryId} is currently decrypting`);
+            return;
+        }
+
+        setVisiblePasswords(prev => {
+            const newVisible = new Set(prev);
+
+            if (newVisible.has(entryId)) {
+                // Hide password
+                console.log(`Hiding password for entry: ${entryId}`);
+                newVisible.delete(entryId);
+            } else {
+                // Show password - decrypt if not already decrypted
+                console.log(`Showing password for entry: ${entryId}`);
+                if (!decryptedPasswords.has(entryId)) {
+                    console.log(`Need to decrypt entry: ${entryId}`);
+                    // Decrypt in background
+                    decryptPassword(entryId, 0).catch(err => {
+                        console.error(`Failed to decrypt ${entryId}:`, err);
+                    });
+                }
+                newVisible.add(entryId);
+            }
+
+            return newVisible;
+        });
+    }, [decryptPassword]);
 
     useEffect(() => {
         if (!user) {
@@ -444,7 +636,7 @@ const Vault = () => {
         }
     }, [user, user?.masterPassword?.isSet, masterPassword]);
 
-    // Fetch passwords from the backend
+    // Fetch passwords from the backend (without decryption for performance)
     const fetchPasswords = useCallback(async () => {
         // Don't fetch if user data is not available, still loading, or no master password
         if (!user?.userId || userLoading || !masterPassword) {
@@ -461,23 +653,23 @@ const Vault = () => {
             setIsLoading(true);
             setError(null);
 
-            const entries = await invoke<any[]>('get_password_entries', {
-                ui: user.userId,
-                masterPassword: masterPassword, // Pass master password for decryption
+            // Fetch encrypted passwords without decryption for faster loading
+            const entries = await invoke<any[]>('get_password_entries_encrypted', {
+                ui: user.userId
             });
 
-            console.log("Fetched entries:", entries);
+            console.log("Fetched encrypted entries:", entries);
 
-            // Map backend fields to frontend structure
+            // Map backend fields to frontend structure (passwords remain encrypted)
             const mappedEntries: PasswordEntry[] = entries.map(entry => ({
                 entry_id: entry.aid,
-                account_name: entry.an,
                 username: entry.aun,
-                password: entry.ap,
+                password: entry.ap, // This is still encrypted
                 strength: entry.aps,
+                platform: entry.plt, // Map platform field
             }));
 
-            console.log("Mapped entries with strength:", mappedEntries);
+            console.log("Mapped encrypted entries:", mappedEntries);
             setPasswords(mappedEntries);
             setInitialLoadDone(true);
         } catch (error) {
@@ -495,6 +687,9 @@ const Vault = () => {
             setError(null);
             setInitialLoadDone(false);
             setMasterPassword(null);
+            setDecryptedPasswords(new Map());
+            setDecryptingPasswords(new Set());
+            setVisiblePasswords(new Set());
             return;
         }
 
@@ -525,9 +720,9 @@ const Vault = () => {
                 await invoke('update_password_entry', {
                     userId: user.userId,
                     entryId: editId,
-                    accountName: platformInfo.name,
                     username: username.trim(),
                     password: password.trim(),
+                    platform: platform, // Pass the platform value
                     masterPassword: masterPassword, // Pass master password for encryption
                 });
 
@@ -549,9 +744,9 @@ const Vault = () => {
                 // Add new password entry
                 const entry_id = await invoke<string>('add_password_entry', {
                     userId: user.userId,
-                    accountName: platformInfo.name,
                     username: username.trim(),
                     password: password.trim(),
+                    platform: platform, // Pass the platform value (like "google", "github")
                     masterPassword: masterPassword, // Pass master password for encryption
                 });
 
@@ -559,7 +754,6 @@ const Vault = () => {
                     ...prev,
                     {
                         entry_id,
-                        account_name: platformInfo.name,
                         username: username.trim(),
                         password: password.trim(),
                         platform: platform,
@@ -571,7 +765,7 @@ const Vault = () => {
             // Reset form
             setUsername('');
             setPassword('');
-            setPlatform('other');
+            setPlatform('google');
             setEditId(null);
             setError(null);
             setShowAddForm(false);
@@ -622,9 +816,9 @@ const Vault = () => {
             await invoke('update_password_entry', {
                 userId: user.userId,
                 entryId: entryId,
-                accountName: platformInfo.name,
                 username: newUsername.trim(),
                 password: newPassword.trim(),
+                platform: newPlatform, // Pass the platform value
                 masterPassword: masterPassword,
             });
 
@@ -668,49 +862,45 @@ const Vault = () => {
     };
 
     // Filter and sort passwords based on search query
+    // Optimize filtering with memoized search
+    // Optimized filtering with memoized search
     const filteredPasswords = useMemo(() => {
         if (!searchQuery.trim()) {
-            // No search query - return original order
             return passwords;
         }
 
         const query = searchQuery.toLowerCase();
-
-        // Filter passwords that match the search
         const matchingPasswords = passwords.filter(entry => {
-            const platformInfo = getPlatformInfo(entry.platform);
-            return (
-                entry.account_name?.toLowerCase().includes(query) ||
-                entry.username?.toLowerCase().includes(query) ||
-                platformInfo.name.toLowerCase().includes(query)
-            );
+            const platformInfo = getPlatformInfo(entry.platform, entry.username);
+            const usernameText = entry.username?.toLowerCase() ?? '';
+            const platformName = platformInfo.name.toLowerCase();
+
+            return usernameText.includes(query) ||
+                username.includes(query) ||
+                platformName.includes(query);
         });
 
         // Sort by relevance - exact matches first, then partial matches
         return matchingPasswords.sort((a, b) => {
-            const platformInfoA = getPlatformInfo(a.platform);
-            const platformInfoB = getPlatformInfo(b.platform);
+            const platformInfoA = getPlatformInfo(a.platform, a.username);
+            const platformInfoB = getPlatformInfo(b.platform, b.username);
 
             // Calculate relevance scores (higher = more relevant)
             const getRelevanceScore = (entry: PasswordEntry, platformInfo: any) => {
-                const accountMatch = entry.account_name?.toLowerCase() || '';
                 const usernameMatch = entry.username?.toLowerCase() || '';
                 const platformMatch = platformInfo.name.toLowerCase();
 
                 let score = 0;
 
                 // Exact matches get highest priority
-                if (accountMatch === query) score += 100;
                 if (usernameMatch === query) score += 90;
                 if (platformMatch === query) score += 80;
 
                 // Starts with query gets medium priority
-                if (accountMatch.startsWith(query)) score += 50;
                 if (usernameMatch.startsWith(query)) score += 40;
                 if (platformMatch.startsWith(query)) score += 30;
 
                 // Contains query gets lowest priority
-                if (accountMatch.includes(query)) score += 10;
                 if (usernameMatch.includes(query)) score += 8;
                 if (platformMatch.includes(query)) score += 5;
 
@@ -725,7 +915,7 @@ const Vault = () => {
                 return scoreB - scoreA;
             }
 
-            // If same relevance, maintain original order by finding index in original array
+            // If same relevance, maintain original order
             return passwords.indexOf(a) - passwords.indexOf(b);
         });
     }, [passwords, searchQuery, getPlatformInfo]);
@@ -764,18 +954,11 @@ const Vault = () => {
         setError(null);
     };
 
-    const getStrengthColor = (strength?: number) => {
-        if (strength === undefined || strength === null || strength === 0) return 'text-red-500'; // Default for undefined strength or 0
-        if (strength >= 4) return 'text-green-500'; // Strong password
-        if (strength >= 2) return 'text-yellow-500'; // Medium password
-        return 'text-red-500'; // Weak password
-    };
-
     // Render password list with cards
     const passwordList = useMemo(() => (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
             {filteredPasswords.map((entry) => {
-                const platformInfo = getPlatformInfo(entry.platform);
+                const platformInfo = getPlatformInfo(entry.platform, entry.username);
                 const isVisible = visiblePasswords.has(entry.entry_id);
                 const isEditing = editId === entry.entry_id;
 
@@ -795,11 +978,14 @@ const Vault = () => {
                         onDelete={() => handleDeletePassword(entry.entry_id)}
                         getStrengthColor={getStrengthColor}
                         platforms={PLATFORMS}
+                        decryptedPassword={decryptedPasswords.get(entry.entry_id)}
+                        isDecrypting={decryptingPasswords.has(entry.entry_id)}
+                        onRetryDecryption={retryDecryption}
                     />
                 );
             })}
         </div>
-    ), [filteredPasswords, visiblePasswords, editId, isLoading, handleDeletePassword, getPlatformInfo, getStrengthColor, copyToClipboard, togglePasswordVisibility, handleSaveEdit, handleCancelEdit]);
+    ), [filteredPasswords, visiblePasswords, editId, decryptedPasswords, decryptingPasswords]);
 
     return (
         <>
@@ -857,7 +1043,7 @@ const Vault = () => {
                             setEditId(null);
                             setUsername('');
                             setPassword('');
-                            setPlatform('other');
+                            setPlatform('google');
                         }}
                         disabled={!user?.userId || !masterPassword}
                         className="flex items-center gap-2 bg-theme-primary hover:bg-theme-primary-transparent disabled:bg-theme-secondary text-theme-text px-4 py-2 rounded-lg transition-colors"
@@ -866,6 +1052,23 @@ const Vault = () => {
                         Add Password
                     </button>
                 </div>
+
+                {/* Decryption Status (for large password counts) */}
+                {!userLoading && user && masterPassword && passwords.length > 50 && (
+                    <div className="mb-6 p-4 bg-theme-accent rounded-lg border border-theme-secondary">
+                        <div className="text-sm text-theme-text-transparent">
+                            Vault Status: {passwords.length} passwords loaded •
+                            {decryptedPasswords.size} decrypted •
+                            {decryptingPasswords.size} decrypting •
+                            {Array.from(decryptedPasswords.values()).filter(p => p === '[DECRYPTION_FAILED]').length} failed
+                        </div>
+                        {Array.from(decryptedPasswords.values()).filter(p => p === '[DECRYPTION_FAILED]').length > 0 && (
+                            <div className="text-xs text-red-500 mt-1">
+                                Some passwords failed to decrypt. Click the retry button next to failed passwords.
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Search Results Info */}
                 {!userLoading && user && masterPassword && searchQuery && (
@@ -1017,7 +1220,7 @@ const Vault = () => {
                                     setEditId(null);
                                     setUsername('');
                                     setPassword('');
-                                    setPlatform('other');
+                                    setPlatform('google');
                                 }}
                                 className="bg-theme-secondary hover:bg-theme-secondary-transparent text-theme-text px-6 py-2 rounded-lg transition-colors"
                             >

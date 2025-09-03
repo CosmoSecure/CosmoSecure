@@ -18,9 +18,9 @@ fn get_password_strength(password: &str) -> u8 {
 pub async fn add_password_entry(
     state: State<'_, MongoClientState>,
     user_id: String,
-    account_name: String,
     username: String,
     password: String,
+    platform: Option<String>,
     master_password: String,
 ) -> Result<String, String> {
     // Use the shared client/database from db_connect.rs
@@ -70,12 +70,12 @@ pub async fn add_password_entry(
 
     let new_entry = PasswordEntry {
         entry_id: ObjectId::new().to_hex(),
-        account_name,
         username,
         password: encrypted_password, // Store encrypted password
         created_at: DateTime::now(),
         password_strength: Some(strength_score),
         last_update: DateTime::now(),
+        platform,
         deleted: None,
     };
 
@@ -110,9 +110,9 @@ pub async fn update_password_entry(
     state: State<'_, MongoClientState>,
     user_id: String, // Add user_id to get salt
     entry_id: String,
-    account_name: String,
     username: String,
     password: String,
+    platform: Option<String>,
     master_password: String, // Master password for encryption
 ) -> Result<String, String> {
     let db: Database = state.get_database("password_manager");
@@ -145,10 +145,10 @@ pub async fn update_password_entry(
     let filter = doc! { "entries.aid": &entry_id };
     let update = doc! {
         "$set": {
-            "entries.$.an": account_name,
             "entries.$.aun": username,
             "entries.$.ap": encrypted_password, // Store encrypted password
             "entries.$.aps": bson::to_bson(&strength_score).unwrap(),
+            "entries.$.plt": bson::to_bson(&platform).unwrap(),
             "entries.$.lup": DateTime::now(),
         }
     };
@@ -250,6 +250,92 @@ pub async fn get_password_entries(
     }
 }
 
+// Get password entries without decryption for performance
+#[tauri::command]
+pub async fn get_password_entries_encrypted(
+    state: State<'_, MongoClientState>,
+    ui: String, // User ID
+) -> Result<Vec<PasswordEntry>, String> {
+    let passwords_collection = state
+        .get_database("password_manager")
+        .collection::<PasswordEntries>("password_entries");
+
+    let filter = doc! { "ui": &ui }; // Filter by user ID
+    println!("Filter : {:#}", filter);
+
+    match passwords_collection.find_one(filter).await {
+        Ok(Some(password_entries)) => {
+            let active_entries: Vec<PasswordEntry> = password_entries
+                .entries
+                .into_iter()
+                .filter(|entry| entry.deleted.is_none())
+                .collect();
+
+            println!(
+                "Active password entries (encrypted): {} entries",
+                active_entries.len()
+            );
+            Ok(active_entries)
+        }
+        Ok(None) => {
+            println!("No password entries found for user ID: {}", ui);
+            Ok(vec![])
+        }
+        Err(e) => Err(format!("Error fetching password entries: {}", e)),
+    }
+}
+
+// Decrypt a single password entry
+#[tauri::command]
+pub async fn decrypt_single_password(
+    state: State<'_, MongoClientState>,
+    ui: String,              // User ID
+    entry_id: String,        // Password entry ID
+    master_password: String, // Master password for decryption
+) -> Result<String, String> {
+    let db: Database = state.get_database("password_manager");
+    let passwords_collection = db.collection::<PasswordEntries>("password_entries");
+    let user_collection: Collection<User> = db.collection("users");
+
+    // Fetch User document to get salt
+    let user_filter = doc! { "ui": &ui };
+    let user_doc = user_collection
+        .find_one(user_filter)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let salt = if let Some(user) = user_doc {
+        user.hashed_password
+            .get(0)
+            .and_then(|hp| Some(hp.master.salt.clone()))
+            .ok_or_else(|| "Master password salt not found".to_string())?
+    } else {
+        return Err("User not found.".to_string());
+    };
+
+    // Find the specific password entry
+    let filter = doc! { "ui": &ui };
+    match passwords_collection.find_one(filter).await {
+        Ok(Some(password_entries)) => {
+            if let Some(entry) = password_entries
+                .entries
+                .iter()
+                .find(|entry| entry.entry_id == entry_id && entry.deleted.is_none())
+            {
+                // Decrypt the password
+                match decrypt_user_password(&entry.password, &master_password, &salt) {
+                    Ok(decrypted_password) => Ok(decrypted_password),
+                    Err(e) => Err(format!("Failed to decrypt password: {}", e)),
+                }
+            } else {
+                Err("Password entry not found or has been deleted".to_string())
+            }
+        }
+        Ok(None) => Err("No password entries found for user".to_string()),
+        Err(e) => Err(format!("Error fetching password entry: {}", e)),
+    }
+}
+
 // Dashboard Statistics Functions (don't require decryption)
 #[tauri::command]
 pub async fn get_password_stats(
@@ -285,8 +371,8 @@ pub async fn get_password_stats(
                 .map(|entry| {
                     serde_json::json!({
                         "aid": entry.entry_id,
-                        "an": entry.account_name,
                         "aun": entry.username,
+                        "plt": entry.platform,
                         "aps": entry.password_strength.unwrap_or(0)
                     })
                 })
