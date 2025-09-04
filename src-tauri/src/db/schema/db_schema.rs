@@ -64,8 +64,6 @@ pub struct DeletedUser {
 pub struct PasswordEntry {
     #[serde(rename = "aid")]
     pub entry_id: String, // Unique identifier for the entry
-    #[serde(rename = "an")]
-    pub account_name: String, 
     #[serde(rename = "aun")]
     pub username: String, 
     #[serde(rename = "ap")]
@@ -76,6 +74,8 @@ pub struct PasswordEntry {
     pub password_strength: Option<u8>,
     #[serde(rename = "lup")]
     pub last_update: DateTime,
+    #[serde(rename = "plt")]
+    pub platform: Option<String>, // Platform type (google, github, facebook, etc.)
     #[serde(rename = "d")]
     pub deleted: Option<DeletedPasswordEntry>, // Is the entry deleted? & Timestamp of deletion
 }
