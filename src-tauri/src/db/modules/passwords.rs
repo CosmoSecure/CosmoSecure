@@ -21,7 +21,7 @@ pub async fn add_password_entry(
     username: String,
     password: String,
     platform: Option<String>,
-    master_password: String,
+    master_password: String, // This is now SHA(Master Password)
 ) -> Result<String, String> {
     // Use the shared client/database from db_connect.rs
     let db: Database = state.get_database("password_manager");
@@ -62,7 +62,7 @@ pub async fn add_password_entry(
         eprintln!("Failed to update user's password_count: {}", e);
     }
 
-    // Encrypt the password using master password and salt
+    // Encrypt the password using SHA(master password) and salt
     let encrypted_password = encrypt_user_password(&password, &master_password, &salt)
         .map_err(|e| format!("Failed to encrypt password: {}", e))?;
 
@@ -113,7 +113,7 @@ pub async fn update_password_entry(
     username: String,
     password: String,
     platform: Option<String>,
-    master_password: String, // Master password for encryption
+    master_password: String, // This is now SHA(Master Password)
 ) -> Result<String, String> {
     let db: Database = state.get_database("password_manager");
     let passwords_collection = db.collection::<PasswordEntries>("password_entries");
@@ -135,7 +135,7 @@ pub async fn update_password_entry(
         return Err("User not found.".to_string());
     };
 
-    // Encrypt the password using master password and salt
+    // Encrypt the password using SHA(master password) and salt
     let encrypted_password = encrypt_user_password(&password, &master_password, &salt)
         .map_err(|e| format!("Failed to encrypt password: {}", e))?;
 
@@ -185,7 +185,7 @@ pub async fn delete_password_entry(
 pub async fn get_password_entries(
     state: State<'_, MongoClientState>,
     ui: String,              // User ID
-    master_password: String, // Master password for decryption
+    master_password: String, // This is now SHA(Master Password)
 ) -> Result<Vec<PasswordEntry>, String> {
     let db: Database = state.get_database("password_manager");
     let passwords_collection = db.collection::<PasswordEntries>("password_entries");
@@ -291,7 +291,7 @@ pub async fn decrypt_single_password(
     state: State<'_, MongoClientState>,
     ui: String,              // User ID
     entry_id: String,        // Password entry ID
-    master_password: String, // Master password for decryption
+    master_password: String, // This is now SHA(Master Password)
 ) -> Result<String, String> {
     let db: Database = state.get_database("password_manager");
     let passwords_collection = db.collection::<PasswordEntries>("password_entries");

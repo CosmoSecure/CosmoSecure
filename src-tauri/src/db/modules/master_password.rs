@@ -121,26 +121,6 @@ pub async fn get_master_salt(
     }
 }
 
-// This provides better entropy and is more compact
-#[tauri::command]
-pub fn generate_salt_base64(byte_length: Option<usize>) -> Result<String, String> {
-    use base64::{engine::general_purpose, Engine as _};
-    use rand::RngCore;
-
-    let length = byte_length.unwrap_or(24); // Default to 24 bytes (32 chars in base64)
-
-    // Validate length
-    if length < 12 || length > 64 {
-        return Err("Salt byte length must be between 12 and 64 bytes.".to_string());
-    }
-
-    let mut salt_bytes = vec![0u8; length];
-    rand::rng().fill_bytes(&mut salt_bytes);
-
-    let salt = general_purpose::STANDARD.encode(&salt_bytes);
-    Ok(salt)
-}
-
 // Hex-encoded salt (alternative format)
 #[tauri::command]
 pub fn generate_salt_hex(byte_length: Option<usize>) -> Result<String, String> {

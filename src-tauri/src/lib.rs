@@ -6,8 +6,8 @@ use crate::db::{
     },
     modules::{
         master_password::{
-            generate_salt_base64, generate_salt_hex, get_master_salt, setup_master_password,
-            update_user_session, verify_master_password,
+            generate_salt_hex, get_master_salt, setup_master_password, update_user_session,
+            verify_master_password,
         },
         passwords::{
             add_password_entry, decrypt_single_password, delete_password_entry,
@@ -103,10 +103,9 @@ pub async fn run() {
             fetch_email_breach_info,
             setup_master_password,
             verify_master_password,
-            generate_salt_base64,
             generate_salt_hex,
             update_user_session,
-            get_master_salt
+            get_master_salt,
         ])
         // .setup(|_app| {
         // // Use an asynchronous runtime to run the database connection
