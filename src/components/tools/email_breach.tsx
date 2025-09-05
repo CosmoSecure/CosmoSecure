@@ -145,6 +145,7 @@ const EmailBreach: React.FC = () => {
                         backgroundColor: 'rgba(0, 0, 0, 0.6)',
                         backdropFilter: 'blur(3px)',
                         WebkitBackdropFilter: 'blur(3px)',
+                        borderRadius: '8px',
                     }
                 }}
             >

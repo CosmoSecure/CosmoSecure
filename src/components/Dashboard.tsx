@@ -17,7 +17,7 @@ const fetchPasswordStats = async (userId: string) => {
             weak_passwords_count: number;
             weak_entries: Array<{
                 aid: string;
-                an: string;
+                plt: string;
                 aun: string;
                 aps: number;
             }>;
@@ -26,7 +26,7 @@ const fetchPasswordStats = async (userId: string) => {
         return {
             totalPasswords: stats.total_passwords,
             weakPasswords: stats.weak_entries.map(entry => ({
-                password: `${entry.an} (${entry.aun})`, // Show account name and username instead of actual password
+                password: `${entry.plt} (${entry.aun})`, // Show platform name and username instead of actual password
                 score: entry.aps,
             }))
         };
@@ -97,16 +97,16 @@ const Dashboard: React.FC = () => {
                         <div className="flex flex-row gap-5 bg-gradient-to-r from-theme-secondary-transparent via-theme-primary to-theme-secondary-transparent py-4 px-0 rounded-lg items-center">
                             <img src={Pro} alt="Profile" className="rounded-full h-24 w-24 hidden xl:block ml-6" />
                             <div className="ml-4 col-span-2">
-                                <div className="text-2xl font-bold">{user.name}</div>
+                                <div className="text-xl font-bold">{user.name}</div>
                                 <div className="flex flex-col gap-2 mt-2">
-                                    <div className="text-lg flex items-center">
+                                    <div className="text-base font-semibold flex items-center">
                                         <CakeIcon className="mr-1" /> {user.joinDate}
                                     </div>
-                                    <div className="text-lg flex items-center break-all">
+                                    <div className="text-base font-semibold flex items-center break-all">
                                         <AlternateEmailIcon className="mr-1" />
                                         <span className="break-all">{user.email}</span>
                                     </div>
-                                    <div className="text-lg flex items-center">
+                                    <div className="text-base font-semibold flex items-center">
                                         <PasswordIcon className="mr-1" /> {passwordStats.totalPasswords}
                                     </div>
                                 </div>
@@ -159,15 +159,19 @@ const Dashboard: React.FC = () => {
                                         sx={{
                                             borderRadius: '8px',
                                             bgcolor: 'rgba(255, 255, 255, 0.3)',
+                                            paddingLeft: 1.5, // Reduce left padding
+                                            paddingRight: 1.5, // Reduce right padding
+                                            minHeight: 0, // Remove extra vertical space
                                         }}
-                                        className="hover:text-theme-text rounded-lg p-3 flex items-center gap-3"
+                                        className="hover:text-theme-text rounded-lg flex items-center overflow-scroll"
                                     >
-                                        <ListItemIcon>
+                                        <ListItemIcon sx={{ minWidth: 32, marginRight: 0 }}> {/* Reduce minWidth and remove right margin */}
                                             <WarningIcon color="error" />
                                         </ListItemIcon>
                                         <ListItemText
-                                            primary={`Password ${index + 1}: ${entry.password}`}
+                                            primary={`${entry.password}`}
                                             secondary={`Strength Score: ${entry.score}/4`}
+                                            sx={{ margin: 0 }} // Remove default margin
                                         />
                                     </ListItemButton>
                                 ))
