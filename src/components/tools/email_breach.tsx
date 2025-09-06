@@ -140,6 +140,14 @@ const EmailBreach: React.FC = () => {
                 onClose={() => setIsModalOpen(false)}
                 aria-labelledby="breach-details-modal"
                 aria-describedby="breach-details-description"
+                BackdropProps={{
+                    sx: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                        backdropFilter: 'blur(3px)',
+                        WebkitBackdropFilter: 'blur(3px)',
+                        borderRadius: '8px',
+                    }
+                }}
             >
                 <Box
                     className="bg-theme-accent-transparent p-6 rounded-md shadow-lg max-w-5xl mx-auto mt-10 overflow-y-auto max-h-[90vh]"

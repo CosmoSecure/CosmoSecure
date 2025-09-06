@@ -1,4 +1,5 @@
 import "./App.css";
+import "./windows-fixes.css"; // Windows-specific fixes for scrollbars and UI
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import RoutesConf from "./routes/RoutesConf";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -10,6 +11,7 @@ import { decryptToken, decryptUser } from "./components/auth/token_secure";
 import { applyTheme, themes, ThemeKeys, CosmicLoader } from "./themes/"; // Import applyTheme and themes
 import { Toaster } from 'sonner'; // Import Toaster from sonner
 import { NavigationProvider, NotificationProvider, UserProvider } from './contexts/';
+import { PlatformUtils } from './utils/platformUtils'; // Import platform utils
 
 const TEST_MODE = true;  // Set to false in production
 
@@ -20,6 +22,9 @@ function App() {
     if ((window as any).__TAURI__) {
       getCurrentWindow().setContentProtected(true).catch(console.error);
     }
+
+    // Initialize platform-specific fixes
+    PlatformUtils.initPlatformFixes();
 
     const checkAuthentication = async () => {
       try {

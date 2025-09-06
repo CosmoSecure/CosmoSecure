@@ -52,6 +52,11 @@ fn delete_token_command(app_handle: tauri::AppHandle) {
     token::delete_token(app_handle);
 }
 
+#[tauri::command]
+fn get_platform() -> String {
+    std::env::consts::OS.to_string()
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub async fn run() {
     let _matches = Command::new("CosmoSecure")
@@ -106,6 +111,7 @@ pub async fn run() {
             generate_salt_hex,
             update_user_session,
             get_master_salt,
+            get_platform,
         ])
         // .setup(|_app| {
         // // Use an asynchronous runtime to run the database connection
