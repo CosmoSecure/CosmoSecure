@@ -77,12 +77,12 @@ const ProcessCapture: React.FC = () => {
     if (!stats) return null;
 
     return (
-        <div className="w-full h-full p-4 pb-4 bg-transparent">
+        <div className="w-full h-full p-4 pb-6 bg-transparent">
             <h2 className="text-2xl font-bold mb-4 text-theme-accent">Process Stats</h2>
 
             {/* Charts Section */}
             <div className="mb-6 grid grid-cols-1 gap-4">
-                <div className="h-72 bg-theme-secondary-transparent p-4 rounded-lg shadow-sm">
+                <div className="h-[17rem] bg-theme-secondary-transparent p-4 rounded-lg shadow-sm">
                     <h3 className="text-base font-semibold mb-2 text-theme-text-transparent">CPU & Memory Usage</h3>
                     <LineChart
                         series={[
@@ -104,7 +104,7 @@ const ProcessCapture: React.FC = () => {
                             scaleType: 'time',
                             valueFormatter: (value) => new Date(value).toLocaleTimeString(),
                         }]}
-                        height={250}
+                        height={230}
                         margin={{ top: 20, right: 30, bottom: 50, left: 40 }}
                         slotProps={{
                             legend: {

@@ -116,9 +116,9 @@ const Dashboard: React.FC = () => {
                         {/* Password Storage Section */}
                         <div className="bg-theme-primary-transparent p-6 rounded-lg flex flex-col items-center justify-center">
                             <h1 className="text-xl font-bold">Password Storage</h1>
-                            <div className="w-full bg-gray-300 rounded-full h-4 mt-2">
+                            <div className="w-full bg-theme-secondary-transparent rounded-full h-4 mt-2">
                                 <div
-                                    className="bg-ultra-violet h-4 rounded-full"
+                                    className="bg-theme-background-transparent h-4 rounded-full"
                                     style={{ width: `${(passwordStats.totalPasswords / user.maxPasswordCount) * 100}%` }}
                                 ></div>
                             </div>
