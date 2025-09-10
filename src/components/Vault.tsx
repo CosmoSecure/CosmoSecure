@@ -483,17 +483,15 @@ const PasswordCard = React.memo(({
             <div className="flex justify-between gap-2 mt-4 pt-2 border-t border-theme-secondary">
                 <button
                     onClick={onEdit}
-                    className="flex items-center gap-1.5 bg-theme-primary hover:bg-theme-primary-transparent text-theme-text px-3 py-1.5 rounded-md text-sm transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
+                    className="flex items-center justify-center gap-1.5 bg-green-600 hover:bg-green-700 font-semibold text-theme-text px-6 pb-1.5 pt-2 rounded-md text-sm transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
                 >
-                    <Edit2 className="w-3.5 h-3.5" />
                     Edit
                 </button>
                 <button
                     onClick={onDelete}
                     disabled={isLoading}
-                    className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-md text-sm transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    className="flex items-center justify-center gap-1.5 bg-red-600 hover:bg-red-700 font-semibold text-white px-6 pb-1.5 pt-2 rounded-md text-sm transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
-                    <Trash2 className="w-3.5 h-3.5" />
                     {isLoading ? 'Deleting...' : 'Delete'}
                 </button>
             </div>
