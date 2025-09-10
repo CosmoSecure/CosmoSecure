@@ -3,6 +3,10 @@ import { invoke } from '@tauri-apps/api/core';
 import { useUser } from '../contexts/UserContext';
 import ZKPMasterPasswordPopup from "./auth/ZKPMasterPasswordPopup";
 import { Eye, EyeOff, Copy, Edit2, Trash2, Plus, Lock, ChevronDown, Search, X, RotateCcw, User, Save } from 'lucide-react';
+import {
+    Warning as WarningIcon,
+    Close as CloseIcon
+} from "@mui/icons-material";
 
 interface PasswordEntry {
     entry_id: string;
@@ -479,17 +483,15 @@ const PasswordCard = React.memo(({
             <div className="flex justify-between gap-2 mt-4 pt-2 border-t border-theme-secondary">
                 <button
                     onClick={onEdit}
-                    className="flex items-center gap-1.5 bg-theme-primary hover:bg-theme-primary-transparent text-theme-text px-3 py-1.5 rounded-md text-sm transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
+                    className="flex items-center justify-center gap-1.5 bg-green-600 hover:bg-green-700 font-semibold text-theme-text px-6 pb-1.5 pt-2 rounded-md text-sm transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
                 >
-                    <Edit2 className="w-3.5 h-3.5" />
                     Edit
                 </button>
                 <button
                     onClick={onDelete}
                     disabled={isLoading}
-                    className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-md text-sm transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    className="flex items-center justify-center gap-1.5 bg-red-600 hover:bg-red-700 font-semibold text-white px-6 pb-1.5 pt-2 rounded-md text-sm transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
-                    <Trash2 className="w-3.5 h-3.5" />
                     {isLoading ? 'Deleting...' : 'Delete'}
                 </button>
             </div>
@@ -518,6 +520,7 @@ const Vault = () => {
     const [decryptedPasswords, setDecryptedPasswords] = useState<Map<string, string>>(new Map());
     const [decryptingPasswords, setDecryptingPasswords] = useState<Set<string>>(new Set());
     const [clickingButtons, setClickingButtons] = useState<Set<string>>(new Set());
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
     // Refs to access current state values in callbacks without causing re-renders
     const decryptedPasswordsRef = useRef(decryptedPasswords);
@@ -1116,14 +1119,25 @@ const Vault = () => {
             });
 
             setPasswords(prev => prev.filter(entry => entry.entry_id !== entryId));
+            setShowDeleteConfirm(null); // Close the modal
             fetchPasswords(); // Update storage in background
         } catch (error) {
             setError("Error deleting password. Please try again.");
             console.error("Error deleting password:", error);
+            setShowDeleteConfirm(null); // Close the modal even on error
         } finally {
             setIsLoading(false);
         }
     }, [user?.userId, fetchPasswords]);
+
+    // Handle delete confirmation
+    const handleDeleteClick = (entryId: string) => {
+        setShowDeleteConfirm(entryId);
+    };
+
+    const handleCancelDelete = () => {
+        setShowDeleteConfirm(null);
+    };
 
     const handleMasterPasswordProvided = useCallback(async () => {
         try {
@@ -1168,7 +1182,7 @@ const Vault = () => {
                         onEdit={() => handleEditPassword(entry.entry_id)}
                         onSaveEdit={handleSaveEdit}
                         onCancelEdit={handleCancelEdit}
-                        onDelete={() => handleDeletePassword(entry.entry_id)}
+                        onDelete={() => handleDeleteClick(entry.entry_id)}
                         getStrengthColor={getStrengthColor}
                         platforms={PLATFORMS}
                         decryptedPassword={decryptedPasswords.get(entry.entry_id)}
@@ -1522,6 +1536,62 @@ const Vault = () => {
                     </>
                 )}
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-theme-background rounded-2xl shadow-2xl max-w-md w-full p-6 border border-theme-secondary">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
+                                    <Trash2 className="text-orange-500" size={20} />
+                                </div>
+                                <h2 className="text-xl font-bold text-theme-text">Move to Trash</h2>
+                            </div>
+                            <button
+                                onClick={handleCancelDelete}
+                                className="w-8 h-8 rounded-full bg-theme-secondary hover:bg-theme-accent transition-colors duration-200 flex items-center justify-center"
+                            >
+                                <CloseIcon className="text-theme-text" style={{ fontSize: '1rem' }} />
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="mb-6 space-y-3">
+                            <p className="text-theme-text opacity-90">
+                                Are you sure you want to move this password entry to trash?
+                            </p>
+                            <div className="p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+                                <div className="flex items-center gap-2 text-orange-500">
+                                    <WarningIcon style={{ fontSize: '1rem' }} />
+                                    <span className="font-medium text-sm">Note</span>
+                                </div>
+                                <p className="text-orange-500 text-sm mt-1">
+                                    The password will be moved to trash and can be restored within 30 days before permanent deletion.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Modal Actions */}
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleCancelDelete}
+                                className="flex-1 bg-theme-secondary hover:bg-theme-accent text-theme-text font-medium py-3 px-4 rounded-lg transition-colors duration-200"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => handleDeletePassword(showDeleteConfirm)}
+                                className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                            >
+                                <Trash2 size={16} />
+                                Move to Trash
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 };
