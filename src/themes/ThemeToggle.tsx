@@ -5,7 +5,7 @@ export type ThemeKeys = 'light' | 'dark' | 'aqua' | 'forest' | 'vamp';
 
 export const themes: Record<ThemeKeys, { [key: string]: string }> = {
     light: {
-        '--background-color': '#f5f7fa',
+        '--background-color': '#f5f7fa', // Use Azure #F0FFFF
         '--text-color': '#2d2d2d',
         '--primary-color': '#9aa0a6',
         '--secondary-color': '#cfd4da',
