@@ -4,6 +4,7 @@ import { routes, bottomRoutes } from '../../routes';
 import { useUser } from '../../contexts/UserContext';
 import { Pro } from '../../assets/';
 import { useLogoutModal } from './LogoutModal';
+import UpdateNotification from './UpdateNotification';
 
 const NavButton = ({ icon, label, onClick }: { icon: React.ReactNode, label: string, onClick: () => void }) => (
     <div className="relative group">
@@ -112,12 +113,20 @@ const HoverNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ togglePro
             <div>
                 <nav className="p-2 space-y-4">
                     {bottomRoutes.map((route) => (
-                        <NavButton
-                            key={route.path}
-                            icon={route.icon || <span>🔗</span>}
-                            label={route.label}
-                            onClick={() => handleNavClick(route)}
-                        />
+                        <div key={route.path}>
+                            {/* Show collapsed update notification above settings button */}
+                            {route.path === '/setting' && (
+                                <div className="mb-2">
+                                    <UpdateNotification isExpanded={false} />
+                                </div>
+                            )}
+
+                            <NavButton
+                                icon={route.icon || <span>🔗</span>}
+                                label={route.label}
+                                onClick={() => handleNavClick(route)}
+                            />
+                        </div>
                     ))}
                 </nav>
             </div>

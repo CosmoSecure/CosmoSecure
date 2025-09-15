@@ -10,7 +10,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { decryptToken, decryptUser } from "./components/auth/token_secure";
 import { applyTheme, themes, ThemeKeys, CosmicLoader } from "./themes/"; // Import applyTheme and themes
 import { Toaster } from 'sonner'; // Import Toaster from sonner
-import { NavigationProvider, NotificationProvider, UserProvider } from './contexts/';
+import { NavigationProvider, NotificationProvider, UserProvider, UpdateProvider } from './contexts/';
 import { PlatformUtils } from './utils/platformUtils'; // Import platform utils
 
 const TEST_MODE = true;  // Set to false in production
@@ -81,36 +81,38 @@ function App() {
     <UserProvider>
       <NotificationProvider>
         <NavigationProvider>
-          <Router>
-            <Routes>
-              {isAuthenticated ? (
-                <>
-                  <Route path="/*" element={<RoutesConf setIsAuthenticated={setIsAuthenticated} />} />
-                </>
-              ) : (
-                <>
-                  <Route path="/" element={<Auth_page />}>
-                    <Route index element={<Intro />} />
-                    <Route path="login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
-                    <Route path="signup" element={<Signup />} />
-                  </Route>
-                </>
-              )}
-            </Routes>
-            <Toaster richColors position="top-center" theme="dark"
-              toastOptions={{
-                style: {
-                  fontSize: '1rem',
-                  padding: '1rem',
-                  marginTop: '1rem',
-                  color: '#f7fafc',
-                  borderRadius: '0.5rem',
-                  boxShadow: '0 0 0.5rem rgba(0, 0, 0, 0.1)',
-                  zIndex: 9999
-                }
-              }}
-            />
-          </Router>
+          <UpdateProvider>
+            <Router>
+              <Routes>
+                {isAuthenticated ? (
+                  <>
+                    <Route path="/*" element={<RoutesConf setIsAuthenticated={setIsAuthenticated} />} />
+                  </>
+                ) : (
+                  <>
+                    <Route path="/" element={<Auth_page />}>
+                      <Route index element={<Intro />} />
+                      <Route path="login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
+                      <Route path="signup" element={<Signup />} />
+                    </Route>
+                  </>
+                )}
+              </Routes>
+              <Toaster richColors position="top-center" theme="dark"
+                toastOptions={{
+                  style: {
+                    fontSize: '1rem',
+                    padding: '1rem',
+                    marginTop: '1rem',
+                    color: '#f7fafc',
+                    borderRadius: '0.5rem',
+                    boxShadow: '0 0 0.5rem rgba(0, 0, 0, 0.1)',
+                    zIndex: 9999
+                  }
+                }}
+              />
+            </Router>
+          </UpdateProvider>
         </NavigationProvider>
       </NotificationProvider>
     </UserProvider>
