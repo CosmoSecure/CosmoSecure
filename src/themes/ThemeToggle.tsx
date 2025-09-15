@@ -5,18 +5,18 @@ export type ThemeKeys = 'light' | 'dark' | 'aqua' | 'forest' | 'vamp';
 
 export const themes: Record<ThemeKeys, { [key: string]: string }> = {
     light: {
-        '--background-color': '#edf2fb',
-        '--text-color': '#292929',
-        '--primary-color': '#a5a5a5',
-        '--secondary-color': '#cccccc',
-        '--accent-color': '#7f7f7f',
+        '--background-color': '#f5f7fa', // Use Azure #F0FFFF
+        '--text-color': '#2d2d2d',
+        '--primary-color': '#9aa0a6',
+        '--secondary-color': '#cfd4da',
+        '--accent-color': '#7c8a96',
     },
     dark: {
-        '--background-color': '#212529',
-        '--text-color': '#f8f9fa',
-        '--primary-color': '#adb5bd',
-        '--secondary-color': '#6c757d',
-        '--accent-color': '#495057',
+        '--background-color': '#121212',
+        '--text-color': '#eaeaea',
+        '--primary-color': '#9d9d9d',
+        '--secondary-color': '#2c2c2c',
+        '--accent-color': '#5a5d63',
     },
     aqua: {
         '--background-color': '#e0f7fa',
