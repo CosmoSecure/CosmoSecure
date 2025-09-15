@@ -4,6 +4,7 @@ import { routes, bottomRoutes } from '../../routes';
 import { useUser } from '../../contexts/UserContext';
 import { Pro } from '../../assets';
 import { useLogoutModal } from './LogoutModal';
+import UpdateNotification from './UpdateNotification';
 
 const DefaultNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ toggleProfileVisibility }) => {
     const navigate = useNavigate();
@@ -99,27 +100,41 @@ const DefaultNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ toggleP
             {/* Bottom Links */}
             <div>
                 <nav className="p-2 space-y-4">
-                    {bottomRoutes.map((route) => (
-                        <div key={route.path} className="flex gap-2">
-                            {/* Icon Tile */}
-                            <button
-                                onClick={() => handleNavClick(route)}
-                                className="flex items-center justify-center text-theme-text h-[40px] w-[40px] rounded-md bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
-                            >
-                                <div className="text-3xl flex items-center justify-center">
-                                    {route.icon ? route.icon : <span>🔗</span>}
-                                </div>
-                            </button>
+                    {/* Update Notification - show above settings button when expanded */}
+                    <div className="group-hover:block hidden">
+                        <UpdateNotification isExpanded={true} />
+                    </div>
 
-                            {/* Label Tile */}
-                            <button
-                                onClick={() => handleNavClick(route)}
-                                className="hidden group-hover:flex items-center justify-start flex-1 text-theme-text h-[40px] rounded-md bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
-                            >
-                                <span className="font-bold text-lg px-4">
-                                    {route.label}
-                                </span>
-                            </button>
+                    {bottomRoutes.map((route) => (
+                        <div key={route.path}>
+                            {/* Show collapsed update notification above settings button */}
+                            {route.path === '/setting' && (
+                                <div className="group-hover:hidden block mb-2">
+                                    <UpdateNotification isExpanded={false} />
+                                </div>
+                            )}
+
+                            <div className="flex gap-2">
+                                {/* Icon Tile */}
+                                <button
+                                    onClick={() => handleNavClick(route)}
+                                    className="flex items-center justify-center text-theme-text h-[40px] w-[40px] rounded-md bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
+                                >
+                                    <div className="text-3xl flex items-center justify-center">
+                                        {route.icon ? route.icon : <span>🔗</span>}
+                                    </div>
+                                </button>
+
+                                {/* Label Tile */}
+                                <button
+                                    onClick={() => handleNavClick(route)}
+                                    className="hidden group-hover:flex items-center justify-start flex-1 text-theme-text h-[40px] rounded-md bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
+                                >
+                                    <span className="font-bold text-lg px-4">
+                                        {route.label}
+                                    </span>
+                                </button>
+                            </div>
                         </div>
                     ))}
                 </nav>

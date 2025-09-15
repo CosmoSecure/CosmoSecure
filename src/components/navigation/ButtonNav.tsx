@@ -6,6 +6,7 @@ import { useUser } from '../../contexts/UserContext';
 import SensorOccupiedIcon from '@mui/icons-material/SensorOccupied';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import { useLogoutModal } from './LogoutModal';
+import UpdateNotification from './UpdateNotification';
 // import MenuIcon from '@mui/icons-material/Menu';
 
 const ButtonNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ }) => {
@@ -117,31 +118,45 @@ const ButtonNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ }) => {
             {/* Bottom Links */}
             <div>
                 <nav className="p-2 space-y-4">
-                    {bottomRoutes.map((route) => (
-                        <div key={route.path} className="flex gap-2">
-                            {/* Icon Tile */}
-                            <button
-                                onClick={() => handleNavClick(route)}
-                                className="flex items-center justify-center text-theme-text h-[40px] w-[40px] 
-                                    rounded-md bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
-                            >
-                                <div className="text-3xl flex items-center justify-center">
-                                    {route.icon || <span>🔗</span>}
-                                </div>
-                            </button>
+                    {/* Update Notification - show above settings button when expanded */}
+                    {isExpanded && (
+                        <UpdateNotification isExpanded={true} />
+                    )}
 
-                            {/* Label Tile */}
-                            <button
-                                onClick={() => handleNavClick(route)}
-                                className={`items-center justify-start flex-1 text-theme-text h-[40px] 
-                                    rounded-md bg-theme-accent-transparent hover:bg-theme-accent active:scale-95
-                                    transition-opacity duration-300
-                                    ${isExpanded ? 'flex opacity-100' : 'hidden opacity-0'}`}
-                            >
-                                <span className="font-bold text-lg px-4">
-                                    {route.label}
-                                </span>
-                            </button>
+                    {bottomRoutes.map((route) => (
+                        <div key={route.path}>
+                            {/* Show collapsed update notification above settings button */}
+                            {route.path === '/setting' && !isExpanded && (
+                                <div className="mb-2">
+                                    <UpdateNotification isExpanded={false} />
+                                </div>
+                            )}
+
+                            <div className="flex gap-2">
+                                {/* Icon Tile */}
+                                <button
+                                    onClick={() => handleNavClick(route)}
+                                    className="flex items-center justify-center text-theme-text h-[40px] w-[40px] 
+                                        rounded-md bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
+                                >
+                                    <div className="text-3xl flex items-center justify-center">
+                                        {route.icon || <span>🔗</span>}
+                                    </div>
+                                </button>
+
+                                {/* Label Tile */}
+                                <button
+                                    onClick={() => handleNavClick(route)}
+                                    className={`items-center justify-start flex-1 text-theme-text h-[40px] 
+                                        rounded-md bg-theme-accent-transparent hover:bg-theme-accent active:scale-95
+                                        transition-opacity duration-300
+                                        ${isExpanded ? 'flex opacity-100' : 'hidden opacity-0'}`}
+                                >
+                                    <span className="font-bold text-lg px-4">
+                                        {route.label}
+                                    </span>
+                                </button>
+                            </div>
                         </div>
                     ))}
                 </nav>
