@@ -19,8 +19,14 @@ use crate::db::{
     token,
 };
 use crate::extensions::{
-    email_breach::fetch_email_breach_info, pass_gen::generate_password,
-    pass_strength::check_password_strength, process_capture::get_system_and_process_usage,
+    email_breach::fetch_email_breach_info,
+    pass_gen::generate_password,
+    pass_strength::check_password_strength,
+    process_capture::get_system_and_process_usage,
+    updater::{
+        check_for_updates, download_and_install_update, force_check_updates, get_platform_info,
+        get_release_info,
+    },
 };
 use crate::version::get_version::get_version;
 use clap::Command;
@@ -119,6 +125,11 @@ pub async fn run() {
             update_user_session,
             get_master_salt,
             get_platform,
+            check_for_updates,
+            download_and_install_update,
+            force_check_updates,
+            get_release_info,
+            get_platform_info,
         ])
         // .setup(|_app| {
         // // Use an asynchronous runtime to run the database connection
