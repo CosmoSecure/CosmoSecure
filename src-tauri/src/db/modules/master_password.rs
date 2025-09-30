@@ -94,24 +94,31 @@ pub async fn verify_master_password(
     }
 }
 
-// This provides better entropy and is more compact
+// Get master password salt for a user (for encryption/decryption operations)
 #[tauri::command]
-pub fn generate_salt_base64(byte_length: Option<usize>) -> Result<String, String> {
-    use base64::{engine::general_purpose, Engine as _};
-    use rand::RngCore;
+pub async fn get_master_salt(
+    state: State<'_, MongoClientState>,
+    user_id: String,
+) -> Result<String, String> {
+    let user_collection = state
+        .get_database("password_manager")
+        .collection::<User>("users");
 
-    let length = byte_length.unwrap_or(24); // Default to 24 bytes (32 chars in base64)
+    let user_filter = doc! { "ui": &user_id };
+    let user_doc = user_collection
+        .find_one(user_filter)
+        .await
+        .map_err(|e| e.to_string())?;
 
-    // Validate length
-    if length < 12 || length > 64 {
-        return Err("Salt byte length must be between 12 and 64 bytes.".to_string());
+    if let Some(user) = user_doc {
+        if let Some(master_auth) = user.hashed_password.get(0).map(|hp| &hp.master) {
+            Ok(master_auth.salt.clone())
+        } else {
+            Err("No master password set for user.".to_string())
+        }
+    } else {
+        Err("User not found.".to_string())
     }
-
-    let mut salt_bytes = vec![0u8; length];
-    rand::rng().fill_bytes(&mut salt_bytes);
-
-    let salt = general_purpose::STANDARD.encode(&salt_bytes);
-    Ok(salt)
 }
 
 // Hex-encoded salt (alternative format)

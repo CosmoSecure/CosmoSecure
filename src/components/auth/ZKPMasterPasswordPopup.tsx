@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { toast } from 'sonner';
 import { Lock, Shield, Eye, EyeOff, Check, AlertCircle } from 'lucide-react';
@@ -30,6 +30,16 @@ const ZKPMasterPasswordPopup: React.FC<ZKPMasterPasswordPopupProps> = ({
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
 
+    // Optimized function to focus on first input of current step
+    const focusFirstInput = useCallback((stepName: 'create' | 'confirm' = step) => {
+        const inputId = `pin-${stepName}-0`;
+        // Use requestAnimationFrame for better performance than setTimeout
+        requestAnimationFrame(() => {
+            const firstInput = document.getElementById(inputId);
+            firstInput?.focus();
+        });
+    }, [step]);
+
     // Check if master password needs to be set up
     useEffect(() => {
         if (user && !user.masterPassword?.isSet) {
@@ -37,12 +47,19 @@ const ZKPMasterPasswordPopup: React.FC<ZKPMasterPasswordPopupProps> = ({
         }
     }, [user]);
 
+    // Auto-focus first input when popup opens or step changes
+    useEffect(() => {
+        if (isOpen) {
+            focusFirstInput();
+        }
+    }, [isOpen, step, focusFirstInput]);
+
     // Don't render if user data is not available yet
     if (!user) {
         return null;
     }
 
-    const handlePinChange = (index: number, value: string) => {
+    const handlePinChange = useCallback((index: number, value: string) => {
         if (!/^\d*$/.test(value)) return; // Only allow digits
 
         const currentPin = step === 'create' ? pin : confirmPin;
@@ -52,23 +69,78 @@ const ZKPMasterPasswordPopup: React.FC<ZKPMasterPasswordPopupProps> = ({
         newPin[index] = value.slice(-1); // Only take the last digit
         setCurrentPin(newPin);
 
-        // Auto-focus next input
+        // Auto-focus next input if value is entered
         if (value && index < 3) {
             const nextInput = document.getElementById(`pin-${step}-${index + 1}`);
             nextInput?.focus();
         }
 
         setError('');
-    };
+    }, [step, pin, confirmPin, setPin, setConfirmPin, setError]);
 
-    const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
-        if (e.key === 'Backspace' && !pin[index] && index > 0) {
-            const prevInput = document.getElementById(`pin-${step}-${index - 1}`);
-            prevInput?.focus();
+    const handleKeyDown = useCallback((index: number, e: React.KeyboardEvent) => {
+        const currentPin = step === 'create' ? pin : confirmPin;
+        const setCurrentPin = step === 'create' ? setPin : setConfirmPin;
+
+        if (e.key === 'Backspace') {
+            // If current input has value, let default behavior clear it
+            if (currentPin[index]) {
+                return; // Don't prevent default, let it clear naturally
+            }
+            // If current input is empty and not first input, go to previous input
+            else if (index > 0) {
+                e.preventDefault();
+                const prevInput = document.getElementById(`pin-${step}-${index - 1}`) as HTMLInputElement;
+                if (prevInput) {
+                    const newPin = [...currentPin];
+                    newPin[index - 1] = '';
+                    setCurrentPin(newPin);
+                    setError('');
+                    prevInput.focus();
+                    prevInput.select(); // Select the content so it gets replaced
+                }
+            }
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+
+            const currentPinStr = currentPin.join('');
+            if (currentPinStr.length === 4) {
+                if (step === 'create') {
+                    // Call handleNextStep directly
+                    const currentPinCheck = pin.join('');
+                    if (currentPinCheck.length !== 4) {
+                        setError('Please enter a 4-digit PIN');
+                        return;
+                    }
+                    setStep('confirm');
+                    setError('');
+                    focusFirstInput('confirm');
+                } else {
+                    // Call handleSetupMasterPassword logic here to avoid dependency issues
+                    const masterPin = pin.join('');
+                    const confirmPinStr = confirmPin.join('');
+
+                    if (masterPin !== confirmPinStr) {
+                        setError('PINs do not match');
+                        return;
+                    }
+                    // Trigger the actual function
+                    setTimeout(() => handleSetupMasterPassword(), 0);
+                }
+            } else {
+                // Find next empty input using optimized approach
+                const nextIndex = currentPin.findIndex((digit, i) => i > index && !digit) ??
+                    currentPin.findIndex(digit => !digit);
+
+                if (nextIndex !== -1) {
+                    const nextInput = document.getElementById(`pin-${step}-${nextIndex}`);
+                    nextInput?.focus();
+                }
+            }
         }
-    };
+    }, [step, pin, confirmPin, setPin, setConfirmPin, setError, focusFirstInput]);
 
-    const handleNextStep = () => {
+    const handleNextStep = useCallback(() => {
         const currentPin = pin.join('');
         if (currentPin.length !== 4) {
             setError('Please enter a 4-digit PIN');
@@ -77,7 +149,10 @@ const ZKPMasterPasswordPopup: React.FC<ZKPMasterPasswordPopupProps> = ({
 
         setStep('confirm');
         setError('');
-    };
+
+        // Use optimized focus function
+        focusFirstInput('confirm');
+    }, [pin, setError, setStep, focusFirstInput]);
 
     const handleSetupMasterPassword = async () => {
         const masterPin = pin.join('');
@@ -104,14 +179,18 @@ const ZKPMasterPasswordPopup: React.FC<ZKPMasterPasswordPopupProps> = ({
             const salt = await invoke<string>('generate_salt_hex');
             console.log('Generated salt:', salt);
 
-            // Hash the PIN with salt (client-side hashing)
+            // Hash the PIN with salt (for authentication verification)
             const hashedPin = await hashPin(masterPin, salt);
             console.log('Hashed PIN:', hashedPin);
 
-            // Setup master password via Tauri
+            // Hash the master password (PIN) with SHA-256 (for encryption operations)
+            const masterPasswordHash = await hashMasterPassword(masterPin);
+            console.log('Master Password Hash (SHA-256):', masterPasswordHash);
+
+            // Setup master password via Tauri - store SHA of master password for encryption
             await invoke('setup_master_password', {
                 userId: user.userId,
-                masterPasswordHash: hashedPin,
+                masterPasswordHash: masterPasswordHash, // Store SHA(Master Password) for encryption
                 salt: salt
             });
 
@@ -156,15 +235,34 @@ const ZKPMasterPasswordPopup: React.FC<ZKPMasterPasswordPopupProps> = ({
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     };
 
-    const resetForm = () => {
+    // Hash master password with SHA-256
+    const hashMasterPassword = async (password: string): Promise<string> => {
+        const encoder = new TextEncoder();
+        const passwordBuffer = encoder.encode(password);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', passwordBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    };
+
+    const resetForm = useCallback(() => {
         setPin(['', '', '', '']);
         setConfirmPin(['', '', '', '']);
         setStep('create');
         setError('');
         setShowPin(false);
-    };
 
-    if (!isOpen) return null;
+        // Use optimized focus function
+        focusFirstInput('create');
+    }, [setPin, setConfirmPin, setStep, setError, setShowPin, focusFirstInput]);
+
+    const handleBackToCreate = useCallback(() => {
+        setStep('create');
+        setConfirmPin(['', '', '', '']);
+        setError('');
+
+        // Use optimized focus function
+        focusFirstInput('create');
+    }, [setStep, setConfirmPin, setError, focusFirstInput]);
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -267,11 +365,7 @@ const ZKPMasterPasswordPopup: React.FC<ZKPMasterPasswordPopupProps> = ({
                     ) : (
                         <>
                             <button
-                                onClick={() => {
-                                    setStep('create');
-                                    setConfirmPin(['', '', '', '']);
-                                    setError('');
-                                }}
+                                onClick={handleBackToCreate}
                                 className="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors"
                             >
                                 Back

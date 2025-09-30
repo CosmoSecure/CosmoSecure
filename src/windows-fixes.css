@@ -1,0 +1,128 @@
+/* Windows-specific fixes for scrollbars and UI elements */
+
+/* Global scrollbar fix for all scrollable elements - Force transparent tracks */
+* {
+    /* Firefox scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 116, 139, 0.6) transparent;
+}
+
+/* Webkit browsers (Chrome, Edge, Safari) scrollbar styling */
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent !important;
+    border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.6);
+    border-radius: 4px;
+    border: 1px solid transparent;
+    background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.8);
+}
+
+*::-webkit-scrollbar-corner {
+    background: transparent !important;
+}
+
+/* Dark theme scrollbar variants */
+.dark *::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.6);
+}
+
+.dark *::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.8);
+}
+
+/* Theme-aware scrollbar using CSS variables */
+html[data-theme="dark"] *::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.6);
+}
+
+html[data-theme="dark"] *::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.8);
+}
+
+html[data-theme="light"] *::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.6);
+}
+
+html[data-theme="light"] *::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.8);
+}
+
+/* Specific fixes for common scrollable containers */
+.overflow-scroll::-webkit-scrollbar-track,
+.overflow-auto::-webkit-scrollbar-track,
+.overflow-y-scroll::-webkit-scrollbar-track,
+.overflow-x-scroll::-webkit-scrollbar-track,
+.overflow-y-auto::-webkit-scrollbar-track,
+.overflow-x-auto::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+/* Platform-specific fixes for Windows */
+.platform-windows *::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+.platform-windows *::-webkit-scrollbar-corner {
+    background: transparent !important;
+}
+
+/* Specific component fixes */
+.platform-windows .h-full.overflow-y-auto::-webkit-scrollbar-track,
+.platform-windows .max-h-32.overflow-y-auto::-webkit-scrollbar-track,
+.platform-windows .max-h-48.overflow-y-auto::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+/* Fix for modal backgrounds on Windows */
+.fixed.inset-0 {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* Windows title bar drag region fix */
+.titlebar {
+    -webkit-app-region: drag;
+}
+
+.titlebar button {
+    -webkit-app-region: no-drag;
+}
+
+/* Text selection color fix for Windows */
+::selection {
+    background-color: rgba(59, 130, 246, 0.3);
+    color: inherit;
+}
+
+::-moz-selection {
+    background-color: rgba(59, 130, 246, 0.3);
+    color: inherit;
+}
+
+/* Additional Windows-specific scrollbar fixes */
+body::-webkit-scrollbar-track,
+html::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+/* Force all divs with overflow to have transparent tracks on Windows */
+.platform-windows div[class*="overflow"]::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+/* Ensure animated scrollbar also gets transparent track */
+.animated-scrollbar::-webkit-scrollbar-track {
+    background: transparent !important;
+}

@@ -1,5 +1,7 @@
 use crate::config::update_config;
-use crate::db::schema::db_schema::{DeletedUser, PasswordEntries, User, HashedPasswordEntry, MasterPasswordAuth};
+use crate::db::schema::db_schema::{
+    DeletedUser, HashedPasswordEntry, MasterPasswordAuth, PasswordEntries, User,
+};
 use crate::db::token::generate_token;
 use crate::env_var::{get_env_key, get_env_vars};
 // use crate::secure::encrypt;

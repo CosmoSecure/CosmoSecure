@@ -10,33 +10,32 @@ import { ExpandLess, ExpandMore, Warning as WarningIcon } from '@mui/icons-mater
 import DashboardEmailBreach from './tools/DashboardEmailBreach';
 
 // API Functions
-const fetchTotalPasswords = async (userId: string) => {
+const fetchPasswordStats = async (userId: string) => {
     try {
-        const entries = await invoke<{ entry_id: string }[]>('get_password_entries', { ui: userId });
-        return entries.length;
-    } catch (error) {
-        console.error('Error fetching total passwords:', error);
-        return 0;
-    }
-};
+        const stats = await invoke<{
+            total_passwords: number;
+            weak_passwords_count: number;
+            weak_entries: Array<{
+                aid: string;
+                plt: string;
+                aun: string;
+                aps: number;
+            }>;
+        }>('get_password_stats', { ui: userId });
 
-const fetchWeakPasswords = async (userId: string) => {
-    try {
-        const entries = await invoke<{ aid: string; ap: string; aps: number }[]>('get_password_entries', { ui: userId });
-
-        // Filter weak passwords directly based on `aps` (strength score)
-        const weakPasswords = entries
-            .filter(entry => entry.aps < 3) // Weak passwords have a strength score less than 3
-            .map(entry => ({
-                password: entry.ap,
+        return {
+            totalPasswords: stats.total_passwords,
+            weakPasswords: stats.weak_entries.map(entry => ({
+                password: `${entry.plt} (${entry.aun})`, // Show platform name and username instead of actual password
                 score: entry.aps,
-            }));
-
-        console.log("Weak passwords:", weakPasswords); // Debugging log
-        return weakPasswords;
+            }))
+        };
     } catch (error) {
-        console.error('Error fetching weak passwords:', error);
-        return [];
+        console.error('Error fetching password stats:', error);
+        return {
+            totalPasswords: 0,
+            weakPasswords: []
+        };
     }
 };
 
@@ -56,27 +55,19 @@ const Dashboard: React.FC = () => {
 
     // Fetch password statistics when user data is available
     useEffect(() => {
-        const fetchPasswordStats = async () => {
+        const fetchStats = async () => {
             if (!user?.userId) return;
 
             try {
-                const [total, weak] = await Promise.all([
-                    fetchTotalPasswords(user.userId),
-                    fetchWeakPasswords(user.userId),
-                ]);
-
+                const stats = await fetchPasswordStats(user.userId);
                 setEmail(user.email);
-
-                setPasswordStats({
-                    totalPasswords: total,
-                    weakPasswords: weak.filter((entry): entry is { password: string; score: number } => entry !== null),
-                });
+                setPasswordStats(stats);
             } catch (error) {
                 console.error('Error fetching password stats:', error);
             }
         };
 
-        fetchPasswordStats();
+        fetchStats();
     }, [user?.userId]); // Fetch stats only when `userId` is available
 
     if (isLoading) {
@@ -106,16 +97,16 @@ const Dashboard: React.FC = () => {
                         <div className="flex flex-row gap-5 bg-gradient-to-r from-theme-secondary-transparent via-theme-primary to-theme-secondary-transparent py-4 px-0 rounded-lg items-center">
                             <img src={Pro} alt="Profile" className="rounded-full h-24 w-24 hidden xl:block ml-6" />
                             <div className="ml-4 col-span-2">
-                                <div className="text-2xl font-bold">{user.name}</div>
+                                <div className="text-xl font-bold">{user.name}</div>
                                 <div className="flex flex-col gap-2 mt-2">
-                                    <div className="text-lg flex items-center">
+                                    <div className="text-base font-semibold flex items-center">
                                         <CakeIcon className="mr-1" /> {user.joinDate}
                                     </div>
-                                    <div className="text-lg flex items-center break-all">
+                                    <div className="text-base font-semibold flex items-center break-all">
                                         <AlternateEmailIcon className="mr-1" />
                                         <span className="break-all">{user.email}</span>
                                     </div>
-                                    <div className="text-lg flex items-center">
+                                    <div className="text-base font-semibold flex items-center">
                                         <PasswordIcon className="mr-1" /> {passwordStats.totalPasswords}
                                     </div>
                                 </div>
@@ -125,9 +116,9 @@ const Dashboard: React.FC = () => {
                         {/* Password Storage Section */}
                         <div className="bg-theme-primary-transparent p-6 rounded-lg flex flex-col items-center justify-center">
                             <h1 className="text-xl font-bold">Password Storage</h1>
-                            <div className="w-full bg-gray-300 rounded-full h-4 mt-2">
+                            <div className="w-full bg-theme-secondary-transparent rounded-full h-4 mt-2">
                                 <div
-                                    className="bg-ultra-violet h-4 rounded-full"
+                                    className="bg-theme-background-transparent h-4 rounded-full"
                                     style={{ width: `${(passwordStats.totalPasswords / user.maxPasswordCount) * 100}%` }}
                                 ></div>
                             </div>
@@ -168,15 +159,19 @@ const Dashboard: React.FC = () => {
                                         sx={{
                                             borderRadius: '8px',
                                             bgcolor: 'rgba(255, 255, 255, 0.3)',
+                                            paddingLeft: 1.5, // Reduce left padding
+                                            paddingRight: 1.5, // Reduce right padding
+                                            minHeight: 0, // Remove extra vertical space
                                         }}
-                                        className="hover:text-theme-text rounded-lg p-3 flex items-center gap-3"
+                                        className="hover:text-theme-text rounded-lg flex items-center overflow-scroll"
                                     >
-                                        <ListItemIcon>
+                                        <ListItemIcon sx={{ minWidth: 32, marginRight: 0 }}> {/* Reduce minWidth and remove right margin */}
                                             <WarningIcon color="error" />
                                         </ListItemIcon>
                                         <ListItemText
-                                            primary={`Password ${index + 1}: ${entry.password}`}
+                                            primary={`${entry.password}`}
                                             secondary={`Strength Score: ${entry.score}/4`}
+                                            sx={{ margin: 0 }} // Remove default margin
                                         />
                                     </ListItemButton>
                                 ))

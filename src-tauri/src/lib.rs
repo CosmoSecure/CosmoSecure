@@ -6,31 +6,41 @@ use crate::db::{
     },
     modules::{
         master_password::{
-            generate_salt_base64, generate_salt_hex, setup_master_password, update_user_session,
+            generate_salt_hex, get_master_salt, setup_master_password, update_user_session,
             verify_master_password,
         },
         passwords::{
-            add_password_entry, delete_password_entry, get_password_entries, update_password_entry,
+            add_password_entry, decrypt_single_password, delete_password_entry,
+            get_password_entries, get_password_entries_encrypted, get_password_stats,
+            update_password_entry,
         },
         trash::{add_to_trash, clean_old_trash, restore_password, trash},
     },
     token,
 };
 use crate::extensions::{
-    email_breach::fetch_email_breach_info, pass_gen::generate_password,
-    pass_strength::check_password_strength, process_capture::get_system_and_process_usage,
+    email_breach::fetch_email_breach_info,
+    pass_gen::generate_password,
+    pass_strength::check_password_strength,
+    process_capture::get_system_and_process_usage,
+    updater::{
+        check_for_updates, download_and_install_update, force_check_updates, get_platform_info,
+        get_release_info,
+    },
 };
 use crate::version::get_version::get_version;
 use clap::Command;
 use config::delete_config;
 use openurl::open_url;
 use std::env;
+use tauri::Manager;
 
 mod config;
 mod db;
 mod env_var;
 mod extensions;
 mod openurl;
+mod password_crypto;
 mod secure;
 mod version;
 
@@ -47,6 +57,11 @@ fn load_token_command() -> (String, String) {
 #[tauri::command]
 fn delete_token_command(app_handle: tauri::AppHandle) {
     token::delete_token(app_handle);
+}
+
+#[tauri::command]
+fn get_platform() -> String {
+    std::env::consts::OS.to_string()
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -66,6 +81,12 @@ pub async fn run() {
     };
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            let _ = app
+                .get_webview_window("main")
+                .expect("no main window")
+                .set_focus();
+        }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .manage(client_state)
@@ -77,6 +98,9 @@ pub async fn run() {
             load_token_command,
             delete_token_command,
             get_password_entries,
+            get_password_entries_encrypted,
+            decrypt_single_password,
+            get_password_stats,
             add_password_entry,
             delete_password_entry,
             update_password_entry,
@@ -97,9 +121,15 @@ pub async fn run() {
             fetch_email_breach_info,
             setup_master_password,
             verify_master_password,
-            generate_salt_base64,
             generate_salt_hex,
-            update_user_session
+            update_user_session,
+            get_master_salt,
+            get_platform,
+            check_for_updates,
+            download_and_install_update,
+            force_check_updates,
+            get_release_info,
+            get_platform_info,
         ])
         // .setup(|_app| {
         // // Use an asynchronous runtime to run the database connection

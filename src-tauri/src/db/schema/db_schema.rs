@@ -51,11 +51,11 @@ pub struct DeletedUser {
     #[serde(rename = "n")]
     pub name: String, // Name
     #[serde(rename = "hp")]
-    pub hashed_password: Vec<HashedPasswordEntry>, 
+    pub hashed_password: Vec<HashedPasswordEntry>,
     #[serde(rename = "e")]
     pub email: String, // Email address
     #[serde(rename = "d")]
-    pub deleted_at: DateTime, 
+    pub deleted_at: DateTime,
     #[serde(rename = "pass")]
     pub passwords: Vec<PasswordEntry>,
 }
@@ -64,10 +64,8 @@ pub struct DeletedUser {
 pub struct PasswordEntry {
     #[serde(rename = "aid")]
     pub entry_id: String, // Unique identifier for the entry
-    #[serde(rename = "an")]
-    pub account_name: String, 
     #[serde(rename = "aun")]
-    pub username: String, 
+    pub username: String,
     #[serde(rename = "ap")]
     pub password: String, // ZKP-Encrypted password
     #[serde(rename = "ac")]
@@ -76,6 +74,8 @@ pub struct PasswordEntry {
     pub password_strength: Option<u8>,
     #[serde(rename = "lup")]
     pub last_update: DateTime,
+    #[serde(rename = "plt")]
+    pub platform: Option<String>, // Platform type (google, github, facebook, etc.)
     #[serde(rename = "d")]
     pub deleted: Option<DeletedPasswordEntry>, // Is the entry deleted? & Timestamp of deletion
 }
