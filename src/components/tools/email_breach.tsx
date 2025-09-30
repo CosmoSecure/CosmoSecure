@@ -26,6 +26,7 @@ const EmailBreach: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [hasSearched, setHasSearched] = useState<boolean>(false);
+    const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
 
     const [breachData_risk, setBreachData_risk] = useState<any>(null);
 
@@ -43,6 +44,7 @@ const EmailBreach: React.FC = () => {
                 setError(null);
             } else if (response.ExposedBreaches.breaches_details) {
                 setBreachData(response.ExposedBreaches.breaches_details);
+
                 setBreachData_risk(response.BreachMetrics.risk);
             } else {
                 setBreachData(null);
@@ -164,11 +166,25 @@ const EmailBreach: React.FC = () => {
                     {breachData && breachData.map((breach, index) => (
                         <div key={index} className="mb-5 p-4 bg-theme-primary-transparent border border-theme-primary rounded-md shadow-md">
                             <div className="flex items-center gap-4">
-                                <img
-                                    src={breach.logo}
-                                    alt={breach.breach}
-                                    className="h-20 w-20 object-contain ml-4"
-                                />
+                                {imageErrors.has(index) ? (
+                                    <div className="h-16 w-16 ml-4 bg-red-500 rounded-full flex items-center justify-center">
+                                        <span className="text-white text-2xl font-bold pt-2">!</span>
+                                    </div>
+                                ) : (
+                                    <img
+                                        src={breach.logo}
+                                        alt={breach.breach}
+                                        className="h-20 w-20 rounded-md object-contain ml-4 border border-gray-300 bg-white"
+                                        onLoad={() => {
+                                            console.log(`Image loaded successfully: ${breach.logo}`);
+                                        }}
+                                        onError={(e) => {
+                                            console.error(`Image failed to load: ${breach.logo}`, e);
+                                            setImageErrors(prev => new Set(prev).add(index));
+                                        }}
+                                        crossOrigin="anonymous"
+                                    />
+                                )}
                                 <div className="text-lg font-bold">{breach.breach}</div>
                             </div>
                             <div className="bg-theme-secondary-transparent mt-2 p-4 rounded-md text-sm font-semibold text-theme-text mb-2">{breach.details}</div>
