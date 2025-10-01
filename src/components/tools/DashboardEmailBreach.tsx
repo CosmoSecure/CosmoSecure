@@ -177,8 +177,8 @@ const DashboardEmailBreach: React.FC<{ userEmail: string }> = ({ userEmail }) =>
                         <div key={index} className="mb-5 p-4 bg-theme-primary-transparent border border-theme-primary rounded-md shadow-md">
                             <div className="flex items-center gap-4">
                                 {imageErrors.has(index) ? (
-                                    <div className="h-16 w-16 ml-4 bg-red-500 rounded-full flex items-center justify-center">
-                                        <span className="text-white text-2xl font-bold pt-2">!</span>
+                                    <div className="h-16 w-16 ml-4 bg-white rounded-xl flex items-center justify-center">
+                                        <span className="text-red-600 text-4xl font-bold pt-2">!</span>
                                     </div>
                                 ) : (
                                     <img
