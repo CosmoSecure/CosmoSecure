@@ -142,8 +142,24 @@ const Settings = () => {
 
     const handleUpdatePassword = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!currentPassword.trim()) {
+            quick.error("Current Password Required", "Please enter your current password.");
+            return;
+        }
+        if (!newPassword.trim()) {
+            quick.error("New Password Required", "Please enter a new password.");
+            return;
+        }
+        if (newPassword.length < 8) {
+            quick.error("Password Too Short", "New password must be at least 8 characters long.");
+            return;
+        }
         if (!passwordsMatch) {
             quick.error("Password Mismatch", "New password and confirm password do not match.");
+            return;
+        }
+        if (!confirmPassword.trim()) {
+            quick.error("Confirm Password Required", "Please confirm your new password.");
             return;
         }
         try {
