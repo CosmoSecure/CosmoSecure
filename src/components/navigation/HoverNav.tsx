@@ -116,7 +116,7 @@ const HoverNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ togglePro
                         <div key={route.path}>
                             {/* Show collapsed update notification above settings button */}
                             {route.path === '/setting' && (
-                                <div className="mb-2">
+                                <div className="mb-4">
                                     <UpdateNotification isExpanded={false} />
                                 </div>
                             )}

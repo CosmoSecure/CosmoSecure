@@ -127,7 +127,7 @@ const ButtonNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ }) => {
                         <div key={route.path}>
                             {/* Show collapsed update notification above settings button */}
                             {route.path === '/setting' && !isExpanded && (
-                                <div className="mb-2">
+                                <div className="mb-4">
                                     <UpdateNotification isExpanded={false} />
                                 </div>
                             )}

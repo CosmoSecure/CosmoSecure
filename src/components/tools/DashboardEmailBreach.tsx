@@ -117,23 +117,23 @@ const DashboardEmailBreach: React.FC<{ userEmail: string }> = ({ userEmail }) =>
             {/* Summary Section */}
             <div className="h-full w-full flex flex-col items-center justify-evenly rounded-lg">
                 <div className="w-full h-auto flex flex-col justify-center bg-theme-secondary-transparent shadow-lg rounded-xl p-6 space-y-4 font-semibold text-gray-800">
-                    <div className="text-xl font-extrabold border-b pb-2 text-theme-accent-transparent">
+                    <div className="text-xl font-extrabold border-b pb-2 text-theme-text-transparent">
                         Summary
                     </div>
 
                     <div className="text-lg flex justify-between">
                         <span className="text-theme-text font-medium">Total Breaches:</span>
-                        <span className="text-theme-accent">{summary.totalBreaches}</span>
+                        <span className="text-theme-text-transparent">{summary.totalBreaches}</span>
                     </div>
 
                     <div className="text-lg flex justify-between">
                         <span className="text-theme-text font-medium">Risk Level:</span>
-                        <span className="text-theme-accent">{summary.risk.risk_label}</span>
+                        <span className="text-theme-text-transparent">{summary.risk.risk_label}</span>
                     </div>
 
                     <div className="text-lg flex justify-between">
                         <span className="text-theme-text font-medium">Risk Score:</span>
-                        <span className="text-theme-accent">{summary.risk.risk_score}</span>
+                        <span className="text-theme-text-transparent">{summary.risk.risk_score}</span>
                     </div>
                 </div>
 

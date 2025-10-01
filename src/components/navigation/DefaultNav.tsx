@@ -109,7 +109,7 @@ const DefaultNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ toggleP
                         <div key={route.path}>
                             {/* Show collapsed update notification above settings button */}
                             {route.path === '/setting' && (
-                                <div className="group-hover:hidden block mb-2">
+                                <div className="group-hover:hidden block mb-4">
                                     <UpdateNotification isExpanded={false} />
                                 </div>
                             )}

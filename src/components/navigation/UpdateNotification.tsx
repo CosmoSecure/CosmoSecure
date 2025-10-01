@@ -82,7 +82,7 @@ const UpdateNotification: React.FC<UpdateNotificationProps> = ({
                     <div className="flex items-center gap-2">
                         <ArrowUpCircle className="w-4 h-4 text-green-500" />
                         <div>
-                            <div className="font-medium">{isWindows ? 'Update Available' : 'Update Available'}</div>
+                            <div className="font-medium">Update Available</div>
                             <div className="text-xs opacity-75">{latestRelease.version}</div>
                             <div className="text-xs font-mono font-semibold">{getAssetNameFromUrl(latestRelease.download_url)}</div>
                             {latestRelease.size && (
@@ -100,7 +100,7 @@ const UpdateNotification: React.FC<UpdateNotificationProps> = ({
 
     // Expanded state - show full notification box
     return (
-        <div className="mb-2 bg-gradient-to-r from-green-500/10 to-blue-500/10 
+        <div className="relative group mb-2 bg-gradient-to-r from-green-500/10 to-blue-500/10 
             border border-green-500/30 rounded-lg p-4 shadow-lg backdrop-blur-sm">
 
             {/* Header */}
@@ -209,20 +209,28 @@ const UpdateNotification: React.FC<UpdateNotificationProps> = ({
                 </div>
             )}
 
-            <div className="absolute left-full top-3/4 -translate-y-1/2 ml-2 px-3 py-2
-                    bg-theme-background border border-theme-accent rounded-md
-                    text-theme-text text-sm whitespace-nowrap opacity-0 scale-95
-                    group-hover:opacity-100 group-hover:scale-100
-                    pointer-events-none transform origin-left z-[9999]
-                    transition-all duration-300 shadow-lg">
-                <div className="flex items-center gap-2">
-                    <ArrowUpCircle className="w-4 h-4 text-green-500" />
-                    <div>
-                        <div className="text-sm font-mono">{getAssetNameFromUrl(latestRelease.download_url)}</div>
-                        <div className="text-xs opacity-75">{latestRelease.version}</div>
-                        {latestRelease.size && (
-                            <div className="text-xs opacity-75">{formatFileSize(latestRelease.size)}</div>
-                        )}
+            {/* Hover trigger for detailed info */}
+            <div className="absolute top-12 right-3 group/info">
+                <div className="w-6 h-w-5 rounded-full bg-theme-accent bg-opacity-20 flex items-center justify-center cursor-help hover:bg-opacity-40 transition-colors">
+                    <span className="text-sm text-theme-text font-bold pt-1">i</span>
+                </div>
+
+                {/* Detailed info tooltip */}
+                <div className="absolute top-8 px-3 py-2
+                        bg-theme-background border border-theme-accent rounded-md
+                        text-theme-text text-sm whitespace-nowrap opacity-0 scale-95
+                        group-hover/info:opacity-100 group-hover/info:scale-100
+                        pointer-events-none transform origin-top-right z-[9999]
+                        transition-all duration-300 shadow-lg">
+                    <div className="flex items-center gap-2">
+                        <ArrowUpCircle className="w-4 h-4 text-green-500" />
+                        <div>
+                            <div className="text-sm font-mono font-semibold">{getAssetNameFromUrl(latestRelease.download_url)}</div>
+                            <div className="text-xs opacity-75">Version: {latestRelease.version}</div>
+                            {latestRelease.size && (
+                                <div className="text-xs opacity-75">Size: {formatFileSize(latestRelease.size)}</div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

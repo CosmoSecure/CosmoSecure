@@ -5,25 +5,25 @@ export type ThemeKeys = 'light' | 'dark' | 'aqua' | 'forest' | 'vamp';
 
 export const themes: Record<ThemeKeys, { [key: string]: string }> = {
     light: {
-        '--background-color': '#f5f7fa', // Use Azure #F0FFFF
-        '--text-color': '#2d2d2d',
-        '--primary-color': '#9aa0a6',
-        '--secondary-color': '#cfd4da',
-        '--accent-color': '#7c8a96',
+        '--background-color': '#eff2f5', // Use Azure #F0FFFF
+        '--text-color': '#262626',
+        '--primary-color': '#9da4af',
+        '--secondary-color': '#d5d8dd',
+        '--accent-color': '#a3afc2',
     },
     dark: {
-        '--background-color': '#121212',
-        '--text-color': '#eaeaea',
-        '--primary-color': '#9d9d9d',
+        '--background-color': '#0d0d0d',
+        '--text-color': '#f2f2f2',
+        '--primary-color': '#808080',
         '--secondary-color': '#2c2c2c',
-        '--accent-color': '#5a5d63',
+        '--accent-color': '#55585e',
     },
     aqua: {
-        '--background-color': '#e0f7fa',
-        '--text-color': '#006064',
-        '--primary-color': '#00acc1',
-        '--secondary-color': '#00838f',
-        '--accent-color': '#4db6ac',
+        '--background-color': '#e0fbfb',
+        '--text-color': '#003333',
+        '--primary-color': '#00b3b3',
+        '--secondary-color': '#80ffff',
+        '--accent-color': '#2dd2d2',
     },
     forest: {
         '--background-color': '#1f2d28',

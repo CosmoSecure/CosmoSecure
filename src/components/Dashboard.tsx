@@ -87,7 +87,7 @@ const Dashboard: React.FC = () => {
     }
 
     return (
-        <div className="bg-theme-background flex flex-col h-full w-full p-6 rounded-md">
+        <div className="bg-theme-background text-theme-text-transparent flex flex-col h-full w-full p-6 rounded-md">
             <div className="grid grid-cols-3 gap-6 h-full">
                 {/* Left Side (2/3 width) */}
                 <div className="col-span-2 flex flex-col gap-6">

@@ -32,10 +32,50 @@ const Tools: React.FC = () => {
                 return <ToolsEmailBreach />;
             default:
                 return (
-                    <div className="flex flex-col justify-center items-center font-extrabold text-theme-text-transparent text-black">
-                        <h1 className="text-2xl font-bold mb-4">Welcome to Tools</h1>
-                        <p className="text-xl">Select a tool from the sidebar to get started.</p>
-                        <p className="text-xl mt-4 italic">"Security is not a product, but a process." - Bruce Schneier</p>
+                    <div className="flex flex-col justify-center items-center h-full w-full p-4 text-theme-text">
+                        <div className="text-center mb-12">
+                            <div className="">
+                                <div className="inline-flex items-center justify-center w-20 h-20 bg-theme-secondary-transparent rounded-full mb-6 shadow-lg border-2 border-theme-text-transparent">
+                                    <BuildIcon sx={{ fontSize: '2.5rem' }} />
+                                </div>
+                            </div>
+                            <h1 className="text-2xl font-bold mb-4 tracking-tight">
+                                Security Toolkit
+                            </h1>
+                            <p className="text-xl-transparent opacity-80 max-w-2xl mx-auto leading-relaxed">
+                                Comprehensive security tools to protect and analyze your digital assets
+                            </p>
+                        </div>
+
+                        {/* Tools Grid Preview */}
+                        <div className='flex flex-col justify-center items-center w-full'>
+                            <div className="text-xl font-semibold mb-4">Available Tools</div>
+                            <div className="grid grid-cols-3 gap-6 mb-12 max-w-4xl">
+                                <div className="bg-theme-secondary-transparent border-2 border-theme-secondary hover:shadow-sm hover:shadow-theme-text rounded-xl p-6 text-center hover:scale-105 transition-transform duration-300">
+                                    <VpnKeyIcon sx={{ fontSize: '2.5rem', color: 'var(--accent-color)', marginBottom: '1rem' }} />
+                                    <h3 className="text-lg font-semibold mb-2">Password Security</h3>
+                                    <p className="text-sm opacity-70">Generate strong, secure passwords</p>
+                                </div>
+                                <div className="bg-theme-secondary-transparent border-2 border-theme-secondary hover:shadow-sm hover:shadow-theme-text rounded-xl p-6 text-center hover:scale-105 transition-transform duration-300">
+                                    <MonitorIcon sx={{ fontSize: '2.5rem', color: 'var(--accent-color)', marginBottom: '1rem' }} />
+                                    <h3 className="text-lg font-semibold mb-2">System Monitor</h3>
+                                    <p className="text-sm opacity-70">Track system processes</p>
+                                </div>
+                                <div className="bg-theme-secondary-transparent border-2 border-theme-secondary hover:shadow-sm hover:shadow-theme-text rounded-xl p-6 text-center hover:scale-105 transition-transform duration-300">
+                                    <MarkEmailUnreadIcon sx={{ fontSize: '2.5rem', color: 'var(--accent-color)', marginBottom: '1rem' }} />
+                                    <h3 className="text-lg font-semibold mb-2">Breach Detection</h3>
+                                    <p className="text-sm opacity-70">Check email security status</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Quote Section */}
+                        <div className="mt-2 text-center">
+                            <blockquote className="text-lg italic text-theme-text opacity-60 max-w-2xl mx-auto">
+                                "Security is not a product, but a process."
+                            </blockquote>
+                            <cite className="text-sm text-theme-text opacity-50 mt-2 block">— Bruce Schneier</cite>
+                        </div>
                     </div>
                 );
         }
