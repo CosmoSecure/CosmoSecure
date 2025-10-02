@@ -11,7 +11,7 @@ const NavButton = ({ icon, label, onClick }: { icon: React.ReactNode, label: str
         <button
             onClick={onClick}
             className="flex items-center justify-center text-theme-text h-[40px] w-[40px] 
-                rounded-md bg-theme-accent-transparent hover:bg-theme-accent 
+                rounded-md bg-gradient-to-br from-theme-accent-transparent to-theme-accent shadow-md border border-theme-accent hover:bg-theme-accent 
                 hover:scale-110 active:scale-95 transition-all duration-300"
         >
             {/* Changed from text-2xl to text-3xl to match OriginalNav */}
@@ -19,7 +19,7 @@ const NavButton = ({ icon, label, onClick }: { icon: React.ReactNode, label: str
         </button>
         <span
             className="absolute left-full top-1/2 -translate-y-1/2 ml-2 h-[40px] px-4
-                rounded-md bg-theme-accent-transparent border border-theme-accent
+                rounded-md bg-gradient-to-r from-theme-accent-transparent to-theme-accent shadow-lg border border-theme-accent
                 text-theme-text text-lg whitespace-nowrap opacity-0 scale-95
                 group-hover:opacity-100 group-hover:scale-100 group-hover:bg-theme-accent
                 pointer-events-none transform origin-left z-[9999]
@@ -83,7 +83,7 @@ const HoverNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ togglePro
                                 toggleProfileVisibility();
                             }}
                             className="absolute left-full top-1/2 -translate-y-1/2 ml-2 h-[40px] px-4
-                            rounded-md bg-theme-accent-transparent border border-theme-accent
+                            rounded-md bg-gradient-to-r from-theme-accent-transparent to-theme-accent shadow-lg border border-theme-accent
                             text-theme-text text-lg whitespace-nowrap opacity-0 scale-95
                             group-hover:opacity-100 group-hover:scale-100 group-hover:bg-theme-accent
                             cursor-pointer transform origin-left z-[9999]

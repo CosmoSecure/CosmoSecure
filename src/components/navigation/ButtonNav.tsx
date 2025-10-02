@@ -72,7 +72,7 @@ const ButtonNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ }) => {
                     {/* Toggle Button - Moved below profile */}
                     <button
                         onClick={toggleNavigation}
-                        className="absolute top-3 z-10 h-[40px] w-[40px] bg-theme-accent p-1 rounded-full text-theme-text hover:scale-110 transition-transform duration-300"
+                        className="absolute top-3 z-10 h-[40px] w-[40px] bg-gradient-to-br from-theme-accent to-theme-accent-transparent shadow-lg border border-theme-accent/30 p-1 rounded-full text-theme-text hover:scale-110 transition-transform duration-300"
                     >
                         {isExpanded ?
                             <MenuOpenIcon className="w-5 h-5" /> :
@@ -90,7 +90,7 @@ const ButtonNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ }) => {
                                 <button
                                     onClick={() => navigate(route.path)}
                                     className="flex items-center justify-center text-theme-text h-[40px] w-[40px] 
-                                    rounded-md bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
+                                    rounded-md bg-gradient-to-br from-theme-accent-transparent to-theme-accent shadow-md border border-theme-accent hover:bg-theme-accent active:scale-95"
                                 >
                                     <div className="text-3xl flex items-center justify-center">
                                         {route.icon || <span>🔗</span>}
@@ -101,7 +101,7 @@ const ButtonNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ }) => {
                                 <button
                                     onClick={() => navigate(route.path)}
                                     className={`items-center justify-start flex-1 text-theme-text h-[40px] 
-                                    rounded-md bg-theme-accent-transparent hover:bg-theme-accent active:scale-95
+                                    rounded-md bg-gradient-to-r from-theme-accent-transparent to-theme-accent shadow-md border border-theme-accent hover:bg-theme-accent active:scale-95
                                     transition-opacity duration-300
                                     ${isExpanded ? 'flex opacity-100' : 'hidden opacity-0'}`}
                                 >
@@ -137,7 +137,7 @@ const ButtonNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ }) => {
                                 <button
                                     onClick={() => handleNavClick(route)}
                                     className="flex items-center justify-center text-theme-text h-[40px] w-[40px] 
-                                        rounded-md bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
+                                        rounded-md bg-gradient-to-br from-theme-accent-transparent to-theme-accent shadow-md border border-theme-accent hover:bg-theme-accent active:scale-95"
                                 >
                                     <div className="text-3xl flex items-center justify-center">
                                         {route.icon || <span>🔗</span>}
@@ -148,7 +148,7 @@ const ButtonNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ }) => {
                                 <button
                                     onClick={() => handleNavClick(route)}
                                     className={`items-center justify-start flex-1 text-theme-text h-[40px] 
-                                        rounded-md bg-theme-accent-transparent hover:bg-theme-accent active:scale-95
+                                        rounded-md bg-gradient-to-r from-theme-accent-transparent to-theme-accent shadow-md border border-theme-accent hover:bg-theme-accent active:scale-95
                                         transition-opacity duration-300
                                         ${isExpanded ? 'flex opacity-100' : 'hidden opacity-0'}`}
                                 >

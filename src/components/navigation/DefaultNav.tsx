@@ -75,7 +75,7 @@ const DefaultNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ toggleP
                                 {/* Icon Tile */}
                                 <button
                                     onClick={() => navigate(route.path)}
-                                    className="flex items-center justify-center text-theme-text h-[40px] w-[40px] rounded-md bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
+                                    className="flex items-center justify-center text-theme-text h-[40px] w-[40px] rounded-md bg-gradient-to-br from-theme-accent-transparent to-theme-accent shadow-md border border-theme-accent hover:bg-theme-accent active:scale-95"
                                 >
                                     <div className="text-3xl flex items-center justify-center">
                                         {route.icon ? route.icon : <span>🔗</span>}
@@ -85,7 +85,7 @@ const DefaultNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ toggleP
                                 {/* Label Tile */}
                                 <button
                                     onClick={() => navigate(route.path)}
-                                    className="hidden group-hover:flex items-center justify-start flex-1 text-theme-text h-[40px] rounded-md bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
+                                    className="hidden group-hover:flex items-center justify-start flex-1 text-theme-text h-[40px] rounded-md bg-gradient-to-r from-theme-accent-transparent to-theme-accent shadow-md border border-theme-accent hover:bg-theme-accent active:scale-95"
                                 >
                                     <span className="font-bold text-lg px-4">
                                         {route.label}
@@ -118,7 +118,7 @@ const DefaultNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ toggleP
                                 {/* Icon Tile */}
                                 <button
                                     onClick={() => handleNavClick(route)}
-                                    className="flex items-center justify-center text-theme-text h-[40px] w-[40px] rounded-md bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
+                                    className="flex items-center justify-center text-theme-text h-[40px] w-[40px] rounded-md bg-gradient-to-br from-theme-accent-transparent to-theme-accent shadow-md border border-theme-accent hover:bg-theme-accent active:scale-95"
                                 >
                                     <div className="text-3xl flex items-center justify-center">
                                         {route.icon ? route.icon : <span>🔗</span>}
@@ -128,7 +128,7 @@ const DefaultNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ toggleP
                                 {/* Label Tile */}
                                 <button
                                     onClick={() => handleNavClick(route)}
-                                    className="hidden group-hover:flex items-center justify-start flex-1 text-theme-text h-[40px] rounded-md bg-theme-accent-transparent hover:bg-theme-accent active:scale-95"
+                                    className="hidden group-hover:flex items-center justify-start flex-1 text-theme-text h-[40px] rounded-md bg-gradient-to-r from-theme-accent-transparent to-theme-accent shadow-md border border-theme-accent hover:bg-theme-accent active:scale-95"
                                 >
                                     <span className="font-bold text-lg px-4">
                                         {route.label}
