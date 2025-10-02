@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { decryptUser } from '../components/auth/token_secure';
+import { decryptUser, token_secure } from '../components/auth/token_secure';
 
 // Define interfaces for user data
 interface UserData {
@@ -146,7 +146,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
             if (response) {
                 console.log("Fresh user data received from backend:", response);
                 // Update sessionStorage with fresh data
-                const token_secure = (await import('../components/auth/token_secure')).token_secure;
                 token_secure(response);
 
                 // Save to backend storage
