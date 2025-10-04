@@ -238,12 +238,12 @@ const PasswordCard = React.memo(({
     useEffect(() => {
         if (isEditing) {
             setEditUsername(entry.username);
-            // Prioritize decrypted password, but don't use encrypted password as fallback
+            // Prioritize decrypted password, but preserve existing password if no decryption available
             if (decryptedPassword && decryptedPassword !== '[DECRYPTION_FAILED]') {
                 setEditPassword(decryptedPassword);
-            } else {
-                // If no decrypted password available, start with empty field or show loading
-                // The decryption should have been triggered in handleEditPassword
+            } else if (editPassword === '') {
+                // Only set to empty if we haven't already set a password
+                // This prevents clearing the field when user is typing
                 setEditPassword('');
             }
             setEditPlatform(entry.platform || 'other');
@@ -1077,16 +1077,21 @@ const Vault = () => {
                     prev.map(entry =>
                         entry.entry_id === editId
                             ? {
-                                entry_id: editId,
-                                account_name: platformInfo.name,
+                                ...entry,
                                 username: username.trim(),
-                                password: password.trim(),
-                                platform: platform,
-                                strength: entry.strength
+                                password: password.trim(), // This will be encrypted by backend
+                                platform: finalPlatform, // Use finalPlatform for consistency
                             }
                             : entry
                     )
                 );
+
+                // Update the decrypted passwords cache
+                setDecryptedPasswords(prev => {
+                    const newMap = new Map(prev);
+                    newMap.set(editId, password.trim()); // Store the decrypted password
+                    return newMap;
+                });
             } else {
                 // Add new password entry
                 const entry_id = await invoke<string>('add_password_entry', {
@@ -1160,20 +1165,33 @@ const Vault = () => {
         console.log(`Decrypting password for editing entry: ${entryId}`);
 
         try {
+            // Clear any previous error
+            setError(null);
+
             // Start the decryption process
             await decryptPassword(entryId, 0);
 
-            // Wait a moment for decryption to complete, then check result
-            setTimeout(() => {
+            // Use a more robust approach with retries
+            let attempts = 0;
+            const maxAttempts = 10; // 2 seconds max wait
+            const checkDecryption = () => {
                 const decryptedPass = decryptedPasswordsRef.current.get(entryId);
+                const isDecrypting = decryptingPasswordsRef.current.has(entryId);
+
                 if (decryptedPass && decryptedPass !== '[DECRYPTION_FAILED]') {
                     console.log(`Password decrypted successfully for entry: ${entryId}, entering edit mode`);
                     setEditId(entryId);
-                } else {
-                    console.error(`Failed to decrypt password for entry: ${entryId}`);
+                } else if (!isDecrypting && attempts >= maxAttempts) {
+                    console.error(`Failed to decrypt password for entry: ${entryId} after ${attempts} attempts`);
                     setError("Failed to decrypt password for editing. Please try again.");
+                } else if (attempts < maxAttempts) {
+                    attempts++;
+                    setTimeout(checkDecryption, 200);
                 }
-            }, 200); // Small delay to allow decryption to complete
+            };
+
+            // Start checking
+            setTimeout(checkDecryption, 200);
 
         } catch (error) {
             console.error(`Error during password decryption for editing ${entryId}:`, error);
@@ -1187,7 +1205,6 @@ const Vault = () => {
             return;
         }
 
-        const platformInfo = getPlatformInfo(newPlatform);
         if (!newUsername.trim() || !newPassword.trim()) {
             setError("Please fill in all fields");
             return;
@@ -1205,23 +1222,30 @@ const Vault = () => {
                 masterPassword: masterPasswordHash,
             });
 
+            // Update the passwords state with new values
             setPasswords(prev =>
                 prev.map(entry =>
                     entry.entry_id === entryId
                         ? {
                             ...entry,
-                            account_name: platformInfo.name,
                             username: newUsername.trim(),
-                            password: newPassword.trim(),
+                            password: newPassword.trim(), // This is encrypted password from backend
                             platform: newPlatform,
                         }
                         : entry
                 )
             );
 
+            // Update the decrypted passwords cache with the new decrypted password
+            setDecryptedPasswords(prev => {
+                const newMap = new Map(prev);
+                newMap.set(entryId, newPassword.trim()); // Store the decrypted password
+                return newMap;
+            });
+
             setEditId(null);
             setError(null);
-            fetchPasswords();
+            // Don't call fetchPasswords() here as it will clear the decrypted cache
         } catch (error) {
             console.error("Error updating password:", error);
 
@@ -1342,6 +1366,7 @@ const Vault = () => {
 
         try {
             setIsLoading(true);
+            // Move password to trash instead of permanent deletion
             await invoke('add_to_trash', {
                 userId: user.userId,
                 entryId,
@@ -1350,9 +1375,24 @@ const Vault = () => {
             setPasswords(prev => prev.filter(entry => entry.entry_id !== entryId));
             setShowDeleteConfirm(null); // Close the modal
             fetchPasswords(); // Update storage in background
+            console.log("Password moved to trash");
         } catch (error) {
-            setError("Error deleting password. Please try again.");
-            console.error("Error deleting password:", error);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error("Error deleting password:", {
+                error: errorMessage,
+                entryId,
+                userId: user.userId,
+                errorDetails: error
+            });
+
+            // Provide more specific error messages
+            if (errorMessage.includes("not found") || errorMessage.includes("already deleted")) {
+                setError("Password entry not found. It may have already been deleted.");
+            } else if (errorMessage.includes("limit") || errorMessage.includes("count")) {
+                setError("Error updating password count. Please try again.");
+            } else {
+                setError(`Error deleting password: ${errorMessage}`);
+            }
             setShowDeleteConfirm(null); // Close the modal even on error
         } finally {
             setIsLoading(false);
@@ -1530,8 +1570,8 @@ const Vault = () => {
                                     key={key}
                                     onClick={() => setActiveFilter(key as 'all' | 'weak' | 'old')}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 font-medium text-sm ${activeFilter === key
-                                            ? 'bg-theme-primary text-white shadow-md transform scale-[1.02]'
-                                            : 'text-theme-text hover:bg-theme-primary-transparent hover:text-theme-text'
+                                        ? 'bg-theme-primary text-white shadow-md transform scale-[1.02]'
+                                        : 'text-theme-text hover:bg-theme-primary-transparent hover:text-theme-text'
                                         } ${key === 'weak' && count > 0 ? 'ring-2 ring-red-400 ring-opacity-30' : ''
                                         } ${key === 'old' && count > 0 ? 'ring-2 ring-orange-400 ring-opacity-30' : ''
                                         }`}
@@ -1539,12 +1579,12 @@ const Vault = () => {
                                     <IconComponent className="w-4 h-4" />
                                     <span>{label}</span>
                                     <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeFilter === key
-                                            ? 'bg-white bg-opacity-20 text-white'
-                                            : key === 'weak' && count > 0
-                                                ? 'bg-red-100 text-red-800'
-                                                : key === 'old' && count > 0
-                                                    ? 'bg-orange-100 text-orange-800'
-                                                    : 'bg-theme-accent text-theme-text'
+                                        ? 'bg-white bg-opacity-20 text-white'
+                                        : key === 'weak' && count > 0
+                                            ? 'bg-red-100 text-red-800'
+                                            : key === 'old' && count > 0
+                                                ? 'bg-orange-100 text-orange-800'
+                                                : 'bg-theme-accent text-theme-text'
                                         }`}>
                                         {count}
                                     </span>
@@ -1555,8 +1595,8 @@ const Vault = () => {
                         {/* Filter Status */}
                         {activeFilter !== 'all' && (
                             <div className={`mt-3 p-3 rounded-lg border ${activeFilter === 'weak'
-                                    ? 'bg-red-50 border-red-200 text-red-700'
-                                    : 'bg-orange-50 border-orange-200 text-orange-700'
+                                ? 'bg-red-50 border-red-200 text-red-700'
+                                : 'bg-orange-50 border-orange-200 text-orange-700'
                                 }`}>
                                 <div className="flex items-center gap-2 text-sm">
                                     {activeFilter === 'weak' ? (
@@ -1632,289 +1672,291 @@ const Vault = () => {
 
                 {/* Add Password Form - Enhanced UI (Reduced size) */}
                 {showAddForm && user && masterPasswordHash && (
-                    <div className="bg-gradient-to-br from-theme-accent to-theme-accent-transparent rounded-lg shadow-xl hover:shadow-2xl p-4 mb-4 border border-theme-primary border-opacity-20 backdrop-blur-sm transition-shadow duration-300">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-bold text-theme-text flex items-center gap-2">
-                                <div className="w-6 h-6 bg-theme-primary rounded-md flex items-center justify-center">
-                                    {editId ? <Edit2 className="w-3.5 h-3.5 text-white" /> : <Plus className="w-3.5 h-3.5 text-white" />}
-                                </div>
-                                {editId ? 'Edit Password' : 'Add New Password'}
-                            </h2>
-                            <button
-                                onClick={() => {
-                                    setShowAddForm(false);
-                                    setEditId(null);
-                                    setUsername('');
-                                    setPassword('');
-                                    setPlatform('google');
-                                    setCustomPlatformName('');
-                                }}
-                                className="text-theme-text-transparent hover:text-theme-text p-1.5 rounded hover:bg-theme-secondary transition-all duration-200"
-                                title="Close form"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
-                        </div>
-
-                        <div className="space-y-4">
-                            {/* Platform Selection - Enhanced (Reduced size) */}
-                            <div className="relative">
-                                <label className="text-sm font-semibold text-theme-text mb-2 flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 bg-theme-primary rounded-full"></span>
-                                    Platform
-                                </label>
-                                <div className="relative">
-                                    {/* Platform Selection Button/Input */}
-                                    {platform ? (
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setShowPlatformDropdown(!showPlatformDropdown);
-                                                setPlatformSearchQuery('');
-                                            }}
-                                            className="w-full px-3 py-2 border border-theme-secondary rounded-lg focus:ring-1 focus:ring-theme-primary focus:border-theme-primary bg-theme-background text-theme-text flex items-center justify-between hover:border-theme-primary transition-all duration-200 shadow-md hover:shadow-lg"
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <div className={`w-6 h-6 rounded-md ${getPlatformInfo(platform).color} flex items-center justify-center text-white text-sm shadow-sm`}>
-                                                    <FontAwesomeIcon icon={getPlatformInfo(platform).icon} className="w-4 h-4" />
-                                                </div>
-                                                <span className="font-medium text-sm">{getPlatformInfo(platform).name}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setPlatform('');
-                                                        setPlatformSearchQuery('');
-                                                        setCustomPlatformName('');
-                                                    }}
-                                                    className="p-1 hover:bg-theme-secondary-transparent rounded-full transition-colors"
-                                                    title="Clear selection"
-                                                >
-                                                    <X className="w-3 h-3" />
-                                                </button>
-                                                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showPlatformDropdown ? 'rotate-180' : ''}`} />
-                                            </div>
-                                        </button>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setShowPlatformDropdown(true);
-                                                // Auto-focus the search input
-                                                setTimeout(() => {
-                                                    const searchInput = document.getElementById('platform-search-input');
-                                                    searchInput?.focus();
-                                                }, 100);
-                                            }}
-                                            className="w-full px-3 py-2 border border-theme-secondary rounded-lg focus:ring-1 focus:ring-theme-primary focus:border-theme-primary bg-theme-background text-theme-text flex items-center justify-between hover:border-theme-primary transition-all duration-200 shadow-md hover:shadow-lg"
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <Search className="w-4 h-4 text-theme-text opacity-50" />
-                                                <span className="text-theme-text opacity-75 text-sm">Search and select platform...</span>
-                                            </div>
-                                            <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showPlatformDropdown ? 'rotate-180' : ''}`} />
-                                        </button>
-                                    )}
-
-                                    {/* Dropdown with Search */}
-                                    {showPlatformDropdown && (
-                                        <>
-                                            <div
-                                                className="fixed inset-0 z-10"
-                                                onClick={() => {
-                                                    setShowPlatformDropdown(false);
-                                                    setPlatformSearchQuery('');
-                                                }}
-                                            />
-                                            <div className="absolute z-20 w-full mt-1 bg-theme-background border border-theme-secondary rounded-lg shadow-xl max-h-64 backdrop-blur-sm">
-                                                {/* Search Input */}
-                                                <div className="sticky top-0 bg-theme-background border-b border-theme-secondary p-2 rounded-t-lg">
-                                                    <div className="relative">
-                                                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-theme-text opacity-50" />
-                                                        <input
-                                                            id="platform-search-input"
-                                                            type="text"
-                                                            placeholder="Search platforms..."
-                                                            value={platformSearchQuery}
-                                                            onChange={(e) => setPlatformSearchQuery(e.target.value)}
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === 'Escape') {
-                                                                    setShowPlatformDropdown(false);
-                                                                    setPlatformSearchQuery('');
-                                                                } else if (e.key === 'Enter') {
-                                                                    const filteredPlatforms = PLATFORMS.filter(p =>
-                                                                        p.name.toLowerCase().includes(platformSearchQuery.toLowerCase()) ||
-                                                                        p.value.toLowerCase().includes(platformSearchQuery.toLowerCase())
-                                                                    );
-                                                                    if (filteredPlatforms.length > 0) {
-                                                                        setPlatform(filteredPlatforms[0].value);
-                                                                        setShowPlatformDropdown(false);
-                                                                        setPlatformSearchQuery('');
-                                                                        if (filteredPlatforms[0].value !== 'other') {
-                                                                            setCustomPlatformName('');
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }}
-                                                            className="w-full pl-10 pr-4 py-2 bg-theme-secondary-transparent border border-theme-text-transparent/20 rounded-lg text-theme-text placeholder-theme-text/50 focus:border-theme-primary focus:ring-1 focus:ring-theme-primary/20 transition-all duration-200"
-                                                            autoComplete="off"
-                                                        />
-                                                        {platformSearchQuery && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setPlatformSearchQuery('')}
-                                                                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-theme-secondary-transparent rounded-full transition-colors"
-                                                            >
-                                                                <X className="w-3 h-3 text-theme-text opacity-50" />
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {/* Platform Options */}
-                                                <div className="max-h-40 overflow-y-auto">
-                                                    {(() => {
-                                                        const filteredPlatforms = PLATFORMS.filter(p =>
-                                                            p.name.toLowerCase().includes(platformSearchQuery.toLowerCase()) ||
-                                                            p.value.toLowerCase().includes(platformSearchQuery.toLowerCase())
-                                                        );
-
-                                                        if (filteredPlatforms.length === 0) {
-                                                            return (
-                                                                <div className="px-3 py-4 text-center text-theme-text opacity-50 text-sm">
-                                                                    No platforms found for "{platformSearchQuery}"
-                                                                </div>
-                                                            );
-                                                        }
-
-                                                        return filteredPlatforms.map((p) => (
-                                                            <button
-                                                                key={p.value}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setPlatform(p.value);
-                                                                    setShowPlatformDropdown(false);
-                                                                    setPlatformSearchQuery('');
-                                                                    if (p.value !== 'other') {
-                                                                        setCustomPlatformName('');
-                                                                    }
-                                                                }}
-                                                                className="w-full px-3 py-2 text-left hover:bg-theme-primary hover:bg-opacity-10 flex items-center gap-2 transition-all duration-200 last:rounded-b-lg"
-                                                            >
-                                                                <div className={`w-6 h-6 rounded-md ${p.color} flex items-center justify-center text-white text-sm shadow-md`}>
-                                                                    <FontAwesomeIcon icon={p.icon} className="w-4 h-4" />
-                                                                </div>
-                                                                <span className="text-theme-text font-medium text-sm">{p.name}</span>
-                                                            </button>
-                                                        ));
-                                                    })()}
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Custom Platform Name Input for Main Form */}
-                            {platform === 'other' && (
-                                <div>
-                                    <label className="text-sm font-semibold text-theme-text mb-2 flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
-                                        Custom Platform Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={customPlatformName}
-                                        onChange={(e) => setCustomPlatformName(e.target.value)}
-                                        placeholder="Enter platform name (e.g., MyBank, School Portal)"
-                                        className="w-full px-3 py-2 border border-theme-secondary rounded-lg focus:ring-1 focus:ring-theme-primary focus:border-theme-primary bg-theme-background text-theme-text hover:border-theme-primary transition-all duration-200 shadow-md hover:shadow-lg focus:shadow-lg"
-                                    />
-                                </div>
-                            )}
-
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                {/* Username - Enhanced (Reduced size) */}
-                                <div>
-                                    <label className="text-sm font-semibold text-theme-text mb-2 flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                                        Username/Email
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            placeholder="Enter username or email"
-                                            value={username}
-                                            onChange={(e) => setUsername(e.target.value)}
-                                            className="w-full px-3 py-2 border border-theme-secondary rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-theme-background text-theme-text hover:border-blue-400 transition-all duration-200 shadow-md hover:shadow-lg focus:shadow-lg text-sm"
-                                        />
-                                        <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none">
-                                            <User className="w-4 h-4 text-theme-text-transparent" />
-                                        </div>
+                    <div className="w-full flex justify-center items-cenetr">
+                        <div className="w-[60%] bg-gradient-to-br from-theme-accent to-theme-accent-transparent rounded-lg shadow-xl hover:shadow-2xl p-4 mb-4 border border-theme-primary border-opacity-20 backdrop-blur-sm transition-shadow duration-300">
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-lg font-bold text-theme-text flex items-center gap-2">
+                                    <div className="w-6 h-6 bg-theme-primary rounded-md flex items-center justify-center">
+                                        {editId ? <Edit2 className="w-3.5 h-3.5 text-white" /> : <Plus className="w-3.5 h-3.5 text-white" />}
                                     </div>
-                                </div>
-
-                                {/* Password - Enhanced (Reduced size) */}
-                                <div>
-                                    <label className="text-sm font-semibold text-theme-text mb-2 flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                                        Password
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type={showPasswordInForm ? "text" : "password"}
-                                            placeholder="Enter password"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            className="w-full px-3 py-2 pr-10 border border-theme-secondary rounded-lg focus:ring-1 focus:ring-green-500 focus:border-green-500 bg-theme-background text-theme-text hover:border-green-400 transition-all duration-200 shadow-md hover:shadow-lg focus:shadow-lg text-sm"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPasswordInForm(!showPasswordInForm)}
-                                            className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-theme-text-transparent hover:text-theme-text transition-colors duration-200"
-                                            title={showPasswordInForm ? 'Hide password' : 'Show password'}
-                                        >
-                                            {showPasswordInForm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Form Actions - Enhanced (Reduced size) */}
-                            <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-theme-secondary">
-                                <button
-                                    onClick={handleAddPassword}
-                                    disabled={isLoading || !username.trim() || !password.trim() || !platform || (platform === 'other' && !customPlatformName.trim())}
-                                    className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 disabled:from-theme-secondary disabled:to-theme-secondary text-white px-4 py-2 rounded-lg transition-all duration-200 font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 text-sm"
-                                >
-                                    {isLoading ? (
-                                        <>
-                                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                                            Saving...
-                                        </>
-                                    ) : (
-                                        <>
-                                            {editId ? <Save className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                                            {editId ? 'Update Password' : 'Add Password'}
-                                        </>
-                                    )}
-                                </button>
+                                    {editId ? 'Edit Password' : 'Add New Password'}
+                                </h2>
                                 <button
                                     onClick={() => {
                                         setShowAddForm(false);
                                         setEditId(null);
                                         setUsername('');
                                         setPassword('');
-                                        setPlatform('');
-                                        setPlatformSearchQuery('');
+                                        setPlatform('google');
                                         setCustomPlatformName('');
                                     }}
-                                    className="bg-theme-secondary hover:bg-theme-secondary-transparent text-theme-text px-4 py-2 rounded-lg transition-all duration-200 font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-1.5 text-sm"
+                                    className="text-theme-text-transparent hover:text-theme-text p-1.5 rounded hover:bg-theme-secondary transition-all duration-200"
+                                    title="Close form"
                                 >
                                     <X className="w-4 h-4" />
-                                    Cancel
                                 </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                {/* Platform Selection - Enhanced (Reduced size) */}
+                                <div className="relative">
+                                    <label className="text-sm font-semibold text-theme-text mb-2 flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 bg-theme-primary rounded-full"></span>
+                                        Platform
+                                    </label>
+                                    <div className="relative">
+                                        {/* Platform Selection Button/Input */}
+                                        {platform ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setShowPlatformDropdown(!showPlatformDropdown);
+                                                    setPlatformSearchQuery('');
+                                                }}
+                                                className="w-full px-3 py-2 border border-theme-secondary rounded-lg focus:ring-1 focus:ring-theme-primary focus:border-theme-primary bg-theme-background text-theme-text flex items-center justify-between hover:border-theme-primary transition-all duration-200 shadow-md hover:shadow-lg"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-6 h-6 rounded-md ${getPlatformInfo(platform).color} flex items-center justify-center text-white text-sm shadow-sm`}>
+                                                        <FontAwesomeIcon icon={getPlatformInfo(platform).icon} className="w-4 h-4" />
+                                                    </div>
+                                                    <span className="font-medium text-sm">{getPlatformInfo(platform).name}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setPlatform('');
+                                                            setPlatformSearchQuery('');
+                                                            setCustomPlatformName('');
+                                                        }}
+                                                        className="p-1 hover:bg-theme-secondary-transparent rounded-full transition-colors"
+                                                        title="Clear selection"
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showPlatformDropdown ? 'rotate-180' : ''}`} />
+                                                </div>
+                                            </button>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setShowPlatformDropdown(true);
+                                                    // Auto-focus the search input
+                                                    setTimeout(() => {
+                                                        const searchInput = document.getElementById('platform-search-input');
+                                                        searchInput?.focus();
+                                                    }, 100);
+                                                }}
+                                                className="w-full px-3 py-2 border border-theme-secondary rounded-lg focus:ring-1 focus:ring-theme-primary focus:border-theme-primary bg-theme-background text-theme-text flex items-center justify-between hover:border-theme-primary transition-all duration-200 shadow-md hover:shadow-lg"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <Search className="w-4 h-4 text-theme-text opacity-50" />
+                                                    <span className="text-theme-text opacity-75 text-sm">Search and select platform...</span>
+                                                </div>
+                                                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showPlatformDropdown ? 'rotate-180' : ''}`} />
+                                            </button>
+                                        )}
+
+                                        {/* Dropdown with Search */}
+                                        {showPlatformDropdown && (
+                                            <>
+                                                <div
+                                                    className="fixed inset-0 z-10"
+                                                    onClick={() => {
+                                                        setShowPlatformDropdown(false);
+                                                        setPlatformSearchQuery('');
+                                                    }}
+                                                />
+                                                <div className="absolute z-20 w-full mt-1 bg-theme-background border border-theme-secondary rounded-lg shadow-xl max-h-64 backdrop-blur-sm">
+                                                    {/* Search Input */}
+                                                    <div className="sticky top-0 bg-theme-background border-b border-theme-secondary p-2 rounded-t-lg">
+                                                        <div className="relative">
+                                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-theme-text opacity-50" />
+                                                            <input
+                                                                id="platform-search-input"
+                                                                type="text"
+                                                                placeholder="Search platforms..."
+                                                                value={platformSearchQuery}
+                                                                onChange={(e) => setPlatformSearchQuery(e.target.value)}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Escape') {
+                                                                        setShowPlatformDropdown(false);
+                                                                        setPlatformSearchQuery('');
+                                                                    } else if (e.key === 'Enter') {
+                                                                        const filteredPlatforms = PLATFORMS.filter(p =>
+                                                                            p.name.toLowerCase().includes(platformSearchQuery.toLowerCase()) ||
+                                                                            p.value.toLowerCase().includes(platformSearchQuery.toLowerCase())
+                                                                        );
+                                                                        if (filteredPlatforms.length > 0) {
+                                                                            setPlatform(filteredPlatforms[0].value);
+                                                                            setShowPlatformDropdown(false);
+                                                                            setPlatformSearchQuery('');
+                                                                            if (filteredPlatforms[0].value !== 'other') {
+                                                                                setCustomPlatformName('');
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }}
+                                                                className="w-full pl-10 pr-4 py-2 bg-theme-secondary-transparent border border-theme-text-transparent/20 rounded-lg text-theme-text placeholder-theme-text/50 focus:border-theme-primary focus:ring-1 focus:ring-theme-primary/20 transition-all duration-200"
+                                                                autoComplete="off"
+                                                            />
+                                                            {platformSearchQuery && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setPlatformSearchQuery('')}
+                                                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-theme-secondary-transparent rounded-full transition-colors"
+                                                                >
+                                                                    <X className="w-3 h-3 text-theme-text opacity-50" />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Platform Options */}
+                                                    <div className="max-h-40 overflow-y-auto">
+                                                        {(() => {
+                                                            const filteredPlatforms = PLATFORMS.filter(p =>
+                                                                p.name.toLowerCase().includes(platformSearchQuery.toLowerCase()) ||
+                                                                p.value.toLowerCase().includes(platformSearchQuery.toLowerCase())
+                                                            );
+
+                                                            if (filteredPlatforms.length === 0) {
+                                                                return (
+                                                                    <div className="px-3 py-4 text-center text-theme-text opacity-50 text-sm">
+                                                                        No platforms found for "{platformSearchQuery}"
+                                                                    </div>
+                                                                );
+                                                            }
+
+                                                            return filteredPlatforms.map((p) => (
+                                                                <button
+                                                                    key={p.value}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setPlatform(p.value);
+                                                                        setShowPlatformDropdown(false);
+                                                                        setPlatformSearchQuery('');
+                                                                        if (p.value !== 'other') {
+                                                                            setCustomPlatformName('');
+                                                                        }
+                                                                    }}
+                                                                    className="w-full px-3 py-2 text-left hover:bg-theme-primary hover:bg-opacity-10 flex items-center gap-2 transition-all duration-200 last:rounded-b-lg"
+                                                                >
+                                                                    <div className={`w-6 h-6 rounded-md ${p.color} flex items-center justify-center text-white text-sm shadow-md`}>
+                                                                        <FontAwesomeIcon icon={p.icon} className="w-4 h-4" />
+                                                                    </div>
+                                                                    <span className="text-theme-text font-medium text-sm">{p.name}</span>
+                                                                </button>
+                                                            ));
+                                                        })()}
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Custom Platform Name Input for Main Form */}
+                                {platform === 'other' && (
+                                    <div>
+                                        <label className="text-sm font-semibold text-theme-text mb-2 flex items-center gap-2">
+                                            <span className="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
+                                            Custom Platform Name
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={customPlatformName}
+                                            onChange={(e) => setCustomPlatformName(e.target.value)}
+                                            placeholder="Enter platform name (e.g., MyBank, School Portal)"
+                                            className="w-full px-3 py-2 border border-theme-secondary rounded-lg focus:ring-1 focus:ring-theme-primary focus:border-theme-primary bg-theme-background text-theme-text hover:border-theme-primary transition-all duration-200 shadow-md hover:shadow-lg focus:shadow-lg"
+                                        />
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                    {/* Username - Enhanced (Reduced size) */}
+                                    <div>
+                                        <label className="text-sm font-semibold text-theme-text mb-2 flex items-center gap-2">
+                                            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                                            Username/Email
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                placeholder="Enter username or email"
+                                                value={username}
+                                                onChange={(e) => setUsername(e.target.value)}
+                                                className="w-full px-3 py-2 border border-theme-secondary rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-theme-background text-theme-text hover:border-blue-400 transition-all duration-200 shadow-md hover:shadow-lg focus:shadow-lg text-sm"
+                                            />
+                                            <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none">
+                                                <User className="w-4 h-4 text-theme-text-transparent" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Password - Enhanced (Reduced size) */}
+                                    <div>
+                                        <label className="text-sm font-semibold text-theme-text mb-2 flex items-center gap-2">
+                                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                                            Password
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                type={showPasswordInForm ? "text" : "password"}
+                                                placeholder="Enter password"
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                className="w-full px-3 py-2 pr-10 border border-theme-secondary rounded-lg focus:ring-1 focus:ring-green-500 focus:border-green-500 bg-theme-background text-theme-text hover:border-green-400 transition-all duration-200 shadow-md hover:shadow-lg focus:shadow-lg text-sm"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPasswordInForm(!showPasswordInForm)}
+                                                className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-theme-text-transparent hover:text-theme-text transition-colors duration-200"
+                                                title={showPasswordInForm ? 'Hide password' : 'Show password'}
+                                            >
+                                                {showPasswordInForm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Form Actions - Enhanced (Reduced size) */}
+                                <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-theme-secondary">
+                                    <button
+                                        onClick={handleAddPassword}
+                                        disabled={isLoading || !username.trim() || !password.trim() || !platform || (platform === 'other' && !customPlatformName.trim())}
+                                        className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 disabled:from-theme-secondary disabled:to-theme-secondary text-white px-4 py-2 rounded-lg transition-all duration-200 font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 text-sm"
+                                    >
+                                        {isLoading ? (
+                                            <>
+                                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                                Saving...
+                                            </>
+                                        ) : (
+                                            <>
+                                                {editId ? <Save className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                                {editId ? 'Update Password' : 'Add Password'}
+                                            </>
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setShowAddForm(false);
+                                            setEditId(null);
+                                            setUsername('');
+                                            setPassword('');
+                                            setPlatform('');
+                                            setPlatformSearchQuery('');
+                                            setCustomPlatformName('');
+                                        }}
+                                        className="bg-theme-secondary hover:bg-theme-secondary-transparent text-theme-text px-4 py-2 rounded-lg transition-all duration-200 font-semibold shadow-lg hover:shadow-xl flex items-center justify-center gap-1.5 text-sm"
+                                    >
+                                        <X className="w-4 h-4" />
+                                        Cancel
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
