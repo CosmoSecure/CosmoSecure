@@ -157,9 +157,13 @@ const fetchOldPasswords = async (userId: string): Promise<{ password: string; da
 
 const fetchPasswordStats = async (userId: string): Promise<PasswordStats> => {
     try {
+        console.log('📊 Fetching password stats for user:', userId);
         const stats = await invoke<{
             total_passwords: number;
             weak_passwords_count: number;
+            fair_passwords_count: number;
+            good_passwords_count: number;
+            strong_passwords_count: number;
             weak_entries: Array<{
                 aid: string;
                 plt: string;
@@ -168,13 +172,17 @@ const fetchPasswordStats = async (userId: string): Promise<PasswordStats> => {
             }>;
         }>('get_password_stats', { ui: userId });
 
-        const weakCount = stats.weak_passwords_count;
+        console.log('📊 Raw stats from backend:', stats);
+        console.log('📊 Weak passwords details:', stats.weak_entries);
+        // const weakCount = stats.weak_passwords_count;
         const totalCount = stats.total_passwords;
-        // Calculate accurate password strength distribution
-        const strongCount = Math.max(0, totalCount - weakCount - Math.floor(totalCount * 0.2));
-        const mediumCount = Math.max(0, totalCount - weakCount - strongCount);
+        // Use real password strength distribution from backend
+        const fairCount = stats.fair_passwords_count;
+        const goodCount = stats.good_passwords_count;
+        const strongCount = stats.strong_passwords_count;
+        const mediumCount = fairCount + goodCount; // Combine fair and good as "medium" for display
 
-        return {
+        const result = {
             totalPasswords: totalCount,
             weakPasswords: stats.weak_entries.map(entry => ({
                 password: `${entry.plt} (${entry.aun})`,
@@ -183,6 +191,9 @@ const fetchPasswordStats = async (userId: string): Promise<PasswordStats> => {
             strongPasswords: strongCount,
             mediumPasswords: mediumCount
         };
+
+        console.log('📊 Processed password stats:', result);
+        return result;
     } catch (error) {
         console.error('Error fetching password stats:', error);
         return {
@@ -214,8 +225,8 @@ const calculateSecurityOverview = (user: any, passwordStats: PasswordStats): Sec
         const mediumRatio = mediumCount / totalPasswords;
         const strongRatio = strongCount / totalPasswords;
 
-        // More balanced scoring that rewards good passwords
-        const baseScore = (strongRatio * 75) + (mediumRatio * 50) + (weakRatio * 15);
+        // Realistic scoring that properly penalizes weak passwords
+        const baseScore = (strongRatio * 75) + (mediumRatio * 45) + (weakRatio * 5);
         securityScore += Math.round(baseScore);
 
         // Bonus for having multiple strong passwords
@@ -223,9 +234,13 @@ const calculateSecurityOverview = (user: any, passwordStats: PasswordStats): Sec
             securityScore += 5;
         }
 
-        // Moderate penalty only if majority (>60%) are weak
-        if (weakRatio > 0.6) {
-            securityScore -= 10;
+        // Significant penalties for high weak password ratios
+        if (weakRatio > 0.7) {
+            securityScore -= 25; // Heavy penalty for >70% weak
+        } else if (weakRatio > 0.5) {
+            securityScore -= 15; // Moderate penalty for >50% weak
+        } else if (weakRatio > 0.3) {
+            securityScore -= 8; // Light penalty for >30% weak
         }
 
         // Bonus for diversity - having some medium passwords shows progression
@@ -283,7 +298,7 @@ const calculateSecurityOverview = (user: any, passwordStats: PasswordStats): Sec
 
 // Dashboard Component
 const Dashboard: React.FC = () => {
-    const { user, isLoading } = useUser();
+    const { user, isLoading, refreshUserFromBackend } = useUser();
     const navigate = useNavigate();
     const quick = useQuickNotifications();
     const [email, setEmail] = useState('');
@@ -304,6 +319,7 @@ const Dashboard: React.FC = () => {
     });
 
     const [oldPasswords, setOldPasswords] = useState<{ password: string; daysOld: number }[]>([]);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     const [openWeakPasswords, setOpenWeakPasswords] = useState(false);
     const [openOldPasswords, setOpenOldPasswords] = useState(false);
@@ -572,6 +588,28 @@ const Dashboard: React.FC = () => {
     };
 
     // Fetch password statistics when user data is available
+    // Function to refresh dashboard data
+    const refreshDashboard = async () => {
+        console.log('🔄 Dashboard refresh triggered');
+        // Clear current data to force fresh fetch
+        setPasswordStats({
+            totalPasswords: 0,
+            weakPasswords: [],
+            strongPasswords: 0,
+            mediumPasswords: 0
+        });
+        setOldPasswords([]);
+
+        // Also refresh user data from backend to ensure freshness
+        try {
+            await refreshUserFromBackend();
+        } catch (error) {
+            console.error('Error refreshing user data:', error);
+        }
+
+        setRefreshTrigger(prev => prev + 1);
+    };
+
     useEffect(() => {
         const fetchStats = async () => {
             if (!user?.userId) return;
@@ -593,7 +631,19 @@ const Dashboard: React.FC = () => {
         };
 
         fetchStats();
-    }, [user?.userId, user?.maxPasswordCount, user?.masterPassword?.isSet]); // Fetch stats when relevant user data changes
+    }, [user?.userId, user?.maxPasswordCount, user?.masterPassword?.isSet, refreshTrigger]); // Fetch stats when relevant user data changes or refresh is triggered
+
+    // Auto-refresh when window/tab becomes visible (user returns from other components)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (!document.hidden && user?.userId) {
+                refreshDashboard();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [user?.userId]);
 
     if (isLoading) {
         return (
@@ -624,7 +674,19 @@ const Dashboard: React.FC = () => {
                                 <h2 className="text-lg sm:text-xl font-bold flex items-center min-w-0 flex-1">
                                     <SecurityIcon className="mr-2 break-all" /> <span className="truncate">Security Dashboard</span>
                                 </h2>
-                                <div className="flex-shrink-0 self-start sm:self-center">
+                                <div className="flex items-center gap-2 flex-shrink-0 self-start sm:self-center">
+                                    <IconButton
+                                        onClick={refreshDashboard}
+                                        title="Refresh Dashboard"
+                                        sx={{
+                                            color: 'rgb(var(--theme-text))',
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                                            }
+                                        }}
+                                    >
+                                        <RefreshIcon />
+                                    </IconButton>
                                     <Chip
                                         label={passwordStats.totalPasswords === 0 ? 'Getting Started' : securityOverview.vaultStatus}
                                         color={
@@ -962,7 +1024,7 @@ const Dashboard: React.FC = () => {
                                         </div>
                                         <button
                                             onClick={() => navigate('/vault')}
-                                            className="text-xs bg-green-200 px-2 py-1 rounded hover:bg-green-300 transition-colors"
+                                            className="text-xs bg-green-400 px-2 py-1 rounded hover:bg-green-500 transition-colors"
                                         >
                                             View Vault
                                         </button>
@@ -989,7 +1051,7 @@ const Dashboard: React.FC = () => {
                             <List
                                 component="div"
                                 disablePadding
-                                className="bg-transparent rounded-lg mt-2 shadow-inner overflow-y-auto max-h-64 space-y-2 p-2"
+                                className="bg-transparent rounded-lg mt-2 shadow-inner overflow-y-auto overflow-x-hidden max-h-64 space-y-2 p-2 w-full"
                             >
                                 {passwordStats.weakPasswords.length > 0 ? (
                                     passwordStats.weakPasswords.map((entry, index) => (
@@ -1001,24 +1063,37 @@ const Dashboard: React.FC = () => {
                                                 paddingLeft: 1.5,
                                                 paddingRight: 1.5,
                                                 minHeight: 0,
-                                                marginBottom: '4px'
+                                                marginBottom: '4px',
+                                                width: '100%',
+                                                maxWidth: '100%'
                                             }}
                                             className="hover:text-theme-text shadow-sm hover:shadow-md transition-all rounded-lg flex items-center"
                                         >
-                                            <ListItemIcon sx={{ minWidth: 32, marginRight: 0 }}>
+                                            <ListItemIcon sx={{ minWidth: 32, marginRight: 0, flexShrink: 0 }}>
                                                 <WarningIcon color="error" fontSize="small" />
                                             </ListItemIcon>
                                             <ListItemText
                                                 primary={entry.password}
                                                 secondary={`Security Score: ${entry.score}/4`}
-                                                sx={{ margin: 0 }}
-                                                primaryTypographyProps={{ fontSize: '0.875rem' }}
-                                                secondaryTypographyProps={{ fontSize: '0.75rem' }}
+                                                sx={{
+                                                    margin: 0,
+                                                    minWidth: 0,
+                                                    overflow: 'hidden'
+                                                }}
+                                                primaryTypographyProps={{
+                                                    fontSize: '0.875rem',
+                                                    noWrap: true,
+                                                    style: { overflow: 'hidden', textOverflow: 'ellipsis' }
+                                                }}
+                                                secondaryTypographyProps={{
+                                                    fontSize: '0.75rem',
+                                                    noWrap: true
+                                                }}
                                             />
                                         </ListItemButton>
                                     ))
                                 ) : (
-                                    <div className="text-theme-text-transparent p-4 text-center">
+                                    <div className="text-theme-text-transparent p-4 text-center w-full">
                                         <CheckCircleIcon className="text-green-500 mb-2" />
                                         <div className="text-sm">No weak passwords found!</div>
                                         <div className="text-xs opacity-75">Your vault is secure</div>
@@ -1065,7 +1140,11 @@ const Dashboard: React.FC = () => {
                             <List
                                 component="div"
                                 disablePadding
-                                className="bg-transparent rounded-lg mt-2 shadow-inner overflow-y-auto max-h-64 space-y-2 p-2"
+                                className="bg-transparent rounded-lg mt-2 shadow-inner overflow-y-auto overflow-x-hidden max-h-64 space-y-2 p-2"
+                                sx={{
+                                    width: '100%',
+                                    maxWidth: '100%'
+                                }}
                             >
                                 {oldPasswords.length > 0 ? (
                                     oldPasswords.map((entry, index) => (
@@ -1077,19 +1156,32 @@ const Dashboard: React.FC = () => {
                                                 paddingLeft: 1.5,
                                                 paddingRight: 1.5,
                                                 minHeight: 0,
-                                                marginBottom: '4px'
+                                                marginBottom: '4px',
+                                                width: '100%',
+                                                maxWidth: '100%',
+                                                overflow: 'hidden'
                                             }}
                                             className="hover:text-theme-text shadow-sm hover:shadow-md transition-all duration-300 rounded-lg flex items-center"
                                         >
-                                            <ListItemIcon sx={{ minWidth: 32, marginRight: 0 }}>
+                                            <ListItemIcon sx={{ minWidth: 32, marginRight: 0, flexShrink: 0 }}>
                                                 <UpdateIcon color="warning" fontSize="small" />
                                             </ListItemIcon>
                                             <ListItemText
                                                 primary={entry.password}
                                                 secondary={`Last updated: ${entry.daysOld} days ago`}
-                                                sx={{ margin: 0 }}
-                                                primaryTypographyProps={{ fontSize: '0.875rem' }}
-                                                secondaryTypographyProps={{ fontSize: '0.75rem' }}
+                                                sx={{ margin: 0, overflow: 'hidden' }}
+                                                primaryTypographyProps={{
+                                                    fontSize: '0.875rem',
+                                                    noWrap: true,
+                                                    textOverflow: 'ellipsis',
+                                                    overflow: 'hidden'
+                                                }}
+                                                secondaryTypographyProps={{
+                                                    fontSize: '0.75rem',
+                                                    noWrap: true,
+                                                    textOverflow: 'ellipsis',
+                                                    overflow: 'hidden'
+                                                }}
                                             />
                                         </ListItemButton>
                                     ))

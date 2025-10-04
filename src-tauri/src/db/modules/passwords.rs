@@ -358,16 +358,31 @@ pub async fn get_password_stats(
 
             let total_passwords = active_entries.len();
 
-            // Count weak passwords (strength < 3) without decrypting them
+            // Count passwords by strength categories to match frontend categorization
             let weak_passwords_count = active_entries
                 .iter()
-                .filter(|entry| entry.password_strength.unwrap_or(0) < 3)
+                .filter(|entry| entry.password_strength.unwrap_or(0) <= 1)
+                .count();
+
+            let fair_passwords_count = active_entries
+                .iter()
+                .filter(|entry| entry.password_strength.unwrap_or(0) == 2)
+                .count();
+
+            let good_passwords_count = active_entries
+                .iter()
+                .filter(|entry| entry.password_strength.unwrap_or(0) == 3)
+                .count();
+
+            let strong_passwords_count = active_entries
+                .iter()
+                .filter(|entry| entry.password_strength.unwrap_or(0) >= 4)
                 .count();
 
             // Get weak password entries (without decrypted passwords)
             let weak_entries: Vec<serde_json::Value> = active_entries
                 .iter()
-                .filter(|entry| entry.password_strength.unwrap_or(0) < 3)
+                .filter(|entry| entry.password_strength.unwrap_or(0) <= 1)
                 .map(|entry| {
                     serde_json::json!({
                         "aid": entry.entry_id,
@@ -381,6 +396,9 @@ pub async fn get_password_stats(
             Ok(serde_json::json!({
                 "total_passwords": total_passwords,
                 "weak_passwords_count": weak_passwords_count,
+                "fair_passwords_count": fair_passwords_count,
+                "good_passwords_count": good_passwords_count,
+                "strong_passwords_count": strong_passwords_count,
                 "weak_entries": weak_entries
             }))
         }

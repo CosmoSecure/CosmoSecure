@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useUser } from "../contexts/UserContext";
+import { useQuickNotifications } from '../utils/notifications';
 import {
     Delete as DeleteIcon,
     Warning as WarningIcon,
@@ -20,6 +21,7 @@ interface PasswordEntry {
     entry_id: string;
     account_name: string;
     username: string;
+    last_update: string | null; // lup field - last update timestamp
     deletion_info: DeletedPasswordEntry | null; //! Deletion metadata
 }
 
@@ -40,18 +42,37 @@ const formatDeletionDate = (dateString: string) => {
     };
 };
 
-const calculateDeletionStatus = (deletedAt: string) => {
+const calculateDeletionStatus = (deletedAt: string, lastUpdate?: string | null) => {
     const deletedDate = new Date(deletedAt);
     const now = new Date();
     const diffTime = now.getTime() - deletedDate.getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     const remainingDays = Math.max(0, 30 - diffDays);
 
-    if (diffDays === 0) return "Deleted today";
-    if (diffDays === 1) return "Deleted yesterday";
-    if (diffDays < 7) return `Deleted ${diffDays} days ago`;
-    if (remainingDays > 0) return `${remainingDays} days until permanent deletion`;
-    return "Scheduled for permanent deletion";
+    let ageInfo = "";
+    if (lastUpdate) {
+        // Handle MongoDB date format: {$date: {$numberLong: "timestamp"}}
+        let timestamp;
+        if (typeof lastUpdate === 'object' && lastUpdate['$date'] && lastUpdate['$date']['$numberLong']) {
+            timestamp = parseInt(lastUpdate['$date']['$numberLong']);
+        } else if (typeof lastUpdate === 'string' || typeof lastUpdate === 'number') {
+            timestamp = typeof lastUpdate === 'string' ? parseInt(lastUpdate) : lastUpdate;
+        }
+
+        if (timestamp && !isNaN(timestamp)) {
+            const lastUpdateDate = new Date(timestamp);
+            const passwordAge = Math.floor((deletedDate.getTime() - lastUpdateDate.getTime()) / (1000 * 60 * 60 * 24));
+            if (passwordAge > 0) {
+                ageInfo = ` (password was ${passwordAge} days old)`;
+            }
+        }
+    }
+
+    if (diffDays === 0) return `Deleted today${ageInfo}`;
+    if (diffDays === 1) return `Deleted yesterday${ageInfo}`;
+    if (diffDays < 7) return `Deleted ${diffDays} days ago${ageInfo}`;
+    if (remainingDays > 0) return `${remainingDays} days until permanent deletion${ageInfo}`;
+    return `Scheduled for permanent deletion${ageInfo}`;
 };
 
 // Memoized Password Card Component for better performance
@@ -145,6 +166,7 @@ PasswordCard.displayName = 'PasswordCard';
 
 const Trash: React.FC = () => {
     const { user, isLoading: userLoading } = useUser();
+    const quick = useQuickNotifications();
     const [deletedPasswords, setDeletedPasswords] = useState<PasswordEntry[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -186,6 +208,7 @@ const Trash: React.FC = () => {
 
             const mappedPasswords: PasswordEntry[] = response.map((entry) => {
                 let deletedAt: string | null = null;
+                let lastUpdate: string | null = null;
 
                 if (entry.d?.d_at?.$date?.$numberLong) {
                     const timestamp = parseInt(entry.d.d_at.$date.$numberLong, 10);
@@ -194,10 +217,23 @@ const Trash: React.FC = () => {
                     }
                 }
 
+                // Extract last update timestamp (lup field)
+                if (entry.lup) {
+                    if (entry.lup.$date?.$numberLong) {
+                        const lupTimestamp = parseInt(entry.lup.$date.$numberLong, 10);
+                        if (!isNaN(lupTimestamp) && lupTimestamp > 0) {
+                            lastUpdate = lupTimestamp.toString();
+                        }
+                    } else if (typeof entry.lup === 'string' || typeof entry.lup === 'number') {
+                        lastUpdate = entry.lup.toString();
+                    }
+                }
+
                 return {
                     entry_id: entry.aid,
                     account_name: entry.plt,
                     username: entry.aun,
+                    last_update: lastUpdate,
                     deletion_info: deletedAt ? { deleted_at: deletedAt } : null,
                 };
             });
@@ -215,21 +251,29 @@ const Trash: React.FC = () => {
     //* Restore password function
     const restorePassword = useCallback(async (entryId: string) => {
         if (!user?.userId) {
-            throw new Error("Failed to get user data or user ID is missing.");
+            quick.error("User Error", "Failed to get user data or user ID is missing.");
+            return;
         }
         try {
             await invoke("restore_password", { userId: user.userId, entryId: entryId });
             setDeletedPasswords((prev) =>
                 prev.filter((password) => password.entry_id !== entryId)
             );
-            // You could add a success toast notification here
+            quick.success("Password Restored", "Password has been successfully restored to your vault.");
             console.log("Password restored successfully");
-        } catch (err) {
-            // Better error handling - could be replaced with toast notification
+        } catch (err: any) {
             console.error("Error restoring password:", err);
-            alert("Failed to restore the password. Please try again.");
+
+            // Handle specific error cases
+            if (err?.message?.includes("limit") || err?.message?.includes("maximum") || err?.message?.includes("capacity")) {
+                quick.warning("Storage Limit Reached", "Cannot restore password. You have reached your storage limit. Please delete some passwords or upgrade your plan.");
+            } else if (err?.message?.includes("not found")) {
+                quick.error("Password Not Found", "The password entry no longer exists or has already been permanently deleted.");
+            } else {
+                quick.error("Restore Failed", err?.message || "Failed to restore the password. Please try again.");
+            }
         }
-    }, [user?.userId]);
+    }, [user?.userId, quick]);
 
     // Permanently delete password function
     const deletePasswordEntry = useCallback(async (entryId: string) => {
@@ -239,14 +283,19 @@ const Trash: React.FC = () => {
                 prev.filter((password) => password.entry_id !== entryId)
             );
             setShowDeleteConfirm(null); // Close the modal
-            // You could add a success toast notification here
+            quick.success("Password Deleted", "Password has been permanently deleted from your vault.");
             console.log("Password permanently deleted");
-        } catch (err) {
+        } catch (err: any) {
             console.error("Error deleting password:", err);
-            alert("Failed to permanently delete the password. Please try again.");
             setShowDeleteConfirm(null); // Close the modal even on error
+
+            if (err?.message?.includes("not found")) {
+                quick.warning("Already Deleted", "The password entry has already been permanently deleted.");
+            } else {
+                quick.error("Delete Failed", err?.message || "Failed to permanently delete the password. Please try again.");
+            }
         }
-    }, []);
+    }, [quick]);
 
     // Handle delete confirmation
     const handleDeleteClick = useCallback((entryId: string) => {
@@ -300,7 +349,7 @@ const Trash: React.FC = () => {
             formattedDeletion: password.deletion_info?.deleted_at ?
                 formatDeletionDate(password.deletion_info.deleted_at) : null,
             deletionStatus: password.deletion_info?.deleted_at ?
-                calculateDeletionStatus(password.deletion_info.deleted_at) : null
+                calculateDeletionStatus(password.deletion_info.deleted_at, password.last_update) : null
         }));
     }, [filteredDeletedPasswords]);
 

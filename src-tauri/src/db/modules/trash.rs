@@ -46,6 +46,11 @@ pub async fn add_to_trash(
     user_id: String,
     entry_id: String,
 ) -> Result<String, String> {
+    println!(
+        "🗑️ add_to_trash called with user_id: {}, entry_id: {}",
+        user_id, entry_id
+    );
+
     let passwords_collection = state
         .get_database("password_manager")
         .collection::<PasswordEntries>("password_entries");
@@ -53,16 +58,62 @@ pub async fn add_to_trash(
         .get_database("password_manager")
         .collection::<User>("users");
 
-    let user_filter = doc! { "ui": &user_id };
+    // First, verify the password entry exists and is not already deleted
+    let verify_filter = doc! {
+        "ui": &user_id,
+        "entries.aid": &entry_id
+    };
 
-    // Update the user's password_count in the users collection
+    println!("🔍 Verifying entry with filter: {:?}", verify_filter);
+
+    let existing_entry = passwords_collection
+        .find_one(verify_filter)
+        .await
+        .map_err(|e| format!("Error verifying password entry: {}", e))?;
+
+    if let Some(password_entries) = existing_entry {
+        println!(
+            "📄 Found password entries document with {} entries",
+            password_entries.entries.len()
+        );
+
+        // Check if the specific entry exists and is not already deleted
+        let entry_exists = password_entries.entries.iter().any(|entry| {
+            let exists = entry.entry_id == entry_id && entry.deleted.is_none();
+            println!(
+                "🔍 Checking entry {}: exists={}, deleted={:?}",
+                entry.entry_id,
+                entry.entry_id == entry_id,
+                entry.deleted
+            );
+            exists
+        });
+
+        println!("✅ Entry exists and not deleted: {}", entry_exists);
+
+        if !entry_exists {
+            return Err("Password entry not found or already deleted".to_string());
+        }
+    } else {
+        println!(
+            "❌ No password entries document found for user: {}",
+            user_id
+        );
+        return Err("User password entries not found".to_string());
+    }
+
+    // Update the user's password_count in the users collection - this is critical
+    let user_filter = doc! { "ui": &user_id };
     let user_update = doc! {
         "$inc": { "pc.0": -1 }
     };
-    if let Err(e) = user_collection.update_one(user_filter, user_update).await {
-        eprintln!("Failed to update user's password_count: {}", e);
-    }
 
+    user_collection
+        .update_one(user_filter, user_update)
+        .await
+        .map_err(|e| format!("Failed to update user's password_count: {}", e))?;
+
+    // Now move the password to trash
     let filter = doc! { "entries.aid": &entry_id };
     let update = doc! {
         "$set": {
@@ -74,8 +125,36 @@ pub async fn add_to_trash(
     };
 
     match passwords_collection.update_one(filter, update).await {
-        Ok(_) => Ok(entry_id),
-        Err(e) => Err(format!("Error adding password entry to trash: {}", e)),
+        Ok(result) => {
+            if result.matched_count == 0 {
+                // If the password entry wasn't found, we need to revert the count decrease
+                let revert_filter = doc! { "ui": &user_id };
+                let revert_update = doc! {
+                    "$inc": { "pc.0": 1 }
+                };
+                let _ = user_collection
+                    .update_one(revert_filter, revert_update)
+                    .await;
+                Err("Password entry not found".to_string())
+            } else {
+                println!(
+                    "Successfully moved password {} to trash and decremented count for user {}",
+                    entry_id, user_id
+                );
+                Ok(entry_id)
+            }
+        }
+        Err(e) => {
+            // If moving to trash failed, revert the count decrease
+            let revert_filter = doc! { "ui": &user_id };
+            let revert_update = doc! {
+                "$inc": { "pc.0": 1 }
+            };
+            let _ = user_collection
+                .update_one(revert_filter, revert_update)
+                .await;
+            Err(format!("Error adding password entry to trash: {}", e))
+        }
     }
 }
 
