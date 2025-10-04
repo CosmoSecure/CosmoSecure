@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Typography, TextField, Modal, Box } from "@mui/material";
 import { invoke } from "@tauri-apps/api/core";
-import Email_Loading from "./Email_Loading";
 import Email_Button from "./Email_Button";
 
 interface BreachDetails {
@@ -27,12 +26,28 @@ const EmailBreach: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [hasSearched, setHasSearched] = useState<boolean>(false);
     const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+    const [emailError, setEmailError] = useState<string>("");
 
     const [breachData_risk, setBreachData_risk] = useState<any>(null);
 
+    // Email validation regex
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+    const validateEmail = (email: string): boolean => {
+        return emailRegex.test(email);
+    };
+
+    const isValidEmail = email.trim() && validateEmail(email.trim());
+
     const handleCheckBreach = async () => {
+        if (!isValidEmail) {
+            setEmailError("Please enter a valid email address");
+            return;
+        }
+
         setLoading(true);
         setError(null);
+        setEmailError("");
         setBreachData(null);
         setHasSearched(true);
 
@@ -63,31 +78,105 @@ const EmailBreach: React.FC = () => {
 
     return (
         <div className="w-[95%] h-[95%]">
-            <Typography variant="h4" gutterBottom className="text-theme-text">
-                Email Breach Checker
-            </Typography>
-            <div className="flex flex-col justify-center items-center">
-                <TextField
-                    fullWidth
-                    label="Enter Email"
-                    variant="outlined"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="m-4"
-                />
-                <div
-                    className={`w-fit m-4 text-center py-2 px-4 rounded-md text-theme-text font-bold cursor-pointer ${loading || !email ? "bg-gray-400 cursor-not-allowed" : "bg-theme-accent hover:bg-theme-accent"
-                        }`}
-                    onClick={!loading && email ? handleCheckBreach : undefined}
-                >
-                    Check Breach
+            <div className="text-center flex flex-col items-center mb-8">
+                <Typography variant="h4" gutterBottom className="text-theme-text font-bold text-center">
+                    Email Breach Checker
+                </Typography>
+                <Typography variant="body1" className="text-theme-text-transparent opacity-80 max-w-md mx-auto">
+                    Check if your email has been exposed in any known data breaches
+                </Typography>
+            </div>
+            <div className="flex flex-col justify-center items-center max-w-md mx-auto">
+                <div className="w-full relative">
+                    <TextField
+                        fullWidth
+                        label="Enter your email address"
+                        variant="outlined"
+                        type="email"
+                        value={email}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            setEmail(value);
+
+                            // Real-time validation feedback
+                            if (value.trim() && !validateEmail(value.trim())) {
+                                setEmailError("Invalid email format");
+                            } else {
+                                setEmailError("");
+                            }
+                        }}
+                        onKeyPress={(e) => {
+                            if (e.key === 'Enter' && !loading && isValidEmail) {
+                                handleCheckBreach();
+                            }
+                        }}
+                        error={!!emailError}
+                        helperText={emailError}
+                        className="mb-6"
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                backgroundColor: 'rgba(var(--theme-secondary-rgb), 0.1)',
+                                borderRadius: '12px',
+                                '& fieldset': {
+                                    borderColor: 'rgba(var(--theme-primary-rgb), 0.3)',
+                                    borderWidth: '2px'
+                                },
+                                '&:hover fieldset': {
+                                    borderColor: 'rgba(var(--theme-primary-rgb), 0.6)',
+                                },
+                                '&.Mui-focused fieldset': {
+                                    borderColor: 'rgb(var(--theme-primary-rgb))',
+                                },
+                            },
+                            '& .MuiInputLabel-root': {
+                                color: 'rgba(var(--theme-text-rgb), 0.7)',
+                                '&.Mui-focused': {
+                                    color: 'rgb(var(--theme-primary-rgb))',
+                                }
+                            },
+                            '& .MuiOutlinedInput-input': {
+                                color: 'rgb(var(--theme-text-rgb))',
+                                fontSize: '1rem',
+                                padding: '14px 16px'
+                            }
+                        }}
+                        placeholder="example@domain.com"
+                        disabled={loading}
+                    />
                 </div>
 
-                {loading && (
-                    <div className="mt-4 justify-center flex items-center">
-                        <Email_Loading />
-                    </div>
-                )}
+                <div className="mt-6">
+                    <button
+                        className={`w-full py-3 px-6 rounded-xl font-semibold text-lg transition-all duration-300 transform ${loading || !isValidEmail
+                                ? "bg-gray-400 text-gray-600 cursor-not-allowed opacity-60"
+                                : "bg-gradient-to-r from-theme-primary to-theme-primary-hover text-white hover:shadow-lg hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98]"
+                            } flex items-center justify-center gap-2 shadow-md`}
+                        onClick={!loading && isValidEmail ? handleCheckBreach : undefined}
+                        disabled={loading || !isValidEmail}
+                        type="button"
+                    >
+                        {loading ? (
+                            <>
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                <span>Checking...</span>
+                            </>
+                        ) : (
+                            <span>Check for Breaches</span>
+                        )}
+                    </button>
+
+                    {!loading && isValidEmail && (
+                        <div className="mt-3 text-sm text-theme-text-transparent opacity-70 text-center">
+                            Press Enter or click the button to start checking
+                        </div>
+                    )}
+
+                    {!loading && email.trim() && !isValidEmail && (
+                        <div className="mt-3 text-sm text-red-500 text-center">
+                            Please enter a valid email address
+                        </div>
+                    )}
+                </div>
 
                 {!loading && error && (
                     <Typography variant="h6" color="error" className="mt-4">
