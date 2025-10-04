@@ -76,7 +76,7 @@ const PasswordGenerator: React.FC = () => {
                 <div className="text-center">
                     <span className="text-theme-text font-semibold text-lg">Password Length</span>
                 </div>
-                
+
                 <div className="flex items-center space-x-4">
                     <button
                         onClick={() => setPassLen(Math.max(8, passLen - 1))}
@@ -85,7 +85,7 @@ const PasswordGenerator: React.FC = () => {
                     >
                         <Minus size={16} />
                     </button>
-                    
+
                     <div className="flex-1">
                         <TextField
                             value={passLen}
@@ -125,7 +125,7 @@ const PasswordGenerator: React.FC = () => {
                             }}
                         />
                     </div>
-                    
+
                     <button
                         onClick={() => setPassLen(Math.min(64, passLen + 1))}
                         className="p-2 bg-theme-secondary hover:bg-theme-primary text-theme-text rounded-lg transition-colors duration-200"
@@ -135,7 +135,7 @@ const PasswordGenerator: React.FC = () => {
                     </button>
                 </div>
 
-                
+
                 <div className="flex justify-between text-xs text-theme-text-secondary">
                     <span>Min: 8</span>
                     <span>Current: {passLen}</span>
@@ -176,11 +176,10 @@ const PasswordGenerator: React.FC = () => {
                         </div>
                         <button
                             onClick={copyToClipboard}
-                            className={`absolute -top-3 -right-3 p-3 rounded-full shadow-lg transition-all duration-200 flex items-center justify-center ${
-                                copied 
-                                    ? 'bg-green-500 hover:bg-green-600 text-white' 
+                            className={`absolute -top-3 -right-3 p-3 rounded-full shadow-lg transition-all duration-200 flex items-center justify-center ${copied
+                                    ? 'bg-green-500 hover:bg-green-600 text-white'
                                     : 'bg-theme-primary hover:bg-theme-primary-hover text-white hover:scale-110'
-                            }`}
+                                }`}
                             title={copied ? 'Copied!' : 'Copy to clipboard'}
                         >
                             {copied ? (
