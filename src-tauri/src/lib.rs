@@ -1,7 +1,7 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 use crate::db::{
     db_connect::{
-        authenticate_user, check_username_availability, reloadapp_update, tauri_add_user,
+        attempt_database_reconnection, authenticate_user, check_database_connection,
+        check_username_availability, ping_database, reloadapp_update, tauri_add_user,
         update_name_username, update_user_password, user_delete,
     },
     modules::{
@@ -73,10 +73,20 @@ pub async fn run() {
 
     // Initialize the Tauri application
     let client_state = match db::db_connect::connect_rust_db().await {
-        Ok(state) => state,
+        Ok(state) => {
+            if state.is_connected() {
+                println!("Application started with database connection");
+            } else {
+                println!(
+                    "Application started without database connection - running in offline mode"
+                );
+            }
+            state
+        }
         Err(e) => {
-            eprintln!("Failed to connect to the database: {}", e);
-            return;
+            eprintln!("Failed to initialize database connection: {}", e);
+            // Still start the app, but without database functionality
+            db::db_connect::MongoClientState::new(None).await
         }
     };
 
@@ -130,6 +140,9 @@ pub async fn run() {
             force_check_updates,
             get_release_info,
             get_platform_info,
+            check_database_connection,
+            ping_database,
+            attempt_database_reconnection,
         ])
         // .setup(|_app| {
         // // Use an asynchronous runtime to run the database connection
