@@ -14,9 +14,12 @@ pub async fn trash(
     state: State<'_, MongoClientState>,
     ui: String, // User ID
 ) -> Result<Vec<PasswordEntry>, String> {
-    let passwords_collection = state
-        .get_database("password_manager")
-        .collection::<PasswordEntries>("password_entries");
+    if !state.is_connected() {
+        return Err("Database not connected. Cannot retrieve trash.".to_string());
+    }
+
+    let db = state.get_database("password_manager")?;
+    let passwords_collection = db.collection::<PasswordEntries>("password_entries");
 
     let filter = doc! { "ui": &ui }; // Filter by user ID
     println!("Filter : {:#}", filter);
@@ -51,12 +54,13 @@ pub async fn add_to_trash(
         user_id, entry_id
     );
 
-    let passwords_collection = state
-        .get_database("password_manager")
-        .collection::<PasswordEntries>("password_entries");
-    let user_collection = state
-        .get_database("password_manager")
-        .collection::<User>("users");
+    if !state.is_connected() {
+        return Err("Database not connected. Cannot move to trash.".to_string());
+    }
+
+    let db = state.get_database("password_manager")?;
+    let passwords_collection = db.collection::<PasswordEntries>("password_entries");
+    let user_collection = db.collection::<User>("users");
 
     // First, verify the password entry exists and is not already deleted
     let verify_filter = doc! {
@@ -164,13 +168,13 @@ pub async fn restore_password(
     user_id: String,
     entry_id: String,
 ) -> Result<String, String> {
-    let passwords_collection = state
-        .get_database("password_manager")
-        .collection::<PasswordEntries>("password_entries");
+    if !state.is_connected() {
+        return Err("Database not connected. Cannot restore password.".to_string());
+    }
 
-    let user_collection = state
-        .get_database("password_manager")
-        .collection::<User>("users");
+    let db = state.get_database("password_manager")?;
+    let passwords_collection = db.collection::<PasswordEntries>("password_entries");
+    let user_collection = db.collection::<User>("users");
 
     let user_filter = doc! { "ui": &user_id };
     let user_doc = user_collection
@@ -217,9 +221,12 @@ pub async fn restore_password(
 
 #[tauri::command]
 pub async fn clean_old_trash(state: State<'_, MongoClientState>) -> Result<usize, String> {
-    let passwords_collection = state
-        .get_database("password_manager")
-        .collection::<PasswordEntries>("password_entries");
+    if !state.is_connected() {
+        return Err("Database not connected. Cannot clean trash.".to_string());
+    }
+
+    let db = state.get_database("password_manager")?;
+    let passwords_collection = db.collection::<PasswordEntries>("password_entries");
 
     let now = Utc::now();
     let threshold = now - Duration::days(30);
