@@ -12,9 +12,12 @@ pub async fn setup_master_password(
     master_password_hash: String, // Pre-hashed on client
     salt: String,
 ) -> Result<String, String> {
-    let user_collection = state
-        .get_database("password_manager")
-        .collection::<User>("users");
+    if !state.is_connected() {
+        return Err("Database not connected. Cannot setup master password.".to_string());
+    }
+
+    let db = state.get_database("password_manager")?;
+    let user_collection = db.collection::<User>("users");
 
     let master_auth = MasterPasswordAuth {
         password_hash: master_password_hash,
@@ -43,9 +46,12 @@ pub async fn update_user_session(
     user_id: String,
     token_data: String, // Token data from the client
 ) -> Result<serde_json::Value, String> {
-    let user_collection = state
-        .get_database("password_manager")
-        .collection::<User>("users");
+    if !state.is_connected() {
+        return Err("Database not connected. Cannot update user session.".to_string());
+    }
+
+    let db = state.get_database("password_manager")?;
+    let user_collection = db.collection::<User>("users");
 
     let filter = doc! { "ui": &user_id };
 
@@ -72,9 +78,12 @@ pub async fn verify_master_password(
     user_id: String,
     provided_hash: String, // Hash computed on client
 ) -> Result<bool, String> {
-    let user_collection = state
-        .get_database("password_manager")
-        .collection::<User>("users");
+    if !state.is_connected() {
+        return Err("Database not connected. Cannot verify master password.".to_string());
+    }
+
+    let db = state.get_database("password_manager")?;
+    let user_collection = db.collection::<User>("users");
 
     let user_filter = doc! { "ui": &user_id };
     let user_doc = user_collection
@@ -100,9 +109,12 @@ pub async fn get_master_salt(
     state: State<'_, MongoClientState>,
     user_id: String,
 ) -> Result<String, String> {
-    let user_collection = state
-        .get_database("password_manager")
-        .collection::<User>("users");
+    if !state.is_connected() {
+        return Err("Database not connected. Cannot retrieve master salt.".to_string());
+    }
+
+    let db = state.get_database("password_manager")?;
+    let user_collection = db.collection::<User>("users");
 
     let user_filter = doc! { "ui": &user_id };
     let user_doc = user_collection

@@ -16,7 +16,7 @@ pub fn generate_token(user_id: &str) -> Result<String, String> {
     let env_vars = get_env_vars();
 
     let token_var = env_vars
-        .get("TOKEN_SECRET")
+        .get("t")
         .ok_or("TOKEN_SECRET not found")?;
     let key = get_env_key().expect("KEY must be set");
     let sec_key = derive_key(key);
