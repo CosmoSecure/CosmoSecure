@@ -16,7 +16,6 @@ import AssessmentIcon from '@mui/icons-material/Assessment';
 import BuildIcon from '@mui/icons-material/Build';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import RefreshIcon from '@mui/icons-material/Refresh';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { List, ListItemButton, ListItemIcon, ListItemText, Collapse, Chip, LinearProgress, Button, TextField, IconButton } from '@mui/material';
@@ -298,7 +297,7 @@ const calculateSecurityOverview = (user: any, passwordStats: PasswordStats): Sec
 
 // Dashboard Component
 const Dashboard: React.FC = () => {
-    const { user, isLoading, refreshUserFromBackend } = useUser();
+    const { user, isLoading } = useUser();
     const navigate = useNavigate();
     const quick = useQuickNotifications();
     const [email, setEmail] = useState('');
@@ -319,7 +318,7 @@ const Dashboard: React.FC = () => {
     });
 
     const [oldPasswords, setOldPasswords] = useState<{ password: string; daysOld: number }[]>([]);
-    const [refreshTrigger, setRefreshTrigger] = useState(0);
+    // removed refreshTrigger state — dashboard will still fetch on mount and when user changes
 
     const [openWeakPasswords, setOpenWeakPasswords] = useState(false);
     const [openOldPasswords, setOpenOldPasswords] = useState(false);
@@ -588,27 +587,7 @@ const Dashboard: React.FC = () => {
     };
 
     // Fetch password statistics when user data is available
-    // Function to refresh dashboard data
-    const refreshDashboard = async () => {
-        console.log('🔄 Dashboard refresh triggered');
-        // Clear current data to force fresh fetch
-        setPasswordStats({
-            totalPasswords: 0,
-            weakPasswords: [],
-            strongPasswords: 0,
-            mediumPasswords: 0
-        });
-        setOldPasswords([]);
-
-        // Also refresh user data from backend to ensure freshness
-        try {
-            await refreshUserFromBackend();
-        } catch (error) {
-            console.error('Error refreshing user data:', error);
-        }
-
-        setRefreshTrigger(prev => prev + 1);
-    };
+    // Manual dashboard refresh UI removed — data still refreshes on mount and when user changes
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -631,19 +610,7 @@ const Dashboard: React.FC = () => {
         };
 
         fetchStats();
-    }, [user?.userId, user?.maxPasswordCount, user?.masterPassword?.isSet, refreshTrigger]); // Fetch stats when relevant user data changes or refresh is triggered
-
-    // Auto-refresh when window/tab becomes visible (user returns from other components)
-    useEffect(() => {
-        const handleVisibilityChange = () => {
-            if (!document.hidden && user?.userId) {
-                refreshDashboard();
-            }
-        };
-
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    }, [user?.userId]);
+    }, [user?.userId, user?.maxPasswordCount, user?.masterPassword?.isSet]);
 
     if (isLoading) {
         return (
@@ -675,18 +642,6 @@ const Dashboard: React.FC = () => {
                                     <SecurityIcon className="mr-2 break-all" /> <span className="truncate">Security Dashboard</span>
                                 </h2>
                                 <div className="flex items-center gap-2 flex-shrink-0 self-start sm:self-center">
-                                    <IconButton
-                                        onClick={refreshDashboard}
-                                        title="Refresh Dashboard"
-                                        sx={{
-                                            color: 'rgb(var(--theme-text))',
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                                            }
-                                        }}
-                                    >
-                                        <RefreshIcon />
-                                    </IconButton>
                                     <Chip
                                         label={passwordStats.totalPasswords === 0 ? 'Getting Started' : securityOverview.vaultStatus}
                                         color={
@@ -1284,7 +1239,6 @@ const Dashboard: React.FC = () => {
                             <Button
                                 onClick={handleGeneratePassword}
                                 variant="contained"
-                                startIcon={<RefreshIcon />}
                                 fullWidth
                                 className="bg-theme-primary"
                             >

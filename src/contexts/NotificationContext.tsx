@@ -39,6 +39,52 @@ interface NotificationContextType {
 // Create the context
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
+// Simple dedupe cache to avoid showing identical notifications multiple times in a short interval
+const recentNotifications = new Map<string, number>();
+const DEDUPE_WINDOW_MS = 60000; // 60 seconds - suppress identical notifications for 60s
+
+function shouldShowNotification(key: string, now = Date.now()): boolean {
+    const last = recentNotifications.get(key);
+    if (!last) return true;
+    return now - last > DEDUPE_WINDOW_MS;
+}
+
+function recordNotification(key: string, now = Date.now()) {
+    recentNotifications.set(key, now);
+}
+
+// Periodic cleanup to avoid unbounded map growth (remove entries older than 5 * DEDUPE_WINDOW_MS)
+setInterval(() => {
+    const cutoff = Date.now() - DEDUPE_WINDOW_MS * 5;
+    for (const [k, ts] of recentNotifications.entries()) {
+        if (ts < cutoff) recentNotifications.delete(k);
+    }
+}, DEDUPE_WINDOW_MS * 5);
+
+function showToast(type: NotificationType, message: string, options?: NotificationOptions): string | number {
+    const key = `${type}:${message}`;
+    if (!shouldShowNotification(key)) {
+        // Return a stable numeric id when suppressed so callers' types remain satisfied
+        return -1;
+    }
+    recordNotification(key);
+
+    switch (type) {
+        case 'success':
+            return toast.success(message, options as any);
+        case 'error':
+            return toast.error(message, options as any);
+        case 'warning':
+            return toast.warning(message, options as any);
+        case 'info':
+            return toast.info(message, options as any);
+        case 'loading':
+            return toast.loading(message, options as any);
+        default:
+            return toast(message, options as any);
+    }
+}
+
 // Provider component
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     // Helper function to merge options with defaults
@@ -51,32 +97,32 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     // Success notification
     const success = (message: string, options?: NotificationOptions) => {
-        return toast.success(message, mergeOptions(options));
+        return showToast('success', message, mergeOptions(options));
     };
 
     // Error notification
     const error = (message: string, options?: NotificationOptions) => {
-        return toast.error(message, mergeOptions(options));
+        return showToast('error', message, mergeOptions(options));
     };
 
     // Warning notification
     const warning = (message: string, options?: NotificationOptions) => {
-        return toast.warning(message, mergeOptions(options));
+        return showToast('warning', message, mergeOptions(options));
     };
 
     // Info notification
     const info = (message: string, options?: NotificationOptions) => {
-        return toast.info(message, mergeOptions(options));
+        return showToast('info', message, mergeOptions(options));
     };
 
     // Loading notification
     const loading = (message: string, options?: NotificationOptions) => {
-        return toast.loading(message, mergeOptions(options));
+        return showToast('loading', message, mergeOptions(options));
     };
 
     // Default message notification
     const message = (message: string, options?: NotificationOptions) => {
-        return toast(message, mergeOptions(options));
+        return showToast('default', message, mergeOptions(options));
     };
 
     // Promise notification
@@ -88,12 +134,14 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
             error: string | ((error: any) => string);
         }
     ) => {
+        // promise helper from sonner can't be deduped easily; call directly
         const toastId = toast.promise(promise, options);
         return toastId as string | number;
     };
 
     // Custom notification
     const custom = (jsx: (id: string | number) => React.ReactElement, options?: NotificationOptions) => {
+        // custom toasts are unique by content — skip dedupe
         return toast.custom(jsx, mergeOptions(options));
     };
 
@@ -145,32 +193,32 @@ export const notificationPresets = {
     // Authentication related
     auth: {
         loginSuccess: (username?: string) =>
-            toast.success(`Welcome back${username ? `, ${username}` : ''}!`, {
+            showToast('success', `Welcome back${username ? `, ${username}` : ''}!`, {
                 description: 'You have been successfully logged in.',
                 duration: 3000,
             }),
         loginError: (error?: string) =>
-            toast.error('Login Failed', {
+            showToast('error', 'Login Failed', {
                 description: error || 'Please check your credentials and try again.',
                 duration: 5000,
             }),
         signupSuccess: () =>
-            toast.success('Account Created Successfully!', {
+            showToast('success', 'Account Created Successfully!', {
                 description: 'You can now log in with your credentials.',
                 duration: 4000,
             }),
         signupError: (error?: string) =>
-            toast.error('Signup Failed', {
+            showToast('error', 'Signup Failed', {
                 description: error || 'Please try again with different credentials.',
                 duration: 5000,
             }),
         logoutSuccess: () =>
-            toast.success('Logged Out Successfully', {
+            showToast('success', 'Logged Out Successfully', {
                 description: 'See you next time!',
                 duration: 2000,
             }),
         sessionExpired: () =>
-            toast.warning('Session Expired', {
+            showToast('warning', 'Session Expired', {
                 description: 'Please log in again to continue.',
                 duration: 5000,
             }),
@@ -179,58 +227,58 @@ export const notificationPresets = {
     // Data operations
     data: {
         saveSuccess: (itemType?: string) =>
-            toast.success(`${itemType || 'Data'} Saved Successfully!`, {
+            showToast('success', `${itemType || 'Data'} Saved Successfully!`, {
                 duration: 3000,
             }),
         saveError: (itemType?: string, error?: string) =>
-            toast.error(`Failed to Save ${itemType || 'Data'}`, {
+            showToast('error', `Failed to Save ${itemType || 'Data'}`, {
                 description: error || 'Please try again.',
                 duration: 4000,
             }),
         deleteSuccess: (itemType?: string) =>
-            toast.success(`${itemType || 'Item'} Deleted Successfully!`, {
+            showToast('success', `${itemType || 'Item'} Deleted Successfully!`, {
                 duration: 3000,
             }),
         deleteError: (itemType?: string, error?: string) =>
-            toast.error(`Failed to Delete ${itemType || 'Item'}`, {
+            showToast('error', `Failed to Delete ${itemType || 'Item'}`, {
                 description: error || 'Please try again.',
-                duration: 4000,
+                duration: 5000,
             }),
         updateSuccess: (itemType?: string) =>
-            toast.success(`${itemType || 'Data'} Updated Successfully!`, {
+            showToast('success', `${itemType || 'Data'} Updated Successfully!`, {
                 duration: 3000,
             }),
         updateError: (itemType?: string, error?: string) =>
-            toast.error(`Failed to Update ${itemType || 'Data'}`, {
+            showToast('error', `Failed to Update ${itemType || 'Data'}`, {
                 description: error || 'Please try again.',
-                duration: 4000,
+                duration: 3000,
             }),
     },
 
     // Password manager specific
     password: {
         copied: () =>
-            toast.success('Password Copied!', {
+            showToast('success', 'Password Copied!', {
                 description: 'Password has been copied to clipboard.',
                 duration: 2000,
             }),
         generated: () =>
-            toast.success('Password Generated!', {
+            showToast('success', 'Password Generated!', {
                 description: 'New secure password has been created.',
                 duration: 3000,
             }),
         strengthWeak: () =>
-            toast.warning('Weak Password Detected', {
+            showToast('warning', 'Weak Password Detected', {
                 description: 'Consider using a stronger password for better security.',
                 duration: 4000,
             }),
         strengthGood: () =>
-            toast.success('Good Password Strength', {
+            showToast('success', 'Good Password Strength', {
                 description: 'Your password meets security requirements.',
                 duration: 3000,
             }),
         breachDetected: (count: number) =>
-            toast.error('Security Breach Detected!', {
+            showToast('error', 'Security Breach Detected!', {
                 description: `This password has been found in ${count} data breaches. Please change it immediately.`,
                 duration: 8000,
             }),
@@ -239,32 +287,32 @@ export const notificationPresets = {
     // System operations
     system: {
         syncSuccess: () =>
-            toast.success('Data Synchronized', {
+            showToast('success', 'Data Synchronized', {
                 description: 'All your data is up to date.',
                 duration: 3000,
             }),
         syncError: () =>
-            toast.error('Synchronization Failed', {
+            showToast('error', 'Synchronization Failed', {
                 description: 'Unable to sync data. Please check your connection.',
                 duration: 5000,
             }),
         backupSuccess: () =>
-            toast.success('Backup Created Successfully!', {
+            showToast('success', 'Backup Created Successfully!', {
                 description: 'Your data has been safely backed up.',
                 duration: 4000,
             }),
         backupError: () =>
-            toast.error('Backup Failed', {
+            showToast('error', 'Backup Failed', {
                 description: 'Unable to create backup. Please try again.',
                 duration: 5000,
             }),
         importSuccess: (count: number) =>
-            toast.success(`Import Completed!`, {
+            showToast('success', `Import Completed!`, {
                 description: `Successfully imported ${count} items.`,
                 duration: 4000,
             }),
         importError: (error?: string) =>
-            toast.error('Import Failed', {
+            showToast('error', 'Import Failed', {
                 description: error || 'Unable to import data. Please check the file format.',
                 duration: 5000,
             }),
@@ -273,18 +321,62 @@ export const notificationPresets = {
     // Network operations
     network: {
         offline: () =>
-            toast.warning('You are offline', {
+            showToast('warning', 'You are offline', {
                 description: 'Some features may not be available.',
                 duration: 5000,
             }),
         online: () =>
-            toast.success('Back online!', {
+            showToast('success', 'Back online!', {
                 description: 'All features are now available.',
                 duration: 2000,
             }),
         slowConnection: () =>
-            toast.info('Slow connection detected', {
+            showToast('info', 'Slow connection detected', {
                 description: 'Operations may take longer than usual.',
+                duration: 4000,
+            }),
+    },
+
+    // Database operations
+    database: {
+        connected: () =>
+            showToast('success', 'Database Connected', {
+                description: 'Successfully connected to MongoDB database.',
+                duration: 3000,
+            }),
+        disconnected: (error?: string) =>
+            showToast('error', 'Database Disconnected', {
+                description: error || 'Lost connection to MongoDB database.',
+                duration: 5000,
+            }),
+        reconnecting: () =>
+            showToast('loading', 'Attempting to reconnect...', {
+                description: 'Trying to reconnect to MongoDB database.',
+                duration: 3000,
+            }),
+        reconnectSuccess: () =>
+            showToast('success', 'Reconnection Successful', {
+                description: 'Successfully reconnected to MongoDB database.',
+                duration: 4000,
+            }),
+        reconnectFailed: () =>
+            showToast('error', 'Reconnection Failed', {
+                description: 'Failed to reconnect to MongoDB database. Please check your connection.',
+                duration: 6000,
+            }),
+        operationFailed: (operation?: string) =>
+            showToast('error', `${operation || 'Operation'} Failed`, {
+                description: 'Database is not connected. Please check your connection.',
+                duration: 5000,
+            }),
+        initialConnectionFailed: () =>
+            showToast('warning', 'Running in Offline Mode', {
+                description: 'Could not connect to database. Some features will be unavailable.',
+                duration: 8000,
+            }),
+        healthCheckFailed: () =>
+            showToast('warning', 'Database Health Check Failed', {
+                description: 'Connection may be unstable. Monitoring connection status.',
                 duration: 4000,
             }),
     },
