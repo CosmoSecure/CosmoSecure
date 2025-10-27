@@ -10,7 +10,6 @@ import Dashboard from './Dashboard';
 import Settings from './Settings';
 import Profile from './Profile';
 import Tools from './Tools';
-import DatabaseStatusIndicator from './DatabaseStatusIndicator';
 
 export {
     Intro,
@@ -28,5 +27,4 @@ export {
     Settings,
     Profile,
     Tools,
-    DatabaseStatusIndicator,
 };
