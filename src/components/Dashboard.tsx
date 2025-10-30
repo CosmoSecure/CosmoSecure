@@ -888,8 +888,9 @@ const Dashboard: React.FC = () => {
                                 <LinearProgress
                                     variant="determinate"
                                     value={(passwordStats.totalPasswords / (user?.maxPasswordCount || 1)) * 100}
-                                    className="h-2 rounded-full"
                                     sx={{
+                                        height: 8,
+                                        borderRadius: '999px',
                                         backgroundColor: 'rgba(255,255,255,0.1)',
                                         '& .MuiLinearProgress-bar': {
                                             borderRadius: '999px',
@@ -1002,7 +1003,7 @@ const Dashboard: React.FC = () => {
                             {openWeakPasswords ? <ExpandLess /> : <ExpandMore />}
                         </ListItemButton>
 
-                        <Collapse in={openWeakPasswords} timeout="auto" unmountOnExit>
+                        <Collapse in={openWeakPasswords} timeout="auto">
                             <List
                                 component="div"
                                 disablePadding
@@ -1091,7 +1092,7 @@ const Dashboard: React.FC = () => {
                             {openOldPasswords ? <ExpandLess /> : <ExpandMore />}
                         </ListItemButton>
 
-                        <Collapse in={openOldPasswords} timeout="auto" unmountOnExit>
+                        <Collapse in={openOldPasswords} timeout="auto">
                             <List
                                 component="div"
                                 disablePadding
@@ -1231,7 +1232,7 @@ const Dashboard: React.FC = () => {
                                 label="Password Length"
                                 type="number"
                                 value={passwordLength}
-                                onChange={(e) => setPasswordLength(Math.min(64, Math.max(8, parseInt(e.target.value) || 8)))}
+                                onChange={(e: { target: { value: string; }; }) => setPasswordLength(Math.min(64, Math.max(8, parseInt(e.target.value) || 8)))}
                                 inputProps={{ min: 8, max: 64 }}
                                 fullWidth
                             />
@@ -1458,7 +1459,7 @@ const Dashboard: React.FC = () => {
                             <TextField
                                 label="Username/Email"
                                 value={newPassword.username}
-                                onChange={(e) => setNewPassword({ ...newPassword, username: e.target.value })}
+                                onChange={(e: { target: { value: any; }; }) => setNewPassword({ ...newPassword, username: e.target.value })}
                                 fullWidth
                                 required
                             />
@@ -1467,7 +1468,7 @@ const Dashboard: React.FC = () => {
                                 label="Password"
                                 type={showPassword ? 'text' : 'password'}
                                 value={newPassword.password}
-                                onChange={(e) => setNewPassword({ ...newPassword, password: e.target.value })}
+                                onChange={(e: { target: { value: any; }; }) => setNewPassword({ ...newPassword, password: e.target.value })}
                                 fullWidth
                                 required
                                 InputProps={{
