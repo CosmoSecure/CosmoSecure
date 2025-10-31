@@ -198,7 +198,7 @@ const Tools: React.FC = () => {
                     </ListItemButton>
 
                     {/* Nested Tools inside Collapsible List */}
-                    <Collapse in={open} timeout="auto" unmountOnExit>
+                    <Collapse in={open} timeout="auto">
                         <List component="div" disablePadding>
                             <ListItemButton
                                 sx={{
