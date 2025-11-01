@@ -89,7 +89,7 @@ const PasswordGenerator: React.FC = () => {
                     <div className="flex-1">
                         <TextField
                             value={passLen}
-                            onChange={(e) => {
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                 const value = parseInt(e.target.value) || 8;
                                 setPassLen(Math.min(64, Math.max(8, value)));
                             }}
@@ -97,7 +97,6 @@ const PasswordGenerator: React.FC = () => {
                             inputProps={{ min: 8, max: 64 }}
                             variant="outlined"
                             fullWidth
-                            className="text-theme-text"
                             sx={{
                                 '& .MuiOutlinedInput-root': {
                                     textAlign: 'center',
@@ -151,7 +150,7 @@ const PasswordGenerator: React.FC = () => {
             >
                 {isGenerating ? (
                     <>
-                        <CircularProgress size={20} className="text-white" />
+                        <CircularProgress size={20} sx={{ color: 'white' }} />
                         <span>Generating...</span>
                     </>
                 ) : (

@@ -87,14 +87,18 @@ const EmailBreach: React.FC = () => {
                 </Typography>
             </div>
             <div className="flex flex-col justify-center items-center max-w-md mx-auto">
-                <div className="w-full relative">
+                <div className="w-full relative" onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
+                    if (e.key === 'Enter' && !loading && isValidEmail) {
+                        handleCheckBreach();
+                    }
+                }}>
                     <TextField
                         fullWidth
                         label="Enter your email address"
                         variant="outlined"
                         type="email"
                         value={email}
-                        onChange={(e) => {
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                             const value = e.target.value;
                             setEmail(value);
 
@@ -105,15 +109,10 @@ const EmailBreach: React.FC = () => {
                                 setEmailError("");
                             }
                         }}
-                        onKeyPress={(e) => {
-                            if (e.key === 'Enter' && !loading && isValidEmail) {
-                                handleCheckBreach();
-                            }
-                        }}
                         error={!!emailError}
                         helperText={emailError}
-                        className="mb-6"
                         sx={{
+                            mb: 6,
                             '& .MuiOutlinedInput-root': {
                                 backgroundColor: 'rgba(var(--theme-secondary-rgb), 0.1)',
                                 borderRadius: '12px',
