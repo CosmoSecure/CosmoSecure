@@ -1,5 +1,5 @@
 use aes_gcm::aead::{Aead, KeyInit};
-use aes_gcm::{Aes256Gcm, Key, Nonce};
+use aes_gcm::Aes256Gcm;
 use anyhow::Error;
 use base64::Engine;
 
@@ -12,15 +12,14 @@ fn latin1_string_to_bytes(s: &str) -> Vec<u8> {
 }
 
 pub fn encrypt(plaintext: &str, key: &[u8]) -> Result<String, Error> {
-    let key_bytes = Key::<Aes256Gcm>::from_slice(key);
-    if key_bytes.len() != 32 {
+    if key.len() != 32 {
         return Err(Error::msg("Key length must be 32 bytes"));
     }
-    let cipher = Aes256Gcm::new(key_bytes);
+    let cipher = Aes256Gcm::new(key.into());
 
     // Generate a random nonce (12 bytes)
     let binding = rand::random::<[u8; 12]>();
-    let nonce = Nonce::from_slice(&binding);
+    let nonce = (&binding).into();
 
     let ciphertext = cipher
         .encrypt(nonce, plaintext.as_bytes())
@@ -36,11 +35,10 @@ pub fn encrypt(plaintext: &str, key: &[u8]) -> Result<String, Error> {
 }
 
 pub fn decrypt(ciphertext: &str, key: &[u8]) -> Result<String, Error> {
-    let key_bytes = Key::<Aes256Gcm>::from_slice(key);
-    if key_bytes.len() != 32 {
+    if key.len() != 32 {
         return Err(Error::msg("Key length must be 32 bytes"));
     }
-    let cipher = Aes256Gcm::new(key_bytes);
+    let cipher = Aes256Gcm::new(key.into());
 
     // Decode from base64, then convert from Latin-1 string to bytes
     let base64_decoded = base64::engine::general_purpose::STANDARD.decode(ciphertext)?;
@@ -53,7 +51,7 @@ pub fn decrypt(ciphertext: &str, key: &[u8]) -> Result<String, Error> {
 
     // Split nonce and ciphertext
     let (nonce_bytes, ciphertext_bytes) = data.split_at(12);
-    let nonce = Nonce::from_slice(nonce_bytes);
+    let nonce = nonce_bytes.into();
 
     let plaintext_bytes = cipher
         .decrypt(nonce, ciphertext_bytes)
