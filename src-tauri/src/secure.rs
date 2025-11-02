@@ -3,14 +3,6 @@ use aes_gcm::Aes256Gcm;
 use anyhow::Error;
 use base64::Engine;
 
-fn bytes_to_latin1_string(bytes: &[u8]) -> String {
-    bytes.iter().map(|&b| b as char).collect()
-}
-
-fn latin1_string_to_bytes(s: &str) -> Vec<u8> {
-    s.chars().map(|c| c as u32 as u8).collect()
-}
-
 pub fn encrypt(plaintext: &str, key: &[u8]) -> Result<String, Error> {
     if key.len() != 32 {
         return Err(Error::msg("Key length must be 32 bytes"));
@@ -18,8 +10,8 @@ pub fn encrypt(plaintext: &str, key: &[u8]) -> Result<String, Error> {
     let cipher = Aes256Gcm::new(key.into());
 
     // Generate a random nonce (12 bytes)
-    let binding = rand::random::<[u8; 12]>();
-    let nonce = (&binding).into();
+    let nonce_bytes = rand::random::<[u8; 12]>();
+    let nonce = (&nonce_bytes).into();
 
     let ciphertext = cipher
         .encrypt(nonce, plaintext.as_bytes())
@@ -29,9 +21,8 @@ pub fn encrypt(plaintext: &str, key: &[u8]) -> Result<String, Error> {
     let mut combined = nonce.to_vec();
     combined.extend_from_slice(&ciphertext);
 
-    // Convert bytes to Latin-1 string, then encode with base64
-    let latin1_string = bytes_to_latin1_string(&combined);
-    Ok(base64::engine::general_purpose::STANDARD.encode(latin1_string.as_bytes()))
+    // Encode with base64
+    Ok(base64::engine::general_purpose::STANDARD.encode(&combined))
 }
 
 pub fn decrypt(ciphertext: &str, key: &[u8]) -> Result<String, Error> {
@@ -40,10 +31,8 @@ pub fn decrypt(ciphertext: &str, key: &[u8]) -> Result<String, Error> {
     }
     let cipher = Aes256Gcm::new(key.into());
 
-    // Decode from base64, then convert from Latin-1 string to bytes
-    let base64_decoded = base64::engine::general_purpose::STANDARD.decode(ciphertext)?;
-    let latin1_string = String::from_utf8(base64_decoded)?;
-    let data = latin1_string_to_bytes(&latin1_string);
+    // Decode from base64
+    let data = base64::engine::general_purpose::STANDARD.decode(ciphertext)?;
 
     if data.len() < 12 {
         return Err(Error::msg("Ciphertext too short"));
