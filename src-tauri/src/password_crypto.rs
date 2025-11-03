@@ -1,5 +1,5 @@
 use aes_gcm::aead::{Aead, KeyInit};
-use aes_gcm::{Aes256Gcm, Key, Nonce};
+use aes_gcm::Aes256Gcm;
 use anyhow::Error;
 use base64::Engine;
 use rand::RngCore;
@@ -38,13 +38,12 @@ pub fn encrypt_user_password(
 
     // Derive key from master password and salt
     let key = derive_password_key(master_password, salt)?;
-    let key_bytes = Key::<Aes256Gcm>::from_slice(&key);
-    let cipher = Aes256Gcm::new(key_bytes);
+    let cipher = Aes256Gcm::new((&key).into());
 
     // Generate a random 12-byte nonce for each encryption
     let mut nonce_bytes = [0u8; 12];
     rand::rng().fill_bytes(&mut nonce_bytes);
-    let nonce = Nonce::from_slice(&nonce_bytes);
+    let nonce = (&nonce_bytes).into();
 
     // Encrypt the password
     let ciphertext = cipher
@@ -75,8 +74,7 @@ pub fn decrypt_user_password(
 
     // Derive key from master password and salt
     let key = derive_password_key(master_password, salt)?;
-    let key_bytes = Key::<Aes256Gcm>::from_slice(&key);
-    let cipher = Aes256Gcm::new(key_bytes);
+    let cipher = Aes256Gcm::new((&key).into());
 
     // Decode the base64-encoded data
     let combined_data = base64::engine::general_purpose::STANDARD
@@ -89,7 +87,7 @@ pub fn decrypt_user_password(
 
     // Extract nonce (first 12 bytes) and ciphertext (rest)
     let (nonce_bytes, ciphertext) = combined_data.split_at(12);
-    let nonce = Nonce::from_slice(nonce_bytes);
+    let nonce = nonce_bytes.into();
 
     // Decrypt the password
     let plaintext_bytes = cipher

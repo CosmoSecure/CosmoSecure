@@ -467,25 +467,26 @@ const Settings = () => {
                                 <form className="flex flex-col gap-5" onSubmit={handleUpdateNameUsername}>
                                     <div className="flex items-center gap-5">
                                         <div className="flex-1">
-                                            <TextField
-                                                fullWidth
-                                                label="New Name"
-                                                variant="outlined"
-                                                size="small"
-                                                InputProps={{
-                                                    style: {
-                                                        color: 'var(--theme-text)',
-                                                        backgroundColor: 'var(--theme-background-transparent)',
-                                                        borderRadius: '10px'
-                                                    },
-                                                }}
-                                                InputLabelProps={{
-                                                    style: { color: 'var(--theme-accent)' },
-                                                }}
-                                                value={newName}
-                                                onChange={(e) => setNewName(e.target.value)}
-                                                className="bg-theme-background-transparent rounded-xl"
-                                            />
+                                            <div className="bg-theme-background-transparent rounded-xl">
+                                                <TextField
+                                                    fullWidth
+                                                    label="New Name"
+                                                    variant="outlined"
+                                                    size="small"
+                                                    InputProps={{
+                                                        style: {
+                                                            color: 'var(--theme-text)',
+                                                            backgroundColor: 'var(--theme-background-transparent)',
+                                                            borderRadius: '10px'
+                                                        },
+                                                    }}
+                                                    InputLabelProps={{
+                                                        style: { color: 'var(--theme-accent)' },
+                                                    }}
+                                                    value={newName}
+                                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewName(e.target.value)}
+                                                />
+                                            </div>
                                         </div>
                                         <Button
                                             type="submit"
@@ -498,25 +499,26 @@ const Settings = () => {
                                     </div>
                                     <div className="flex items-center gap-5">
                                         <div className="flex-1">
-                                            <TextField
-                                                fullWidth
-                                                label="New Username"
-                                                variant="outlined"
-                                                size="small"
-                                                InputProps={{
-                                                    style: {
-                                                        color: 'var(--theme-text)',
-                                                        backgroundColor: 'var(--theme-background-transparent)',
-                                                        borderRadius: '10px'
-                                                    },
-                                                }}
-                                                InputLabelProps={{
-                                                    style: { color: 'var(--theme-accent)' },
-                                                }}
-                                                value={newUsername}
-                                                onChange={(e) => setNewUsername(e.target.value)}
-                                                className="bg-theme-background-transparent rounded-xl"
-                                            />
+                                            <div className="bg-theme-background-transparent rounded-xl">
+                                                <TextField
+                                                    fullWidth
+                                                    label="New Username"
+                                                    variant="outlined"
+                                                    size="small"
+                                                    InputProps={{
+                                                        style: {
+                                                            color: 'var(--theme-text)',
+                                                            backgroundColor: 'var(--theme-background-transparent)',
+                                                            borderRadius: '10px'
+                                                        },
+                                                    }}
+                                                    InputLabelProps={{
+                                                        style: { color: 'var(--theme-accent)' },
+                                                    }}
+                                                    value={newUsername}
+                                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewUsername(e.target.value)}
+                                                />
+                                            </div>
                                         </div>
                                         <Button
                                             type="submit"
@@ -581,26 +583,27 @@ const Settings = () => {
                             <div className="pt-5 border-t border-theme-accent-transparent">
                                 <form className="flex flex-col gap-5" onSubmit={handleUpdatePassword}>
                                     <div className="relative">
-                                        <TextField
-                                            fullWidth
-                                            label="Current Password"
-                                            type={passwordVisible ? "text" : "password"}
-                                            variant="outlined"
-                                            size="small"
-                                            InputProps={{
-                                                style: {
-                                                    color: 'var(--theme-text)',
-                                                    backgroundColor: 'var(--theme-background-transparent)',
-                                                    borderRadius: '10px'
-                                                },
-                                            }}
-                                            InputLabelProps={{
-                                                style: { color: 'var(--theme-accent)' },
-                                            }}
-                                            value={currentPassword}
-                                            onChange={(e) => setCurrentPassword(e.target.value)}
-                                            className="bg-theme-background-transparent rounded-xl"
-                                        />
+                                        <div className="bg-theme-background-transparent rounded-xl">
+                                            <TextField
+                                                fullWidth
+                                                label="Current Password"
+                                                type={passwordVisible ? "text" : "password"}
+                                                variant="outlined"
+                                                size="small"
+                                                InputProps={{
+                                                    style: {
+                                                        color: 'var(--theme-text)',
+                                                        backgroundColor: 'var(--theme-background-transparent)',
+                                                        borderRadius: '10px'
+                                                    },
+                                                }}
+                                                InputLabelProps={{
+                                                    style: { color: 'var(--theme-accent)' },
+                                                }}
+                                                value={currentPassword}
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentPassword(e.target.value)}
+                                            />
+                                        </div>
                                         <button
                                             type="button"
                                             onClick={togglePasswordVisibility}
@@ -610,26 +613,27 @@ const Settings = () => {
                                         </button>
                                     </div>
                                     <div className="relative">
-                                        <TextField
-                                            fullWidth
-                                            label="New Password"
-                                            type={newPasswordVisible ? "text" : "password"}
-                                            variant="outlined"
-                                            size="small"
-                                            InputProps={{
-                                                style: {
-                                                    color: 'var(--theme-text)',
-                                                    backgroundColor: 'var(--theme-background-transparent)',
-                                                    borderRadius: '10px'
-                                                },
-                                            }}
-                                            InputLabelProps={{
-                                                style: { color: 'var(--theme-accent)' },
-                                            }}
-                                            value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
-                                            className="bg-theme-background-transparent rounded-xl"
-                                        />
+                                        <div className="bg-theme-background-transparent rounded-xl">
+                                            <TextField
+                                                fullWidth
+                                                label="New Password"
+                                                type={newPasswordVisible ? "text" : "password"}
+                                                variant="outlined"
+                                                size="small"
+                                                InputProps={{
+                                                    style: {
+                                                        color: 'var(--theme-text)',
+                                                        backgroundColor: 'var(--theme-background-transparent)',
+                                                        borderRadius: '10px'
+                                                    },
+                                                }}
+                                                InputLabelProps={{
+                                                    style: { color: 'var(--theme-accent)' },
+                                                }}
+                                                value={newPassword}
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPassword(e.target.value)}
+                                            />
+                                        </div>
                                         <button
                                             type="button"
                                             onClick={toggleNewPasswordVisibility}
@@ -656,26 +660,27 @@ const Settings = () => {
                                         )}
                                     </div>
                                     <div className="relative">
-                                        <TextField
-                                            fullWidth
-                                            label="Confirm Password"
-                                            type={confirmPasswordVisible ? "text" : "password"}
-                                            variant="outlined"
-                                            size="small"
-                                            InputProps={{
-                                                style: {
-                                                    color: 'var(--theme-text)',
-                                                    backgroundColor: 'var(--theme-background-transparent)',
-                                                    borderRadius: '10px'
-                                                },
-                                            }}
-                                            InputLabelProps={{
-                                                style: { color: 'var(--theme-accent)' },
-                                            }}
-                                            value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                            className="bg-theme-background-transparent rounded-xl"
-                                        />
+                                        <div className="bg-theme-background-transparent rounded-xl">
+                                            <TextField
+                                                fullWidth
+                                                label="Confirm Password"
+                                                type={confirmPasswordVisible ? "text" : "password"}
+                                                variant="outlined"
+                                                size="small"
+                                                InputProps={{
+                                                    style: {
+                                                        color: 'var(--theme-text)',
+                                                        backgroundColor: 'var(--theme-background-transparent)',
+                                                        borderRadius: '10px'
+                                                    },
+                                                }}
+                                                InputLabelProps={{
+                                                    style: { color: 'var(--theme-accent)' },
+                                                }}
+                                                value={confirmPassword}
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
+                                            />
+                                        </div>
                                         <button
                                             type="button"
                                             onClick={toggleConfirmPasswordVisibility}
@@ -852,30 +857,10 @@ const Settings = () => {
                                     </p>
                                 </div>
                                 <form className="flex flex-col gap-5" onSubmit={openDeleteModal}>
-                                    <TextField
-                                        fullWidth
-                                        label="Username"
-                                        variant="outlined"
-                                        size="small"
-                                        InputProps={{
-                                            style: {
-                                                color: 'var(--theme-text)',
-                                                backgroundColor: 'var(--theme-background-transparent)',
-                                                borderRadius: '10px'
-                                            },
-                                        }}
-                                        InputLabelProps={{
-                                            style: { color: 'var(--theme-accent)' },
-                                        }}
-                                        value={deleteUsername}
-                                        onChange={(e) => setDeleteUsername(e.target.value)}
-                                        className="bg-theme-background-transparent rounded-xl"
-                                    />
-                                    <div className="relative">
+                                    <div className="bg-theme-background-transparent rounded-xl">
                                         <TextField
                                             fullWidth
-                                            label="Password"
-                                            type={passwordVisible ? "text" : "password"}
+                                            label="Username"
                                             variant="outlined"
                                             size="small"
                                             InputProps={{
@@ -888,10 +873,32 @@ const Settings = () => {
                                             InputLabelProps={{
                                                 style: { color: 'var(--theme-accent)' },
                                             }}
-                                            value={deletePassword}
-                                            onChange={(e) => setDeletePassword(e.target.value)}
-                                            className="bg-theme-background-transparent rounded-xl"
+                                            value={deleteUsername}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDeleteUsername(e.target.value)}
                                         />
+                                    </div>
+                                    <div className="relative">
+                                        <div className="bg-theme-background-transparent rounded-xl">
+                                            <TextField
+                                                fullWidth
+                                                label="Password"
+                                                type={passwordVisible ? "text" : "password"}
+                                                variant="outlined"
+                                                size="small"
+                                                InputProps={{
+                                                    style: {
+                                                        color: 'var(--theme-text)',
+                                                        backgroundColor: 'var(--theme-background-transparent)',
+                                                        borderRadius: '10px'
+                                                    },
+                                                }}
+                                                InputLabelProps={{
+                                                    style: { color: 'var(--theme-accent)' },
+                                                }}
+                                                value={deletePassword}
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDeletePassword(e.target.value)}
+                                            />
+                                        </div>
                                         <button
                                             type="button"
                                             onClick={togglePasswordVisibility}
@@ -958,25 +965,26 @@ const Settings = () => {
                             This action cannot be undone!
                         </p>
                     </div>
-                    <TextField
-                        fullWidth
-                        variant="outlined"
-                        label="Type 'delete' to confirm"
-                        size="small"
-                        value={confirmationText}
-                        onChange={(e) => setConfirmationText(e.target.value)}
-                        InputProps={{
-                            style: {
-                                color: "var(--theme-text)",
-                                backgroundColor: 'var(--theme-background-transparent)',
-                                borderRadius: '10px'
-                            },
-                        }}
-                        InputLabelProps={{
-                            style: { color: "var(--theme-accent)" },
-                        }}
-                        className="mb-5 text-theme-text bg-theme-background-transparent rounded-xl"
-                    />
+                    <div className="mb-5 text-theme-text bg-theme-background-transparent rounded-xl">
+                        <TextField
+                            fullWidth
+                            variant="outlined"
+                            label="Type 'delete' to confirm"
+                            size="small"
+                            value={confirmationText}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmationText(e.target.value)}
+                            InputProps={{
+                                style: {
+                                    color: "var(--theme-text)",
+                                    backgroundColor: 'var(--theme-background-transparent)',
+                                    borderRadius: '10px'
+                                },
+                            }}
+                            InputLabelProps={{
+                                style: { color: "var(--theme-accent)" },
+                            }}
+                        />
+                    </div>
                     <div className="flex justify-between gap-3 mt-5">
                         <Button
                             variant="outlined"
