@@ -26,6 +26,7 @@ pub fn get_env_vars() -> HashMap<&'static str, &'static str> {
     env_vars.insert("m", dotenv!("m"));
     env_vars.insert("t", dotenv!("t"));
     env_vars.insert("k", dotenv!("k"));
+    env_vars.insert("a", dotenv!("a"));
 
     env_vars
 }
