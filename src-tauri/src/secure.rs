@@ -2,8 +2,12 @@ use aes_gcm::aead::{Aead, KeyInit};
 use aes_gcm::Aes256Gcm;
 use anyhow::Error;
 use base64::Engine;
-use base64::{alphabet, engine::{self, general_purpose}};
+use base64::{
+    alphabet,
+    engine::{self, general_purpose},
+};
 use once_cell::sync::Lazy;
+use sha2::{Digest, Sha256};
 
 use crate::env_var::get_env_vars;
 
@@ -30,13 +34,10 @@ fn load_alphabet_from_env() -> alphabet::Alphabet {
 static CUSTOM_ALPHABET: Lazy<alphabet::Alphabet> = Lazy::new(|| load_alphabet_from_env());
 
 // Create engine with custom alphabet
-static CUSTOM_ENGINE: Lazy<engine::GeneralPurpose> = Lazy::new(|| {
-    engine::GeneralPurpose::new(
-        &*CUSTOM_ALPHABET,
-        general_purpose::PAD
-    )
-});
+static CUSTOM_ENGINE: Lazy<engine::GeneralPurpose> =
+    Lazy::new(|| engine::GeneralPurpose::new(&*CUSTOM_ALPHABET, general_purpose::PAD));
 
+#[cfg(test)]
 pub fn encrypt(plaintext: &str, key: &[u8]) -> Result<String, Error> {
     if key.len() != 32 {
         return Err(Error::msg("Key length must be 32 bytes"));
@@ -81,4 +82,13 @@ pub fn decrypt(ciphertext: &str, key: &[u8]) -> Result<String, Error> {
         .map_err(Error::msg)?;
 
     Ok(String::from_utf8(plaintext_bytes)?)
+}
+
+pub fn derive_key(input_key: &str) -> [u8; 32] {
+    let mut hasher = Sha256::new();
+    hasher.update(input_key.as_bytes());
+    let result = hasher.finalize();
+    let mut key = [0u8; 32];
+    key.copy_from_slice(&result[..32]);
+    key
 }

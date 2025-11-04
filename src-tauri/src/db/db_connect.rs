@@ -4,36 +4,99 @@ use crate::db::schema::db_schema::{
 };
 use crate::db::token::generate_token;
 use crate::env_var::{get_env_key, get_env_vars};
-// use crate::secure::encrypt;
-use crate::secure::decrypt;
+use crate::secure::{decrypt, derive_key};
 use bcrypt::{hash, verify, DEFAULT_COST};
 use mongodb::bson::DateTime;
 use mongodb::bson::{doc, oid::ObjectId};
 use mongodb::error::Error;
 use mongodb::options::{ClientOptions, IndexOptions};
 use mongodb::{Client, Collection, Database, IndexModel};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
-use sha2::{Digest, Sha256};
+use std::sync::{Arc, Mutex};
 use tauri::State;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConnectionStatus {
+    pub is_connected: bool,
+    pub last_check: Option<DateTime>,
+    pub error_message: Option<String>,
+    pub connection_uri: Option<String>,
+}
+
 pub struct MongoClientState {
-    client: Client,
+    client: Option<Client>,
+    status: Arc<Mutex<ConnectionStatus>>,
 }
 
 impl MongoClientState {
-    // The new function to create MongoClientState
-    pub async fn new(client: Client) -> Self {
-        MongoClientState { client }
+    // Create MongoClientState with optional client
+    pub async fn new(client: Option<Client>) -> Self {
+        let status = ConnectionStatus {
+            is_connected: client.is_some(),
+            last_check: Some(DateTime::now()),
+            error_message: None,
+            connection_uri: None,
+        };
+
+        MongoClientState {
+            client,
+            status: Arc::new(Mutex::new(status)),
+        }
     }
 
     // Get a reference to the MongoDB client
-    pub fn _client(&self) -> &Client {
-        &self.client
+    pub fn _client(&self) -> Option<&Client> {
+        self.client.as_ref()
     }
 
     // Access a specific database
-    pub fn get_database(&self, db_name: &str) -> Database {
-        self.client.database(db_name)
+    pub fn get_database(&self, db_name: &str) -> Result<Database, String> {
+        match &self.client {
+            Some(client) => Ok(client.database(db_name)),
+            None => Err("Database not connected".to_string()),
+        }
+    }
+
+    // Check if database is connected
+    pub fn is_connected(&self) -> bool {
+        let status = self.status.lock().unwrap();
+        status.is_connected
+    }
+
+    // Get connection status
+    pub fn get_status(&self) -> ConnectionStatus {
+        let status = self.status.lock().unwrap();
+        status.clone()
+    }
+
+    // Update connection status
+    pub fn update_status(&self, is_connected: bool, error_message: Option<String>) {
+        let mut status = self.status.lock().unwrap();
+        status.is_connected = is_connected;
+        status.last_check = Some(DateTime::now());
+        status.error_message = error_message;
+    }
+
+    // Attempt to reconnect to database
+    pub async fn try_reconnect(&self) -> Result<(), String> {
+        if let Some(client) = &self.client {
+            match client.database("admin").run_command(doc! {"ping": 1}).await {
+                Ok(_) => {
+                    self.update_status(true, None);
+                    Ok(())
+                }
+                Err(e) => {
+                    let error_msg = format!("Reconnection failed: {}", e);
+                    self.update_status(false, Some(error_msg.clone()));
+                    Err(error_msg)
+                }
+            }
+        } else {
+            let error_msg = "No client available for reconnection".to_string();
+            self.update_status(false, Some(error_msg.clone()));
+            Err(error_msg)
+        }
     }
 }
 
@@ -43,9 +106,12 @@ pub async fn check_username_availability(
     state: State<'_, MongoClientState>,
     username: String,
 ) -> Result<bool, String> {
-    let users_collection = state
-        .get_database("password_manager")
-        .collection::<User>("users");
+    if !state.is_connected() {
+        return Err("Database not connected".to_string());
+    }
+
+    let db = state.get_database("password_manager")?;
+    let users_collection = db.collection::<User>("users");
 
     match users_collection
         .find_one(doc! { "username": &username })
@@ -53,7 +119,10 @@ pub async fn check_username_availability(
     {
         Ok(Some(_)) => Ok(false), // Username exists
         Ok(None) => Ok(true),     // Username is available
-        Err(e) => Err(format!("Error checking username: {}", e)),
+        Err(e) => {
+            state.update_status(false, Some(format!("Database error: {}", e)));
+            Err(format!("Error checking username: {}", e))
+        }
     }
 }
 
@@ -64,9 +133,12 @@ pub async fn update_name_username(
     new_name: Option<String>,
     new_username: Option<String>,
 ) -> Result<(), String> {
-    let users_collection = state
-        .get_database("password_manager")
-        .collection::<User>("users");
+    if !state.is_connected() {
+        return Err("Database not connected. Cannot update user information.".to_string());
+    }
+
+    let db = state.get_database("password_manager")?;
+    let users_collection = db.collection::<User>("users");
 
     let mut update_doc = doc! {};
 
@@ -103,9 +175,12 @@ pub async fn update_user_password(
     current_password: String,
     new_password: String,
 ) -> Result<(), String> {
-    let users_collection = state
-        .get_database("password_manager")
-        .collection::<User>("users");
+    if !state.is_connected() {
+        return Err("Database not connected. Cannot update password.".to_string());
+    }
+
+    let db = state.get_database("password_manager")?;
+    let users_collection = db.collection::<User>("users");
 
     let filter = doc! { "ui": &user_id };
 
@@ -144,9 +219,12 @@ pub async fn reloadapp_update(
     state: State<'_, MongoClientState>,
     user_id: String,
 ) -> Result<User, String> {
-    let users_collection = state
-        .get_database("password_manager")
-        .collection::<User>("users");
+    if !state.is_connected() {
+        return Err("Database not connected. Cannot reload user data.".to_string());
+    }
+
+    let db = state.get_database("password_manager")?;
+    let users_collection = db.collection::<User>("users");
 
     let filter = doc! { "ui": &user_id };
 
@@ -181,9 +259,12 @@ pub async fn authenticate_user(
     password: String,
     state: State<'_, MongoClientState>,
 ) -> Result<serde_json::Value, String> {
-    let users_collection = state
-        .get_database("password_manager")
-        .collection::<User>("users");
+    if !state.is_connected() {
+        return Err("Database not connected. Cannot authenticate user.".to_string());
+    }
+
+    let db = state.get_database("password_manager")?;
+    let users_collection = db.collection::<User>("users");
 
     match get_user_by_username_or_email(&identifier, &users_collection).await {
         Ok(user) => {
@@ -228,37 +309,33 @@ pub async fn tauri_add_user(
     password: String,
     email: String,
 ) -> Result<String, String> {
-    let trimmed_name = name.trim();
-    let trimmed_email = email.trim();
-
-    println!("Received username: {}", username);
-    println!("Received email: {}", email);
-
-    if username.is_empty() {
-        return Err("Username cannot be empty.".to_string());
+    if !state.is_connected() {
+        return Err("Database not connected. Cannot create user account.".to_string());
     }
+
+    let db = state.get_database("password_manager")?;
+    let users_collection = db.collection::<User>("users");
 
     let hashed_password = match hash(password, DEFAULT_COST) {
         Ok(hashed) => hashed,
-        Err(e) => {
-            println!("Error hashing password: {}", e);
-            return Err(format!("Error hashing password: {}", e));
-        }
+        Err(e) => return Err(format!("Error hashing password: {}", e)),
     };
 
-    let users_collection = state
-        .get_database("password_manager")
-        .collection::<User>("users");
-
-    add_user(
+    match add_user(
         &users_collection,
         &username,
-        trimmed_name,
-        &hashed_password, // Use the hashed password
-        trimmed_email,
+        &name,
+        &hashed_password,
+        &email,
     )
     .await
-    .map_err(|e| e.to_string())
+    {
+        Ok(user_id) => Ok(user_id),
+        Err(e) => {
+            state.update_status(false, Some(format!("Database error: {}", e)));
+            Err(format!("Error adding user: {}", e))
+        }
+    }
 }
 
 pub async fn add_user(
@@ -307,15 +384,14 @@ pub async fn user_delete(
     username: String,
     password: String,
 ) -> Result<(), String> {
-    let users_collection = state
-        .get_database("password_manager")
-        .collection::<User>("users");
-    let deleted_users_collection = state
-        .get_database("password_manager")
-        .collection::<DeletedUser>("deleted_users");
-    let passwords_collection = state
-        .get_database("password_manager")
-        .collection::<PasswordEntries>("password_entries");
+    if !state.is_connected() {
+        return Err("Database not connected. Cannot delete user account.".to_string());
+    }
+
+    let db = state.get_database("password_manager")?;
+    let users_collection = db.collection::<User>("users");
+    let deleted_users_collection = db.collection::<DeletedUser>("deleted_users");
+    let passwords_collection = db.collection::<PasswordEntries>("password_entries");
 
     match users_collection
         .find_one(doc! { "username": &username })
@@ -390,55 +466,103 @@ async fn create_unique_indexes(collection: &Collection<User>) -> mongodb::error:
     Ok(())
 }
 
-pub(crate) async fn connect_rust_db() -> mongodb::error::Result<MongoClientState> {
+pub(crate) async fn connect_rust_db(
+) -> Result<MongoClientState, Box<dyn std::error::Error + Send + Sync>> {
     let env_vars = get_env_vars();
 
     // MongoDB URI
-    let encrypted_mongo_uri = env_vars.get("MONGO_URI").expect("MONGO_URI must be set");
-    // let key1 = env_vars.get("KEY").expect("KEY must be set");
-    // println!("Key-test: {} \n\n", key1);
+    let encrypted_mongo_uri = match env_vars.get("m") {
+        Some(uri) => uri,
+        None => {
+            eprintln!("MONGO_URI environment variable not set");
+            return Ok(MongoClientState::new(None).await);
+        }
+    };
 
-    let key = get_env_key().expect("KEY must be set");
+    let key = match get_env_key() {
+        Some(k) => k,
+        None => {
+            eprintln!("Environment key not available");
+            return Ok(MongoClientState::new(None).await);
+        }
+    };
+
     let sec_key = derive_key(key);
 
-    // let mongodb_uri = encrypt(encrypted_mongo_uri, &sec_key);
+    let mongo_uri = match decrypt(encrypted_mongo_uri, &sec_key) {
+        Ok(uri) => uri,
+        Err(e) => {
+            eprintln!("Failed to decrypt Mongo URI: {}", e);
+            return Ok(MongoClientState::new(None).await);
+        }
+    };
 
-    // println!("Mongodb_uri: {:?} \n", encrypted_mongo_uri);
-    // println!("Mongodb_uri: {} \n", mongodb_uri.unwrap());
-    // println!("Key: {} \n", key1);
-    // println!("Key-Hash: {} \n", key);
-    // println!("Sec_Key: {:?} \n", sec_key);
+    let client_options = match ClientOptions::parse(&mongo_uri).await {
+        Ok(options) => options,
+        Err(e) => {
+            eprintln!("Failed to parse MongoDB URI: {}", e);
+            return Ok(MongoClientState::new(None).await);
+        }
+    };
 
-    let mongo_uri = decrypt(encrypted_mongo_uri, &sec_key).expect("Failed to decrypt Mongo URI");
-
-    let client_options = ClientOptions::parse(&mongo_uri).await?;
-    let client = Client::with_options(client_options)?;
+    let client = match Client::with_options(client_options) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("Failed to create MongoDB client: {}", e);
+            return Ok(MongoClientState::new(None).await);
+        }
+    };
 
     match client.database("admin").run_command(doc! {"ping": 1}).await {
         Ok(_) => {
             println!("Connected to MongoDB securely!");
+
+            let db = client.database("password_manager");
+            let users_collection = db.collection::<User>("users");
+
+            if let Err(e) = create_unique_indexes(&users_collection).await {
+                eprintln!("Warning: Failed to create indexes: {}", e);
+            }
+
+            Ok(MongoClientState::new(Some(client)).await)
         }
         Err(e) => {
             eprintln!("Failed to connect to MongoDB: {}", e);
-            return Err(e);
+            Ok(MongoClientState::new(None).await)
         }
     }
-
-    println!("Connected to MongoDB securely!");
-
-    let db = client.database("password_manager");
-    let users_collection = db.collection::<User>("users");
-    create_unique_indexes(&users_collection).await?;
-
-    Ok(MongoClientState::new(client).await)
 }
 
-// Derive the key using SHA-256
-fn derive_key(input_key: &str) -> [u8; 32] {
-    let mut hasher = Sha256::new();
-    hasher.update(input_key.as_bytes());
-    let result = hasher.finalize();
-    let mut key = [0u8; 32];
-    key.copy_from_slice(&result[..32]);
-    key
+// ! Database Connection Status Commands
+
+#[tauri::command]
+pub async fn check_database_connection(
+    state: State<'_, MongoClientState>,
+) -> Result<ConnectionStatus, String> {
+    Ok(state.get_status())
+}
+
+#[tauri::command]
+pub async fn ping_database(state: State<'_, MongoClientState>) -> Result<bool, String> {
+    if !state.is_connected() {
+        return Ok(false);
+    }
+
+    match state.try_reconnect().await {
+        Ok(_) => Ok(true),
+        Err(_) => Ok(false),
+    }
+}
+
+#[tauri::command]
+pub async fn attempt_database_reconnection(
+    state: State<'_, MongoClientState>,
+) -> Result<bool, String> {
+    match state.try_reconnect().await {
+        Ok(_) => Ok(true),
+        Err(e) => {
+            eprintln!("Reconnection failed: {}", e);
+            Ok(false)
+        }
+    }
 }
