@@ -42,6 +42,7 @@ mod extensions;
 mod openurl;
 mod password_crypto;
 mod secure;
+mod tests;
 mod version;
 
 #[tauri::command]
@@ -69,6 +70,7 @@ pub async fn run() {
     let _matches = Command::new("CosmoSecure")
         .author("akash2061")
         .version(env!("CARGO_PKG_VERSION"))
+        .about("\nCosmoSecure: A secure password manager built with Tauri and Rust.\nAuthor: akash2061 <aakash.soni8781@gmail.com>")
         .get_matches();
 
     // Initialize the Tauri application

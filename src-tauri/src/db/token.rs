@@ -1,9 +1,8 @@
 use crate::env_var::{get_env_key, get_env_vars};
 // use crate::secure::encrypt;
-use crate::secure::decrypt;
+use crate::secure::{decrypt, derive_key};
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 use std::time::{Duration, SystemTime};
 
 #[derive(Serialize, Deserialize)]
@@ -21,8 +20,6 @@ pub fn generate_token(user_id: &str) -> Result<String, String> {
     let key = get_env_key().expect("KEY must be set");
     let sec_key = derive_key(key);
 
-    // let token = encrypt(token_var, &sec_key);
-    // println!("Encoded - Token: {:?} \n", token.unwrap());
     let token_secret = decrypt(token_var, &sec_key);
     let token_sec = token_secret.unwrap();
 
@@ -41,16 +38,6 @@ pub fn generate_token(user_id: &str) -> Result<String, String> {
 
     // Encode the claims into a JWT token
     encode(&header, &claims, &encoding_key).map_err(|e| e.to_string()) // Convert errors to String
-}
-
-// Derive the key using SHA-256
-fn derive_key(input_key: &str) -> [u8; 32] {
-    let mut hasher = Sha256::new();
-    hasher.update(input_key.as_bytes());
-    let result = hasher.finalize();
-    let mut key = [0u8; 32];
-    key.copy_from_slice(&result[..32]);
-    key
 }
 
 use crate::config::{delete_config, load_from_config, save_to_config};
