@@ -30,10 +30,8 @@ fn load_alphabet_from_env() -> alphabet::Alphabet {
         .expect("Invalid alphabet length — must be exactly 64 characters")
 }
 
-// --- Use Lazy to initialize once globally ---
 static CUSTOM_ALPHABET: Lazy<alphabet::Alphabet> = Lazy::new(|| load_alphabet_from_env());
 
-// Create engine with custom alphabet
 static CUSTOM_ENGINE: Lazy<engine::GeneralPurpose> =
     Lazy::new(|| engine::GeneralPurpose::new(&*CUSTOM_ALPHABET, general_purpose::PAD));
 
