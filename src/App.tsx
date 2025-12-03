@@ -5,7 +5,7 @@ import RoutesConf from "./routes/RoutesConf";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useState } from "react";
 import Auth_page from "./components/auth/Auth_page";
-import { Intro, Login, Signup } from "./components";
+import { Intro, Login } from "./components";
 import { invoke } from "@tauri-apps/api/core";
 import { decryptToken, decryptUser } from "./components/auth/token_secure";
 import { applyTheme, themes, ThemeKeys, CosmicLoader } from "./themes/"; // Import applyTheme and themes
@@ -94,7 +94,7 @@ function App() {
                       <Route path="/" element={<Auth_page />}>
                         <Route index element={<Intro />} />
                         <Route path="login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
-                        <Route path="signup" element={<Signup />} />
+
                       </Route>
                     </>
                   )}

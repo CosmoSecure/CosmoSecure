@@ -95,6 +95,24 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
         if (e.key === ' ') e.preventDefault();
     };
 
+    const handleSignupRedirect = async () => {
+        try {
+            await invoke('open_url', { url: 'https://cosmosecure.vercel.app/signup' });
+        } catch (error) {
+            console.error('Failed to open signup URL:', error);
+            quick.error('Error', 'Failed to open signup page. Please visit https://cosmosecure.vercel.app/signup manually.');
+        }
+    };
+
+    const handleForgotPasswordRedirect = async () => {
+        try {
+            await invoke('open_url', { url: 'https://cosmosecure.vercel.app/forgot-password' });
+        } catch (error) {
+            console.error('Failed to open forgot password URL:', error);
+            quick.error('Error', 'Failed to open forgot password page. Please visit https://cosmosecure.vercel.app/forgot-password manually.');
+        }
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, x: 300 }}
@@ -156,10 +174,22 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
                                 Login
                             </button>
                         </form>
+
+                        {/* Forgot Password */}
                         <div className="mt-4 text-center">
+                            <button
+                                onClick={handleForgotPasswordRedirect}
+                                className="text-theme-accent hover:underline text-sm"
+                            >
+                                Forgot Password?
+                            </button>
+                        </div>
+
+                        {/* Signup */}
+                        <div className="mt-2 text-center">
                             Don't have an account?{" "}
                             <button
-                                onClick={() => navigate("/signup")}
+                                onClick={handleSignupRedirect}
                                 className="text-theme-accent hover:underline"
                             >
                                 Signup
