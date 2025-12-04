@@ -22,13 +22,25 @@ if (!SECRET_KEY) {
 }
 
 export function token_secure(response: Response) {
-    // Encrypt the token using AES encryption
-    const encryptedToken = CryptoJS.AES.encrypt(response.token, SECRET_KEY).toString();
-    sessionStorage.setItem("token", encryptedToken);
+    if (!response || !response.token || !response.data) {
+        console.error("Invalid response structure in token_secure:", response);
+        throw new Error("Invalid response structure");
+    }
 
-    // Encrypt the user data using AES encryption
-    const encryptedData = CryptoJS.AES.encrypt(JSON.stringify(response.data), SECRET_KEY).toString();
-    sessionStorage.setItem("user", encryptedData);
+    try {
+        // Encrypt the token using AES encryption
+        const encryptedToken = CryptoJS.AES.encrypt(response.token, SECRET_KEY).toString();
+        sessionStorage.setItem("token", encryptedToken);
+
+        // Encrypt the user data using AES encryption
+        const encryptedData = CryptoJS.AES.encrypt(JSON.stringify(response.data), SECRET_KEY).toString();
+        sessionStorage.setItem("user", encryptedData);
+        
+        console.log("Token and user data encrypted and stored successfully");
+    } catch (error) {
+        console.error("Error in token_secure:", error);
+        throw error;
+    }
 }
 
 // Decrypt the token and user data for use in the application
