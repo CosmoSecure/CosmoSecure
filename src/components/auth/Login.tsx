@@ -46,6 +46,14 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
 
         try {
             const response = await middleware.auth.login(performLogin, identifier);
+            console.log("Login response received:", {
+                hasResponse: !!response,
+                hasToken: !!(response?.token),
+                hasData: !!(response?.data),
+                dataId: response?.data?.id,
+                dataIdType: typeof response?.data?.id
+            });
+
             if (response) {
                 token_secure(response);
                 await invoke('save_token_command', {
@@ -56,8 +64,18 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
                 // Get updated user session with fresh last_login time
                 try {
                     console.log("Fetching updated user session after login...");
+
+                    // Validate response structure before proceeding
+                    if (!response || !response.data || !response.data.id) {
+                        console.warn("Invalid response structure, skipping user session update");
+                        throw new Error("Invalid response structure");
+                    }
+
+                    const userId = response.data.id.toString();
+                    console.log("Using userId for session update:", userId);
+
                     const updatedResponse = await invoke<{ token: string; data: User }>('update_user_session', {
-                        userId: response.data.id.toString(),
+                        userId: userId,
                         tokenData: sessionStorage.getItem('token'),
                     });
 
@@ -93,6 +111,24 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === ' ') e.preventDefault();
+    };
+
+    const handleSignupRedirect = async () => {
+        try {
+            await invoke('open_url', { url: 'https://cosmosecure.vercel.app/signup' });
+        } catch (error) {
+            console.error('Failed to open signup URL:', error);
+            quick.error('Error', 'Failed to open signup page. Please visit https://cosmosecure.vercel.app/signup manually.');
+        }
+    };
+
+    const handleForgotPasswordRedirect = async () => {
+        try {
+            await invoke('open_url', { url: 'https://cosmosecure.vercel.app/forgot-password' });
+        } catch (error) {
+            console.error('Failed to open forgot password URL:', error);
+            quick.error('Error', 'Failed to open forgot password page. Please visit https://cosmosecure.vercel.app/forgot-password manually.');
+        }
     };
 
     return (
@@ -156,11 +192,23 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
                                 Login
                             </button>
                         </form>
+
+                        {/* Forgot Password */}
                         <div className="mt-4 text-center">
+                            <button
+                                onClick={handleForgotPasswordRedirect}
+                                className="text-theme-accent hover:text-[#019690] font-semibold"
+                            >
+                                Forgot Password?
+                            </button>
+                        </div>
+
+                        {/* Signup */}
+                        <div className="mt-2 text-center">
                             Don't have an account?{" "}
                             <button
-                                onClick={() => navigate("/signup")}
-                                className="text-theme-accent hover:underline"
+                                onClick={handleSignupRedirect}
+                                className="text-theme-accent hover:text-[#019690] font-semibold"
                             >
                                 Signup
                             </button>

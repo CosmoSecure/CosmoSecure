@@ -1,11 +1,9 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { invoke } from '@tauri-apps/api/core';
 
 // Custom hook for logout functionality
 export const useLogoutModal = () => {
     const [showLogoutPopup, setShowLogoutPopup] = useState(false);
-    const navigate = useNavigate();
 
     const showLogout = () => {
         setShowLogoutPopup(true);
@@ -13,23 +11,39 @@ export const useLogoutModal = () => {
 
     const handleLogout = async () => {
         try {
-            // Call Tauri delete_config function
-            await invoke('delete_config');
-
             setShowLogoutPopup(false);
 
-            // Additional logout logic:
-            // - Clear authentication tokens
-            // - Clear user data from context/localStorage
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userData');
+            // Clear all authentication data immediately (first priority)
+            localStorage.clear();
+            sessionStorage.clear();
 
-            console.log('Logout confirmed and config deleted');
-            navigate('/login');
+            // Dispatch logout event immediately for instant UI response
+            window.dispatchEvent(new CustomEvent('userLogout'));
+
+            console.log('Logout initiated - storage cleared and event dispatched');
+
+            // Call Tauri delete_config in background (don't wait for it)
+            invoke('delete_config').catch((error) => {
+                console.warn('Background config deletion failed:', error);
+                // This is non-critical, continue with logout
+            });
+
+            // Immediate redirect without waiting for backend cleanup
+            window.location.replace('/login');
+
         } catch (error) {
             console.error('Error during logout:', error);
             setShowLogoutPopup(false);
-            navigate('/login');
+
+            // Even if something fails, clear local data and logout
+            localStorage.clear();
+            sessionStorage.clear();
+
+            console.log('Emergency logout completed');
+
+            // Dispatch logout event and immediate redirect
+            window.dispatchEvent(new CustomEvent('userLogout'));
+            window.location.replace('/login');
         }
     };
 

@@ -85,14 +85,16 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
             const decryptedUser = decryptUser();
 
             console.log("Decrypted User: ", decryptedUser); //! Debugging log
-            console.log("Raw last login field (l):", decryptedUser.l); //! Debug last login
-            console.log("Formatted last login:", formatLastLogin(decryptedUser.l)); //! Debug formatted last login
 
             if (!decryptedUser) {
+                console.log("No decrypted user data found"); //! Debug
                 setUser(null);
                 setError('Failed to decrypt user data');
                 return;
             }
+
+            console.log("Raw last login field (l):", decryptedUser.l); //! Debug last login
+            console.log("Formatted last login:", formatLastLogin(decryptedUser.l)); //! Debug formatted last login
 
             // Map raw user data to clean interface
             const userData: UserData = {
@@ -190,12 +192,20 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
             loadUser();
         };
 
+        // Listen for logout events and immediately clear user data
+        const handleLogoutEvent = () => {
+            console.log('Logout event received, clearing user data');
+            clearUser();
+        };
+
         window.addEventListener('storage', handleStorageChange);
         window.addEventListener('userDataChanged', handleUserDataChange);
+        window.addEventListener('userLogout', handleLogoutEvent);
 
         return () => {
             window.removeEventListener('storage', handleStorageChange);
             window.removeEventListener('userDataChanged', handleUserDataChange);
+            window.removeEventListener('userLogout', handleLogoutEvent);
         };
     }, []);
 

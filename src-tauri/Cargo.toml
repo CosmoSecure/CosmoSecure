@@ -14,15 +14,12 @@
 
 [package]
 name = "cosmosecure"
-version = "0.1.0"
-description = "A Tauri App"                        # Change it! [Don't start with A, An, The]
+version = "1.0.0"
+description = "CosmoSecure is a modern password manager that keeps your credentials safe with military-grade encryption and zero-knowledge architecture. Manage passwords securely across all your devices."                        # Change it! [Don't start with A, An, The]
 authors = ["akash2061 <aakashsoni8781@gmail.com>"]
 edition = "2021"
 readme = "../README.md"
 license-file = "../LICENSE"
-# license = "Apache-2.0"
-#! Add Category.
-# categories = ["encoding", "cryptography", "accessibility"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

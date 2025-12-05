@@ -629,15 +629,15 @@ const Dashboard: React.FC = () => {
     }
 
     return (
-        <div className="bg-theme-background text-theme-text-transparent flex flex-col h-full w-full p-2 sm:p-4 lg:p-6 rounded-md overflow-auto items-center shadow-inner">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-screen-2xl w-full backdrop-blur-sm">
+        <div className="bg-theme-background text-theme-text-transparent flex flex-col h-full w-full p-1 sm:p-3 lg:p-4 rounded-md overflow-auto items-center shadow-inner">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 max-w-screen-2xl w-full backdrop-blur-sm">
                 {/* Left Side (2/3 width) */}
-                <div className="col-span-1 lg:col-span-2 flex flex-col gap-6">
+                <div className="col-span-1 lg:col-span-2 flex flex-col gap-4">
                     {/* Security Overview & Quick Actions */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         {/* Enhanced Security Overview Section */}
-                        <div className="bg-gradient-to-r from-theme-secondary-transparent via-theme-primary to-theme-secondary-transparent p-3 sm:p-6 rounded-lg shadow-2xl hover:shadow-3xl border border-theme-text-transparent/10 transition-shadow duration-300">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
+                        <div className="bg-gradient-to-r from-theme-secondary-transparent via-theme-primary to-theme-secondary-transparent p-2 sm:p-4 rounded-lg shadow-2xl hover:shadow-3xl border border-theme-text-transparent/10 transition-shadow duration-300">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
                                 <h2 className="text-lg sm:text-xl font-bold flex items-center min-w-0 flex-1">
                                     <SecurityIcon className="mr-2 break-all" /> <span className="truncate">Security Dashboard</span>
                                 </h2>
@@ -651,18 +651,18 @@ const Dashboard: React.FC = () => {
                                         }
                                         icon={passwordStats.totalPasswords === 0 ? <CheckCircleIcon /> : (securityOverview.vaultStatus === 'Secure' ? <CheckCircleIcon /> : <WarningIcon />)}
                                         sx={{
-                                            borderRadius: '12px',
+                                            borderRadius: '10px',
                                             fontWeight: 'bold',
                                             boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                            fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                                            height: { xs: '24px', sm: '32px' },
+                                            fontSize: { xs: '0.6rem', sm: '0.7rem' },
+                                            height: { xs: '20px', sm: '26px' },
                                             maxWidth: '100%',
                                             '& .MuiChip-label': {
-                                                px: { xs: 1, sm: 1.5 },
-                                                fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                                                px: { xs: 0.8, sm: 1.2 },
+                                                fontSize: { xs: '0.6rem', sm: '0.7rem' }
                                             },
                                             '& .MuiChip-icon': {
-                                                fontSize: { xs: '16px', sm: '18px' }
+                                                fontSize: { xs: '12px', sm: '14px' }
                                             }
                                         }}
                                     />
@@ -672,8 +672,8 @@ const Dashboard: React.FC = () => {
                             {/* Security Score with Progress Ring */}
                             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 gap-4">
                                 <div className="flex items-center space-x-3 lg:space-x-4 min-w-0">
-                                    <div className="relative w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0">
-                                        <svg className="w-12 h-12 sm:w-16 sm:h-16 transform -rotate-90" viewBox="0 0 36 36">
+                                    <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
+                                        <svg className="w-10 h-10 sm:w-12 sm:h-12 transform -rotate-90" viewBox="0 0 36 36">
                                             <path
                                                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                                                 fill="none"
@@ -693,7 +693,7 @@ const Dashboard: React.FC = () => {
                                             />
                                         </svg>
                                         <div className="absolute inset-0 flex items-center justify-center">
-                                            <span className="text-sm sm:text-lg font-bold">{securityOverview.securityScore}</span>
+                                            <span className="text-xs sm:text-sm font-bold">{securityOverview.securityScore}</span>
                                         </div>
                                     </div>
                                     <div className="min-w-0 flex-1">
@@ -803,21 +803,21 @@ const Dashboard: React.FC = () => {
                         </div>
 
                         {/* Quick Actions Panel */}
-                        <div className="bg-theme-primary-transparent p-6 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300">
-                            <h2 className="text-xl font-bold mb-4 flex items-center">
+                        <div className="bg-theme-primary-transparent p-4 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300">
+                            <h2 className="text-lg font-bold mb-3 flex items-center">
                                 <BuildIcon className="mr-2" /> Quick Actions
                             </h2>
-                            <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-2 gap-2">
                                 <button
                                     onClick={() => setShowAddPassword(true)}
-                                    className="bg-theme-secondary-transparent hover:bg-theme-secondary shadow-md hover:shadow-lg p-3 rounded-lg flex flex-col items-center transition-all duration-300 transform hover:scale-105"
+                                    className="bg-theme-secondary-transparent hover:bg-theme-secondary shadow-md hover:shadow-lg p-2 rounded-lg flex flex-col items-center transition-all duration-300 transform hover:scale-105"
                                 >
                                     <AddIcon className="text-theme-primary mb-1" />
                                     <span className="text-sm">Add Password</span>
                                 </button>
                                 <button
                                     onClick={() => setShowPasswordGenerator(true)}
-                                    className="bg-theme-secondary-transparent hover:bg-theme-secondary shadow-md hover:shadow-lg p-3 rounded-lg flex flex-col items-center transition-all duration-300 transform hover:scale-105"
+                                    className="bg-theme-secondary-transparent hover:bg-theme-secondary shadow-md hover:shadow-lg p-2 rounded-lg flex flex-col items-center transition-all duration-300 transform hover:scale-105"
                                 >
                                     <VpnKeyIcon className="text-theme-primary mb-1" />
                                     <span className="text-sm">Generate</span>
@@ -827,14 +827,14 @@ const Dashboard: React.FC = () => {
                                         setShowSecurityAudit(true);
                                         handleSecurityAudit();
                                     }}
-                                    className="bg-theme-secondary-transparent hover:bg-theme-secondary shadow-md hover:shadow-lg p-3 rounded-lg flex flex-col items-center transition-all duration-300 transform hover:scale-105"
+                                    className="bg-theme-secondary-transparent hover:bg-theme-secondary shadow-md hover:shadow-lg p-2 rounded-lg flex flex-col items-center transition-all duration-300 transform hover:scale-105"
                                 >
                                     <AssessmentIcon className="text-theme-primary mb-1" />
                                     <span className="text-sm">Security Audit</span>
                                 </button>
                                 <button
                                     onClick={() => navigate('/vault')}
-                                    className="bg-theme-secondary-transparent hover:bg-theme-secondary shadow-md hover:shadow-lg p-3 rounded-lg flex flex-col items-center transition-all duration-300 transform hover:scale-105"
+                                    className="bg-theme-secondary-transparent hover:bg-theme-secondary shadow-md hover:shadow-lg p-2 rounded-lg flex flex-col items-center transition-all duration-300 transform hover:scale-105"
                                 >
                                     <ShieldIcon className="text-theme-primary mb-1" />
                                     <span className="text-sm">View Vault</span>
@@ -844,17 +844,17 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Email Breach Check */}
-                    <div className="bg-theme-primary-transparent p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-fit overflow-scroll mb-6">
+                    <div className="bg-theme-primary-transparent p-4 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-fit overflow-scroll mb-4">
                         <DashboardEmailBreach userEmail={email} />
                     </div>
                 </div>
 
                 {/* Right Side (1/3 width) - Security Panel */}
-                <div className="col-span-1 flex flex-col gap-4">
+                <div className="col-span-1 flex flex-col gap-3">
                     {/* Consolidated Action Center */}
-                    <div className="bg-theme-primary-transparent p-4 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300">
-                        <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-lg font-bold flex items-center">
+                    <div className="bg-theme-primary-transparent p-3 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300">
+                        <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-base font-bold flex items-center">
                                 <ShieldIcon className="mr-2" /> Action Center
                             </h3>
                             <button
@@ -869,8 +869,8 @@ const Dashboard: React.FC = () => {
                         </div>
 
                         {/* Password Storage Bar */}
-                        <div className="bg-theme-secondary-transparent p-3 rounded-lg mb-3 border border-theme-secondary shadow-md hover:shadow-lg transition-shadow duration-300">
-                            <div className="flex justify-between items-center mb-2">
+                        <div className="bg-theme-secondary-transparent p-2 rounded-lg mb-2 border border-theme-secondary shadow-md hover:shadow-lg transition-shadow duration-300">
+                            <div className="flex justify-between items-center mb-1">
                                 <div className="flex items-center">
                                     <VpnKeyIcon className="mr-2 text-blue-500" fontSize="small" />
                                     <span className="text-sm font-medium">Password Storage</span>
@@ -889,7 +889,7 @@ const Dashboard: React.FC = () => {
                                     variant="determinate"
                                     value={(passwordStats.totalPasswords / (user?.maxPasswordCount || 1)) * 100}
                                     sx={{
-                                        height: 8,
+                                        height: 6,
                                         borderRadius: '999px',
                                         backgroundColor: 'rgba(255,255,255,0.1)',
                                         '& .MuiLinearProgress-bar': {
@@ -902,9 +902,9 @@ const Dashboard: React.FC = () => {
                         </div>
 
                         {/* Priority Actions Only */}
-                        <div className="space-y-2 shadow-md hover:shadow-lg transition-shadow duration-300 rounded-md p-2">
+                        <div className="space-y-1 shadow-md hover:shadow-lg transition-shadow duration-300 rounded-md p-1">
                             {!user?.masterPassword?.isSet && (
-                                <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-lg border-l-4 border-red-500 shadow-md hover:shadow-lg transition-shadow duration-300">
+                                <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg border-l-4 border-red-500 shadow-md hover:shadow-lg transition-shadow duration-300">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center text-sm font-medium text-red-800 dark:text-red-200">
                                             <WarningIcon className="mr-2" fontSize="small" />
@@ -921,7 +921,7 @@ const Dashboard: React.FC = () => {
                             )}
 
                             {passwordStats.weakPasswords.length > 0 && (
-                                <div className="p-3 bg-orange-100 rounded-lg border-l-4 border-orange-500 shadow-md hover:shadow-lg transition-shadow duration-300">
+                                <div className="p-2 bg-orange-100 rounded-lg border-l-4 border-orange-500 shadow-md hover:shadow-lg transition-shadow duration-300">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center text-sm font-medium text-orange-800">
                                             <AssessmentIcon className="mr-2" fontSize="small" />
@@ -938,7 +938,7 @@ const Dashboard: React.FC = () => {
                             )}
 
                             {oldPasswords.length > 0 && (
-                                <div className="p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg border-l-4 border-yellow-500 shadow-md hover:shadow-lg transition-shadow duration-300">
+                                <div className="p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg border-l-4 border-yellow-500 shadow-md hover:shadow-lg transition-shadow duration-300">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center text-sm font-medium text-yellow-800 dark:text-yellow-200">
                                             <UpdateIcon className="mr-2" fontSize="small" />
@@ -955,7 +955,7 @@ const Dashboard: React.FC = () => {
                             )}
 
                             {passwordStats.totalPasswords === 0 && user?.masterPassword?.isSet && (
-                                <div className="p-3 bg-blue-100 rounded-lg border-l-4 border-blue-500 shadow-md hover:shadow-lg transition-shadow duration-300">
+                                <div className="p-2 bg-blue-100 rounded-lg border-l-4 border-blue-500 shadow-md hover:shadow-lg transition-shadow duration-300">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center text-sm font-medium text-blue-800">
                                             <AddIcon className="mr-2" fontSize="small" />
@@ -972,7 +972,7 @@ const Dashboard: React.FC = () => {
                             )}
 
                             {securityOverview.recommendationsCount === 0 && passwordStats.totalPasswords > 0 && (
-                                <div className="p-3 bg-green-100 rounded-lg border-l-4 border-green-500 shadow-md hover:shadow-lg transition-shadow duration-300">
+                                <div className="p-2 bg-green-100 rounded-lg border-l-4 border-green-500 shadow-md hover:shadow-lg transition-shadow duration-300">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center text-sm font-medium text-green-800">
                                             <CheckCircleIcon className="mr-2" fontSize="small" />
@@ -991,10 +991,10 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Weak Passwords Details */}
-                    <div className="bg-theme-primary-transparent p-4 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div className="bg-theme-primary-transparent p-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
                         <ListItemButton
                             onClick={() => setOpenWeakPasswords(!openWeakPasswords)}
-                            className="text-theme-text font-bold p-2 rounded-lg flex justify-between items-center bg-transparent hover:rounded-lg"
+                            className="text-theme-text font-bold p-1 rounded-lg flex justify-between items-center bg-transparent hover:rounded-lg"
                         >
                             <span className="flex items-center">
                                 <WarningIcon className="mr-2 text-red-500" />
@@ -1007,7 +1007,7 @@ const Dashboard: React.FC = () => {
                             <List
                                 component="div"
                                 disablePadding
-                                className="bg-transparent rounded-lg mt-2 shadow-inner overflow-y-auto overflow-x-hidden max-h-64 space-y-2 p-2 w-full"
+                                className="bg-transparent rounded-lg mt-2 shadow-inner overflow-y-auto overflow-x-hidden max-h-52 space-y-1 p-1 w-full"
                             >
                                 {passwordStats.weakPasswords.length > 0 ? (
                                     passwordStats.weakPasswords.map((entry, index) => (
@@ -1080,10 +1080,10 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Old Passwords Details */}
-                    <div className="bg-theme-primary-transparent p-4 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div className="bg-theme-primary-transparent p-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
                         <ListItemButton
                             onClick={() => setOpenOldPasswords(!openOldPasswords)}
-                            className="text-theme-text font-bold p-2 rounded-lg flex justify-between items-center bg-transparent hover:rounded-lg"
+                            className="text-theme-text font-bold p-1 rounded-lg flex justify-between items-center bg-transparent hover:rounded-lg"
                         >
                             <span className="flex items-center">
                                 <UpdateIcon className="mr-2 text-yellow-500" />
@@ -1096,7 +1096,7 @@ const Dashboard: React.FC = () => {
                             <List
                                 component="div"
                                 disablePadding
-                                className="bg-transparent rounded-lg mt-2 shadow-inner overflow-y-auto overflow-x-hidden max-h-64 space-y-2 p-2"
+                                className="bg-transparent rounded-lg mt-2 shadow-inner overflow-y-auto overflow-x-hidden max-h-52 space-y-1 p-1"
                                 sx={{
                                     width: '100%',
                                     maxWidth: '100%'
@@ -1173,22 +1173,22 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     {/* User Account Info */}
-                    <div className="bg-theme-primary-transparent p-4 rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02]">
-                        <h3 className="text-xl font-bold mb-3">Account Info</h3>
-                        <div className="space-y-3">
-                            <div className="flex items-center text-base">
-                                <img src={Pro} alt="Profile" className="rounded-full h-10 w-10 mr-3" />
+                    <div className="bg-theme-primary-transparent p-3 rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02]">
+                        <h3 className="text-lg font-bold mb-2">Account Info</h3>
+                        <div className="space-y-2">
+                            <div className="flex items-center text-sm">
+                                <img src={Pro} alt="Profile" className="rounded-full h-8 w-8 mr-2" />
                                 <div>
                                     <div className="font-semibold text-base">{user?.name || 'Unknown'}</div>
                                     <div className="text-sm opacity-75 break-all">{user?.email || 'No email'}</div>
                                 </div>
                             </div>
-                            <div className="flex items-center text-base">
-                                <CakeIcon className="mr-4 ml-2 text-theme-text-transparent" fontSize="medium" />
+                            <div className="flex items-center text-sm">
+                                <CakeIcon className="mr-3 ml-1 text-theme-text-transparent" fontSize="small" />
                                 <span className='font-sarif font-semibold'>Joined {user?.joinDate || 'Unknown'}</span>
                             </div>
-                            <div className="flex items-center text-base">
-                                <PasswordIcon className="mr-4 ml-2 text-theme-text-transparent" fontSize="medium" />
+                            <div className="flex items-center text-sm">
+                                <PasswordIcon className="mr-3 ml-1 text-theme-text-transparent" fontSize="small" />
                                 <span className='font-sarif font-semibold'>{passwordStats.totalPasswords} passwords stored</span>
                             </div>
                         </div>
@@ -1207,12 +1207,12 @@ const Dashboard: React.FC = () => {
                     ></div>
 
                     {/* Modal Content */}
-                    <div className="relative bg-theme-primary-transparent border border-theme-primary-transparent rounded-lg shadow-3xl hover:shadow-4xl transition-shadow duration-300 backdrop-blur-lg max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+                    <div className="relative bg-theme-primary-transparent border border-theme-primary-transparent rounded-lg shadow-3xl hover:shadow-4xl transition-shadow duration-300 backdrop-blur-lg max-w-sm w-full mx-3 max-h-[90vh] overflow-y-auto">
                         {/* Header */}
-                        <div className="flex items-center justify-between p-4 border-b border-theme-text-transparent/10">
+                        <div className="flex items-center justify-between p-3 border-b border-theme-text-transparent/10">
                             <div className="flex items-center">
-                                <VpnKeyIcon className="mr-2 text-theme-secondary-transparent mb-2" />
-                                <h2 className="text-lg font-semibold text-theme-text">Password Generator</h2>
+                                <VpnKeyIcon className="mr-2 text-theme-secondary-transparent mb-1" fontSize="small" />
+                                <h2 className="text-base font-semibold text-theme-text">Password Generator</h2>
                             </div>
                             <button
                                 onClick={() => {
@@ -1227,7 +1227,7 @@ const Dashboard: React.FC = () => {
                         </div>
 
                         {/* Content */}
-                        <div className="p-4 space-y-4">
+                        <div className="p-3 space-y-3">
                             <TextField
                                 label="Password Length"
                                 type="number"
@@ -1288,12 +1288,12 @@ const Dashboard: React.FC = () => {
                     ></div>
 
                     {/* Modal Content */}
-                    <div className="relative bg-theme-primary border border-theme-text-transparent rounded-lg shadow-3xl hover:shadow-4xl transition-shadow duration-300 backdrop-blur-lg max-w-md w-full mx-4 max-h-[90vh] flex flex-col">
+                    <div className="relative bg-theme-primary border border-theme-text-transparent rounded-lg shadow-3xl hover:shadow-4xl transition-shadow duration-300 backdrop-blur-lg max-w-sm w-full mx-3 max-h-[90vh] flex flex-col">
                         {/* Header */}
-                        <div className="flex items-center justify-between p-4 border-b border-theme-text-transparent">
+                        <div className="flex items-center justify-between p-3 border-b border-theme-text-transparent">
                             <div className="flex items-center">
-                                <AddIcon className="mr-2 text-theme-primary" />
-                                <h2 className="text-lg font-semibold text-theme-text">Add New Password</h2>
+                                <AddIcon className="mr-2 text-theme-primary" fontSize="small" />
+                                <h2 className="text-base font-semibold text-theme-text">Add New Password</h2>
                             </div>
                             <button
                                 onClick={() => {
@@ -1311,7 +1311,7 @@ const Dashboard: React.FC = () => {
                         </div>
 
                         {/* Content */}
-                        <div className="p-4 space-y-4 overflow-y-auto flex-1">
+                        <div className="p-3 space-y-3 overflow-y-auto flex-1">
                             {!user?.masterPassword?.isSet && (
                                 <div className="p-3 bg-orange-100 dark:bg-orange-900/20 rounded-lg border-l-4 border-orange-500">
                                     <div className="flex items-center text-sm font-medium text-orange-800 dark:text-orange-200">
@@ -1509,7 +1509,7 @@ const Dashboard: React.FC = () => {
                                             value={digit}
                                             onChange={(e) => handleMasterPinChange(index, e.target.value)}
                                             onKeyDown={(e) => handleMasterPinKeyDown(index, e)}
-                                            className="w-12 h-12 text-center text-lg font-bold bg-theme-secondary border border-theme-text-transparent rounded-lg text-theme-text focus:border-theme-primary focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="w-10 h-10 text-center text-base font-bold bg-theme-secondary border border-theme-text-transparent rounded-lg text-theme-text focus:border-theme-primary focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                             placeholder="•"
                                             disabled={!user?.masterPassword?.isSet}
                                         />
@@ -1572,12 +1572,12 @@ const Dashboard: React.FC = () => {
                     ></div>
 
                     {/* Modal Content */}
-                    <div className="relative bg-theme-primary border border-theme-text-transparent rounded-lg shadow-3xl hover:shadow-4xl transition-all duration-300 backdrop-blur-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto transform animate-in slide-in-from-bottom-4">
+                    <div className="relative bg-theme-primary border border-theme-text-transparent rounded-lg shadow-3xl hover:shadow-4xl transition-all duration-300 backdrop-blur-lg max-w-xl w-full mx-3 max-h-[90vh] overflow-y-auto transform animate-in slide-in-from-bottom-4">
                         {/* Header */}
-                        <div className="flex items-center justify-between p-4 border-b border-theme-text-transparent">
+                        <div className="flex items-center justify-between p-3 border-b border-theme-text-transparent">
                             <div className="flex items-center">
-                                <AssessmentIcon className="mr-2 text-theme-secondary-transparent mb-1" />
-                                <h2 className="text-lg font-semibold text-theme-text">Security Audit Results</h2>
+                                <AssessmentIcon className="mr-2 text-theme-secondary-transparent mb-1" fontSize="small" />
+                                <h2 className="text-base font-semibold text-theme-text">Security Audit Results</h2>
                             </div>
                             <button
                                 onClick={() => {
@@ -1586,12 +1586,12 @@ const Dashboard: React.FC = () => {
                                 }}
                                 className="p-1 hover:bg-theme-secondary-transparent rounded-full transition-colors"
                             >
-                                <CloseIcon className="text-theme-text" />
+                                <CloseIcon className="text-theme-text" fontSize="small" />
                             </button>
                         </div>
 
                         {/* Content */}
-                        <div className="p-4">
+                        <div className="p-3">
                             {auditResults && (
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-3 gap-4">
@@ -1668,7 +1668,7 @@ const Dashboard: React.FC = () => {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex justify-end space-x-2 p-4 border-t border-theme-text-transparent">
+                        <div className="flex justify-end space-x-2 p-3 border-t border-theme-text-transparent">
                             <Button
                                 onClick={() => {
                                     setShowSecurityAudit(false);

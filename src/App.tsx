@@ -5,7 +5,7 @@ import RoutesConf from "./routes/RoutesConf";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useState } from "react";
 import Auth_page from "./components/auth/Auth_page";
-import { Intro, Login, Signup } from "./components";
+import { Intro, Login } from "./components";
 import { invoke } from "@tauri-apps/api/core";
 import { decryptToken, decryptUser } from "./components/auth/token_secure";
 import { applyTheme, themes, ThemeKeys, CosmicLoader } from "./themes/"; // Import applyTheme and themes
@@ -13,7 +13,7 @@ import { Toaster } from 'sonner'; // Import Toaster from sonner
 import { NavigationProvider, NotificationProvider, UserProvider, UpdateProvider, DatabaseProvider } from './contexts/';
 import { PlatformUtils } from './utils/platformUtils'; // Import platform utils
 
-const TEST_MODE = true;  // Set to false in production
+const TEST_MODE = false;  // Set to false in production
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -33,7 +33,14 @@ function App() {
           await new Promise(resolve => setTimeout(resolve, 4000));
         }
 
-        const [encryptedToken, encryptedUser] = await invoke<[string, string]>('load_token_command');
+        // Fast authentication check with timeout to prevent hanging
+        const authPromise = invoke<[string, string]>('load_token_command');
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Authentication check timeout')), 3000);
+        });
+        
+        const [encryptedToken, encryptedUser] = await Promise.race([authPromise, timeoutPromise]);
+        
         if (encryptedToken && encryptedUser) {
           sessionStorage.setItem('token', encryptedToken);
           sessionStorage.setItem('user', encryptedUser);
@@ -42,33 +49,40 @@ function App() {
           if (token && user) {
             setIsAuthenticated(true);
           } else {
+            console.log('Token/user decryption failed, redirecting to login');
             setIsAuthenticated(false);
           }
         } else {
+          console.log('No valid token/user found, redirecting to login');
           setIsAuthenticated(false);
         }
       } catch (error) {
         console.error("Failed to load token:", error);
+        // Clear any potentially corrupted data
+        localStorage.clear();
+        sessionStorage.clear();
         setIsAuthenticated(false);
       }
     };
 
     checkAuthentication();
 
+    // Listen for logout events
+    const handleLogoutEvent = () => {
+      console.log('Logout event received, setting authentication to false');
+      setIsAuthenticated(false);
+    };
+
+    window.addEventListener('userLogout', handleLogoutEvent);
+
     // Apply the saved theme or default to 'light'
     const savedTheme = (localStorage.getItem('theme') as ThemeKeys) || 'light';
     applyTheme(themes[savedTheme]);
 
-    // Disable right-click context menu
-    // const handleContextMenu = (e: MouseEvent) => {
-    //   e.preventDefault();
-    // };
-
-    // document.addEventListener('contextmenu', handleContextMenu);
-
-    // return () => {
-    //   document.removeEventListener('contextmenu', handleContextMenu);
-    // };
+    // Cleanup
+    return () => {
+      window.removeEventListener('userLogout', handleLogoutEvent);
+    };
   }, []);
 
   if (isAuthenticated === null) {
@@ -94,7 +108,7 @@ function App() {
                       <Route path="/" element={<Auth_page />}>
                         <Route index element={<Intro />} />
                         <Route path="login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
-                        <Route path="signup" element={<Signup />} />
+
                       </Route>
                     </>
                   )}

@@ -57,7 +57,7 @@ const DefaultNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ toggleP
 
                     {/* Username */}
                     <div
-                        className="absolute top-[5rem] left-[47%] -translate-x-1/2 hidden group-hover:block text-theme-text font-bold text-center text-xl transition-all duration-300 active:scale-95"
+                        className="absolute top-[5rem] left-[47%] -translate-x-1/2 hidden group-hover:block text-theme-text font-bold text-center text-xl transition-all duration-300 delay-300 active:scale-95"
                         onClick={(e) => {
                             e.stopPropagation();
                             toggleProfileVisibility();
@@ -85,9 +85,9 @@ const DefaultNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ toggleP
                                 {/* Label Tile */}
                                 <button
                                     onClick={() => navigate(route.path)}
-                                    className="hidden group-hover:flex items-center justify-start flex-1 text-theme-text h-[40px] rounded-md bg-gradient-to-r from-theme-accent-transparent to-theme-accent shadow-md border border-theme-accent hover:bg-theme-accent active:scale-95"
+                                    className="hidden group-hover:flex items-center justify-start flex-1 text-theme-text h-[40px] rounded-md bg-gradient-to-r from-theme-accent-transparent to-theme-accent shadow-md border border-theme-accent hover:bg-theme-accent active:scale-95 transition-all duration-300 delay-150"
                                 >
-                                    <span className="font-bold text-lg px-4">
+                                    <span className="font-bold text-lg px-4 transition-all duration-300 delay-300">
                                         {route.label}
                                     </span>
                                 </button>
@@ -101,7 +101,7 @@ const DefaultNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ toggleP
             <div>
                 <nav className="p-2 space-y-4">
                     {/* Update Notification - show above settings button when expanded */}
-                    <div className="group-hover:block hidden">
+                    <div className="group-hover:block hidden transition-all duration-300 delay-300">
                         <UpdateNotification isExpanded={true} />
                     </div>
 
@@ -109,7 +109,7 @@ const DefaultNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ toggleP
                         <div key={route.path}>
                             {/* Show collapsed update notification above settings button */}
                             {route.path === '/setting' && (
-                                <div className="group-hover:hidden block mb-4">
+                                <div className="group-hover:hidden block mb-4 transition-all duration-300 delay-300">
                                     <UpdateNotification isExpanded={false} />
                                 </div>
                             )}
@@ -128,9 +128,9 @@ const DefaultNav: React.FC<{ toggleProfileVisibility: () => void }> = ({ toggleP
                                 {/* Label Tile */}
                                 <button
                                     onClick={() => handleNavClick(route)}
-                                    className="hidden group-hover:flex items-center justify-start flex-1 text-theme-text h-[40px] rounded-md bg-gradient-to-r from-theme-accent-transparent to-theme-accent shadow-md border border-theme-accent hover:bg-theme-accent active:scale-95"
+                                    className="hidden group-hover:flex items-center justify-start flex-1 text-theme-text h-[40px] rounded-md bg-gradient-to-r from-theme-accent-transparent to-theme-accent shadow-md border border-theme-accent hover:bg-theme-accent active:scale-95 transition-all duration-300 delay-150"
                                 >
-                                    <span className="font-bold text-lg px-4">
+                                    <span className="font-bold text-lg px-4 transition-all duration-300 delay-300">
                                         {route.label}
                                     </span>
                                 </button>

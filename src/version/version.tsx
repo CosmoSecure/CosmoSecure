@@ -11,7 +11,7 @@ const VersionDisplay: React.FC = () => {
                 setVersion(appVersion);
             } catch (error) {
                 console.error('Error fetching version:', error);
-                setVersion('0.1.0'); // Fallback version
+                setVersion('1.0.0'); // Fallback version
             }
         };
 
@@ -23,7 +23,7 @@ const VersionDisplay: React.FC = () => {
             className="fixed bottom-0 right-3 text-theme-text opacity-50 text-sm"
             style={{ zIndex: 1000 }}
         >
-            © 2024 CosmoSecure • v{version}
+            © 2025 CosmoSecure • v{version}
         </div>
     );
 };
