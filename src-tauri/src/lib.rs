@@ -6,8 +6,8 @@ use crate::db::{
     },
     modules::{
         master_password::{
-            generate_salt_hex, get_master_salt, setup_master_password, update_user_session,
-            verify_master_password,
+            generate_salt_hex, get_master_salt, get_zkp_verification_data, setup_master_password,
+            update_user_session,
         },
         passwords::{
             add_password_entry, decrypt_single_password, delete_password_entry,
@@ -132,7 +132,7 @@ pub async fn run() {
             get_system_and_process_usage,
             fetch_email_breach_info,
             setup_master_password,
-            verify_master_password,
+            get_zkp_verification_data,
             generate_salt_hex,
             update_user_session,
             get_master_salt,

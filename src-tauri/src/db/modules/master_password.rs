@@ -1,6 +1,6 @@
 use crate::db::{
     db_connect::MongoClientState,
-    schema::db_schema::{MasterPasswordAuth, User},
+    schema::db_schema::{User, ZKPAuth},
 };
 use bson::{doc, DateTime};
 use tauri::State;
@@ -9,7 +9,7 @@ use tauri::State;
 pub async fn setup_master_password(
     state: State<'_, MongoClientState>,
     user_id: String,
-    master_password_hash: String, // Pre-hashed on client
+    encrypted_canary: String, // Encrypted canary from client (NOT a hash!)
     salt: String,
 ) -> Result<String, String> {
     if !state.is_connected() {
@@ -19,8 +19,8 @@ pub async fn setup_master_password(
     let db = state.get_database("password_manager")?;
     let user_collection = db.collection::<User>("users");
 
-    let master_auth = MasterPasswordAuth {
-        password_hash: master_password_hash,
+    let zkp_auth = ZKPAuth {
+        encrypted_canary,
         salt,
         created_at: DateTime::now(),
     };
@@ -28,7 +28,7 @@ pub async fn setup_master_password(
     let filter = doc! { "ui": &user_id };
     let update = doc! {
         "$set": {
-            "hp.0.mp": bson::to_bson(&master_auth).unwrap(),
+            "ep.zkp": bson::to_bson(&zkp_auth).unwrap(),
         }
     };
 
@@ -71,15 +71,16 @@ pub async fn update_user_session(
     }
 }
 
-// Verify master password (for additional security checks)
+// Verify master password using ZKP (client-side verification only!)
+// This function now just retrieves the encrypted canary and salt
+// The actual verification happens CLIENT-SIDE by decrypting the canary
 #[tauri::command]
-pub async fn verify_master_password(
+pub async fn get_zkp_verification_data(
     state: State<'_, MongoClientState>,
     user_id: String,
-    provided_hash: String, // Hash computed on client
-) -> Result<bool, String> {
+) -> Result<serde_json::Value, String> {
     if !state.is_connected() {
-        return Err("Database not connected. Cannot verify master password.".to_string());
+        return Err("Database not connected. Cannot get ZKP verification data.".to_string());
     }
 
     let db = state.get_database("password_manager")?;
@@ -92,9 +93,11 @@ pub async fn verify_master_password(
         .map_err(|e| e.to_string())?;
 
     if let Some(user) = user_doc {
-        if let Some(master_auth) = user.hashed_password.get(0).map(|hp| &hp.master) {
-            // Compare hashes (both computed on client side)
-            Ok(master_auth.password_hash == provided_hash)
+        if let Some(zkp_auth) = &user.email_password.zkp_auth {
+            Ok(serde_json::json!({
+                "encrypted_canary": zkp_auth.encrypted_canary,
+                "salt": zkp_auth.salt
+            }))
         } else {
             Err("No master password set for user.".to_string())
         }
@@ -123,8 +126,8 @@ pub async fn get_master_salt(
         .map_err(|e| e.to_string())?;
 
     if let Some(user) = user_doc {
-        if let Some(master_auth) = user.hashed_password.get(0).map(|hp| &hp.master) {
-            Ok(master_auth.salt.clone())
+        if let Some(zkp_auth) = &user.email_password.zkp_auth {
+            Ok(zkp_auth.salt.clone())
         } else {
             Err("No master password set for user.".to_string())
         }
