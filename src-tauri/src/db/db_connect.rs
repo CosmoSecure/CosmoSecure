@@ -1,7 +1,5 @@
 use crate::config::update_config;
-use crate::db::schema::db_schema::{
-    DeletedUser, HashedPasswordEntry, MasterPasswordAuth, PasswordEntries, User,
-};
+use crate::db::schema::db_schema::{DeletedUser, EmailPasswordAuth, PasswordEntries, User};
 use crate::db::token::generate_token;
 use crate::env_var::{get_env_key, get_env_vars};
 use crate::secure::{decrypt, derive_key};
@@ -187,12 +185,12 @@ pub async fn update_user_password(
     match users_collection.find_one(filter.clone()).await {
         Ok(Some(user)) => {
             // Verify the current password
-            if !verify(&current_password, &user.hashed_password[0].password_hash).unwrap_or(false) {
+            if !verify(&current_password, &user.email_password.password_hash).unwrap_or(false) {
                 return Err("Current password is incorrect.".to_string());
             }
 
             // Ensure the new password is not the same as the current password
-            if verify(&new_password, &user.hashed_password[0].password_hash).unwrap_or(false) {
+            if verify(&new_password, &user.email_password.password_hash).unwrap_or(false) {
                 return Err("New password cannot be the same as the current password.".to_string());
             }
 
@@ -268,7 +266,7 @@ pub async fn authenticate_user(
 
     match get_user_by_username_or_email(&identifier, &users_collection).await {
         Ok(user) => {
-            if verify(&password, &user.hashed_password[0].password_hash).unwrap_or(false) {
+            if verify(&password, &user.email_password.password_hash).unwrap_or(false) {
                 let filter = doc! { "ui": &user.user_id };
                 let last_login = DateTime::now(); // Get the current timestamp
                 let update = doc! {
@@ -351,14 +349,10 @@ pub async fn add_user(
         user_id: ObjectId::new().to_string(),
         username: username.to_string(),
         name: name.to_string(),
-        hashed_password: vec![HashedPasswordEntry {
+        email_password: EmailPasswordAuth {
             password_hash: hashed_password.to_string(),
-            master: MasterPasswordAuth {
-                password_hash: String::new(),
-                salt: String::new(),
-                created_at: DateTime::now(),
-            },
-        }],
+            zkp_auth: None, // Master password not set up yet
+        },
         email: email.to_string(),
         created_at: DateTime::now(),
         last_login: DateTime::now(),
@@ -399,7 +393,7 @@ pub async fn user_delete(
     {
         Ok(Some(user)) => {
             // Verify the password
-            if !verify(&password, &user.hashed_password[0].password_hash).unwrap_or(false) {
+            if !verify(&password, &user.email_password.password_hash).unwrap_or(false) {
                 return Err("Invalid credentials.".to_string());
             }
 
@@ -421,7 +415,7 @@ pub async fn user_delete(
                 user_id: user.user_id.clone(),
                 username: user.username.clone(),
                 name: user.name.clone(),
-                hashed_password: user.hashed_password.clone(),
+                email_password: user.email_password.clone(),
                 email: user.email.clone(),
                 deleted_at: DateTime::now(),
                 passwords: user_passwords,

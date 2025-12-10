@@ -106,10 +106,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                 lastLogin: formatLastLogin(decryptedUser.l),
                 userId: decryptedUser.ui || '',
                 maxPasswordCount: decryptedUser.pc?.[1] || 0,
-                isSecureVault: Boolean(decryptedUser.hp?.[0]?.ph),
+                isSecureVault: Boolean(decryptedUser.ep?.ph),
                 masterPassword: {
-                    isSet: Boolean(decryptedUser.hp?.[0]?.mp?.ph),
-                    hash: decryptedUser.hp?.[0]?.mp?.ph || undefined
+                    isSet: Boolean(decryptedUser.ep?.zkp?.ec && decryptedUser.ep?.zkp?.s),
+                    hash: undefined // ZKP doesn't store hash, only encrypted canary
                 }
             };
 

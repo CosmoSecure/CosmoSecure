@@ -1,23 +1,24 @@
 use mongodb::bson::DateTime;
 use serde::{Deserialize, Serialize};
 
-// ! Zero-Knowledge Password Manager Schema
+// ! Zero-Knowledge Password Manager Schema - True ZKP Implementation
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MasterPasswordAuth {
-    #[serde(rename = "ph")]
-    pub password_hash: String, // Argon2 hash for authentication
+pub struct ZKPAuth {
+    #[serde(rename = "ec")]
+    pub encrypted_canary: String, // Encrypted verification canary (no password hash!)
     #[serde(rename = "s")]
-    pub salt: String,
+    pub salt: String, // Salt for key derivation
     #[serde(rename = "c")]
     pub created_at: DateTime,
 }
-// ! Email-Password & ZKP-Password Schema
+
+// ! Email-Password Authentication (bcrypt for email/password login)
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HashedPasswordEntry {
+pub struct EmailPasswordAuth {
     #[serde(rename = "ph")]
-    pub password_hash: String, // Email's password hash
-    #[serde(rename = "mp")]
-    pub master: MasterPasswordAuth, // Master password hash for ZKP
+    pub password_hash: String, // Bcrypt hash for email/password authentication
+    #[serde(rename = "zkp")]
+    pub zkp_auth: Option<ZKPAuth>, // Optional master password ZKP auth
 }
 
 // ! User Schema
@@ -28,8 +29,8 @@ pub struct User {
     pub username: String, // username : Unique
     #[serde(rename = "n")]
     pub name: String, // Name
-    #[serde(rename = "hp")]
-    pub hashed_password: Vec<HashedPasswordEntry>, // Hashed password for authentication
+    #[serde(rename = "ep")]
+    pub email_password: EmailPasswordAuth, // Email authentication
     pub email: String,    // Email address : Unique
     #[serde(rename = "c")]
     pub created_at: DateTime, // Account creation timestamp
@@ -50,8 +51,8 @@ pub struct DeletedUser {
     pub username: String, // username
     #[serde(rename = "n")]
     pub name: String, // Name
-    #[serde(rename = "hp")]
-    pub hashed_password: Vec<HashedPasswordEntry>,
+    #[serde(rename = "ep")]
+    pub email_password: EmailPasswordAuth,
     #[serde(rename = "e")]
     pub email: String, // Email address
     #[serde(rename = "d")]

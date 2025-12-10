@@ -10,6 +10,7 @@ import {
 } from "@mui/icons-material";
 import { PLATFORMS, FontAwesomeIcon } from '../constants/platforms';
 import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
+import { hashMasterPassword, verifyMasterPassword } from '../utils/zkpUtils';
 
 interface PasswordEntry {
     entry_id: string;
@@ -20,19 +21,12 @@ interface PasswordEntry {
     lastUpdate?: number; // Timestamp for tracking password age
 }
 
-
-
-// Hash master password with SHA-256 (same as in ZKP setup)
-const hashMasterPassword = async (password: string): Promise<string> => {
-    const encoder = new TextEncoder();
-    const passwordBuffer = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', passwordBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-};
-
 // Master Password Prompt Component
-const MasterPasswordPrompt = ({ onPasswordProvided }: { onPasswordProvided: () => void }) => {
+const MasterPasswordPrompt = ({
+    onPasswordProvided
+}: {
+    onPasswordProvided: (masterPasswordHash: string) => void
+}) => {
     const [pin, setPin] = useState(['', '', '', '']);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -121,28 +115,48 @@ const MasterPasswordPrompt = ({ onPasswordProvided }: { onPasswordProvided: () =
 
         setIsLoading(true);
         try {
-            // Hash the PIN with SHA-256 (same method used during setup)
-            const masterPasswordHash = await hashMasterPassword(masterPin);
+            // Fetch ZKP verification data (encrypted canary + salt) from backend
+            const zkpData = await invoke<{ encrypted_canary: string; salt: string }>(
+                'get_zkp_verification_data',
+                { userId: user.userId }
+            );
 
-            // Get the stored master password SHA from user data
-            const storedMasterPasswordSha = user.masterPassword?.hash;
-
-            if (!storedMasterPasswordSha) {
-                setError('Master password hash not available. Please try again.');
+            if (!zkpData || !zkpData.encrypted_canary || !zkpData.salt) {
+                setError('Master password not set up. Please set up master password first.');
                 return;
             }
 
-            // Verify by comparing the SHA values
-            if (masterPasswordHash === storedMasterPasswordSha) {
-                onPasswordProvided();
+            console.log('Verifying master password with ZKP...');
+
+            // Verify master password using ZKP (client-side decryption)
+            const isValid = await verifyMasterPassword(
+                masterPin,
+                zkpData.encrypted_canary,
+                zkpData.salt
+            );
+
+            if (isValid) {
+                console.log('Master password verified successfully with ZKP');
+
+                // Hash the PIN with SHA-256 for password encryption operations
+                const masterPasswordHash = await hashMasterPassword(masterPin);
+
+                // Pass the hash to parent component for encrypting/decrypting passwords
+                onPasswordProvided(masterPasswordHash);
                 setError('');
             } else {
+                console.log('Master password verification failed');
                 setError('Incorrect PIN. Please try again.');
                 setPin(['', '', '', '']);
             }
         } catch (error) {
             console.error('Master password verification failed:', error);
-            setError('Failed to verify PIN. Please try again.');
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            if (errorMsg.includes('Master password not set up')) {
+                setError('Master password not set up. Please set up master password first.');
+            } else {
+                setError('Failed to verify PIN. Please try again.');
+            }
         } finally {
             setIsLoading(false);
         }
@@ -1408,27 +1422,25 @@ const Vault = () => {
         setShowDeleteConfirm(null);
     };
 
-    const handleMasterPasswordProvided = useCallback(async () => {
+    const handleMasterPasswordProvided = useCallback(async (providedMasterPasswordHash: string) => {
         try {
-            // Use the master password hash that's already available in user data
-            const masterPasswordHash = user?.masterPassword?.hash;
-
-            if (!masterPasswordHash) {
-                setError('Master password hash not available in user data. Please try again.');
-                return;
-            }
+            console.log('Master password hash received from prompt');
 
             // Store the master password hash for backend calls
-            setMasterPasswordHash(masterPasswordHash);
+            setMasterPasswordHash(providedMasterPasswordHash);
             setShowMasterPasswordPrompt(false);
             setError(null);
 
             console.log('Master password verified and ready for encryption operations');
+
+            // Fetch passwords now that we have the master password hash
+            await fetchPasswords();
         } catch (error) {
-            console.error('Failed to use master password hash:', error);
-            setError('Failed to verify master password. Please try again.');
+            console.error('Error after master password provided:', error);
+            setError('Failed to load passwords. Please try again.');
         }
-    }, [user?.masterPassword?.hash]);
+    }, [fetchPasswords]);
+
 
     // Render password list with cards
     const passwordList = useMemo(() => (

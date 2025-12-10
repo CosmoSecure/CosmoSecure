@@ -24,6 +24,7 @@ import DashboardEmailBreach from './tools/DashboardEmailBreach';
 
 import { PLATFORMS, FontAwesomeIcon } from '../constants/platforms';
 import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
+import { hashMasterPassword, verifyMasterPassword } from '../utils/zkpUtils';
 import { Search, ChevronDown } from 'lucide-react';
 
 // Types
@@ -358,15 +359,6 @@ const Dashboard: React.FC = () => {
         recommendations: string[];
     } | null>(null);
 
-    // Hash master password with SHA-256 (same as in Vault component)
-    const hashMasterPassword = async (password: string): Promise<string> => {
-        const encoder = new TextEncoder();
-        const passwordBuffer = encoder.encode(password);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', passwordBuffer);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    };
-
     // Navigation functions for directing users to Vault with specific filters
     const navigateToWeakPasswords = () => {
         navigate('/vault?filter=weak');
@@ -455,20 +447,35 @@ const Dashboard: React.FC = () => {
         }
 
         try {
-            // Hash the master password before sending to backend (same as Vault component)
+            // Fetch ZKP verification data (encrypted canary + salt) from backend
+            const zkpData = await invoke<{ encrypted_canary: string; salt: string }>(
+                'get_zkp_verification_data',
+                { userId: user.userId }
+            );
+
+            if (!zkpData || !zkpData.encrypted_canary || !zkpData.salt) {
+                quick.error('Master password not set up', 'Please set up master password first');
+                return;
+            }
+
+            console.log('Verifying master password with ZKP in Dashboard...');
+
+            // Verify master password using ZKP (client-side decryption)
+            const isValid = await verifyMasterPassword(
+                masterPasswordValue,
+                zkpData.encrypted_canary,
+                zkpData.salt
+            );
+
+            if (!isValid) {
+                quick.error('Invalid master password', 'Please enter the correct master PIN');
+                return;
+            }
+
+            console.log('Master password verified successfully with ZKP');
+
+            // Hash the PIN with SHA-256 for password encryption operations
             const hashedMasterPassword = await hashMasterPassword(masterPasswordValue);
-
-            // Validate master password against stored hash
-            const storedMasterPasswordHash = user?.masterPassword?.hash;
-            if (!storedMasterPasswordHash) {
-                quick.error('Master password hash not available', 'Please try logging out and back in');
-                return;
-            }
-
-            if (hashedMasterPassword !== storedMasterPasswordHash) {
-                quick.error('Invalid master password', 'Please enter the correct master password');
-                return;
-            }
 
             // Determine final platform name (use custom name if Other is selected)
             const finalPlatform = newPassword.platform === 'other' && customPlatformName.trim()

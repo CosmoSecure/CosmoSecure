@@ -46,10 +46,11 @@ pub async fn add_password_entry(
     // Fetch current_count, max_count, and salt from User document
     let (current_count, max_count, salt) = if let Some(user) = user_doc {
         let salt = user
-            .hashed_password
-            .get(0)
-            .and_then(|hp| Some(hp.master.salt.clone()))
-            .ok_or_else(|| "Master password salt not found".to_string())?;
+            .email_password
+            .zkp_auth
+            .as_ref()
+            .map(|zkp| zkp.salt.clone())
+            .ok_or_else(|| "Master password not set up".to_string())?;
         (user.password_count[0], user.password_count[1], salt)
     } else {
         return Err("User not found.".to_string());
@@ -139,10 +140,11 @@ pub async fn update_password_entry(
         .map_err(|e| e.to_string())?;
 
     let salt = if let Some(user) = user_doc {
-        user.hashed_password
-            .get(0)
-            .and_then(|hp| Some(hp.master.salt.clone()))
-            .ok_or_else(|| "Master password salt not found".to_string())?
+        user.email_password
+            .zkp_auth
+            .as_ref()
+            .map(|zkp| zkp.salt.clone())
+            .ok_or_else(|| "Master password not set up".to_string())?
     } else {
         return Err("User not found.".to_string());
     };
@@ -219,10 +221,11 @@ pub async fn get_password_entries(
         .map_err(|e| e.to_string())?;
 
     let salt = if let Some(user) = user_doc {
-        user.hashed_password
-            .get(0)
-            .and_then(|hp| Some(hp.master.salt.clone()))
-            .ok_or_else(|| "Master password salt not found".to_string())?
+        user.email_password
+            .zkp_auth
+            .as_ref()
+            .map(|zkp| zkp.salt.clone())
+            .ok_or_else(|| "Master password not set up".to_string())?
     } else {
         return Err("User not found.".to_string());
     };
@@ -335,10 +338,11 @@ pub async fn decrypt_single_password(
         .map_err(|e| e.to_string())?;
 
     let salt = if let Some(user) = user_doc {
-        user.hashed_password
-            .get(0)
-            .and_then(|hp| Some(hp.master.salt.clone()))
-            .ok_or_else(|| "Master password salt not found".to_string())?
+        user.email_password
+            .zkp_auth
+            .as_ref()
+            .map(|zkp| zkp.salt.clone())
+            .ok_or_else(|| "Master password not set up".to_string())?
     } else {
         return Err("User not found.".to_string());
     };

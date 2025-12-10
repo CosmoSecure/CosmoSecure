@@ -4,6 +4,12 @@ import { toast } from 'sonner';
 import { Lock, Shield, Eye, EyeOff, Check, AlertCircle } from 'lucide-react';
 import { token_secure } from "./token_secure";
 import { useUser } from '../../contexts/UserContext';
+import {
+    CANARY_VALUE,
+    deriveKeyFromPassword,
+    encryptCanary,
+    hashMasterPassword
+} from '../../utils/zkpUtils';
 
 interface ZKPMasterPasswordPopupProps {
     onSetupComplete: () => void;
@@ -179,18 +185,21 @@ const ZKPMasterPasswordPopup: React.FC<ZKPMasterPasswordPopupProps> = ({
             const salt = await invoke<string>('generate_salt_hex');
             console.log('Generated salt:', salt);
 
-            // Hash the PIN with salt (for authentication verification)
-            const hashedPin = await hashPin(masterPin, salt);
-            console.log('Hashed PIN:', hashedPin);
+            // Derive encryption key from master PIN + salt
+            const derivedKey = await deriveKeyFromPassword(masterPin, salt);
 
-            // Hash the master password (PIN) with SHA-256 (for encryption operations)
+            // Encrypt the canary value with derived key
+            const encryptedCanary = await encryptCanary(CANARY_VALUE, derivedKey);
+            console.log('Encrypted canary:', encryptedCanary);
+
+            // Hash the master password (PIN) with SHA-256 (for encryption operations with stored passwords)
             const masterPasswordHash = await hashMasterPassword(masterPin);
             console.log('Master Password Hash (SHA-256):', masterPasswordHash);
 
-            // Setup master password via Tauri - store SHA of master password for encryption
+            // Setup master password via Tauri - store encrypted canary for ZKP verification
             await invoke('setup_master_password', {
                 userId: user.userId,
-                masterPasswordHash: masterPasswordHash, // Store SHA(Master Password) for encryption
+                encryptedCanary: encryptedCanary,
                 salt: salt
             });
 
@@ -224,24 +233,6 @@ const ZKPMasterPasswordPopup: React.FC<ZKPMasterPasswordPopupProps> = ({
         } finally {
             setIsLoading(false);
         }
-    };
-
-    // Simple client-side PIN hashing (you can replace with crypto-js or WebCrypto)
-    const hashPin = async (pin: string, salt: string): Promise<string> => {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(pin + salt);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    };
-
-    // Hash master password with SHA-256
-    const hashMasterPassword = async (password: string): Promise<string> => {
-        const encoder = new TextEncoder();
-        const passwordBuffer = encoder.encode(password);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', passwordBuffer);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     };
 
     const resetForm = useCallback(() => {
