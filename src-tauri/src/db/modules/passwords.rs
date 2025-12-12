@@ -24,12 +24,12 @@ pub async fn add_password_entry(
     master_password: String, // This is now SHA(Master Password)
 ) -> Result<String, String> {
     // Check if database is connected
-    if !state.is_connected() {
+    if !(state.is_connected().await) {
         return Err("Database not connected. Cannot add password entry.".to_string());
     }
 
     // Use the shared client/database from db_connect.rs
-    let db: Database = state.get_database("password_manager")?;
+    let db: Database = state.get_database("password_manager").await?;
     let passwords_collection: Collection<PasswordEntries> = db.collection("password_entries");
     let user_collection: Collection<User> = db.collection("users");
 
@@ -39,7 +39,6 @@ pub async fn add_password_entry(
         .find_one(user_filter.clone())
         .await
         .map_err(|e| {
-            state.update_status(false, Some(format!("Database error: {}", e)));
             e.to_string()
         })?;
 
@@ -124,11 +123,11 @@ pub async fn update_password_entry(
     platform: Option<String>,
     master_password: String, // This is now SHA(Master Password)
 ) -> Result<String, String> {
-    if !state.is_connected() {
+    if !(state.is_connected().await) {
         return Err("Database not connected. Cannot update password entry.".to_string());
     }
 
-    let db: Database = state.get_database("password_manager")?;
+    let db: Database = state.get_database("password_manager").await?;
     let passwords_collection = db.collection::<PasswordEntries>("password_entries");
     let user_collection: Collection<User> = db.collection("users");
 
@@ -160,7 +159,7 @@ pub async fn update_password_entry(
     let update = doc! {
         "$set": {
             "entries.$.aun": username,
-            "entries.$.ap": encrypted_password, // Store encrypted password
+            "entries.$.ap": encrypted_password,
             "entries.$.aps": bson::to_bson(&strength_score).unwrap(),
             "entries.$.plt": bson::to_bson(&platform).unwrap(),
             "entries.$.lup": DateTime::now(),
@@ -178,11 +177,11 @@ pub async fn delete_password_entry(
     state: State<'_, MongoClientState>,
     entry_id: String,
 ) -> Result<String, String> {
-    if !state.is_connected() {
+    if !(state.is_connected().await) {
         return Err("Database not connected. Cannot delete password entry.".to_string());
     }
 
-    let db = state.get_database("password_manager")?;
+    let db = state.get_database("password_manager").await?;
     let passwords_collection = db.collection::<PasswordEntries>("password_entries");
 
     let filter = doc! { "entries.aid": &entry_id };
@@ -201,15 +200,14 @@ pub async fn delete_password_entry(
 #[tauri::command]
 pub async fn get_password_entries(
     state: State<'_, MongoClientState>,
-    ui: String,              // User ID
-    master_password: String, // This is now SHA(Master Password)
+    ui: String,
+    master_password: String,
 ) -> Result<Vec<PasswordEntry>, String> {
-    // Check if database is connected
-    if !state.is_connected() {
+    if !(state.is_connected().await) {
         return Err("Database not connected. Cannot retrieve password entries.".to_string());
     }
 
-    let db: Database = state.get_database("password_manager")?;
+    let db: Database = state.get_database("password_manager").await?;
     let passwords_collection = db.collection::<PasswordEntries>("password_entries");
     let user_collection: Collection<User> = db.collection("users");
 
@@ -280,13 +278,13 @@ pub async fn get_password_entries_encrypted(
     ui: String, // User ID
 ) -> Result<Vec<PasswordEntry>, String> {
     // Check if database is connected
-    if !state.is_connected() {
+    if !(state.is_connected().await) {
         return Err(
             "Database not connected. Cannot retrieve encrypted password entries.".to_string(),
         );
     }
 
-    let db = state.get_database("password_manager")?;
+    let db = state.get_database("password_manager").await?;
     let passwords_collection = db.collection::<PasswordEntries>("password_entries");
 
     let filter = doc! { "ui": &ui }; // Filter by user ID
@@ -322,11 +320,11 @@ pub async fn decrypt_single_password(
     entry_id: String,        // Password entry ID
     master_password: String, // This is now SHA(Master Password)
 ) -> Result<String, String> {
-    if !state.is_connected() {
+    if !(state.is_connected().await) {
         return Err("Database not connected. Cannot decrypt password.".to_string());
     }
 
-    let db: Database = state.get_database("password_manager")?;
+    let db: Database = state.get_database("password_manager").await?;
     let passwords_collection = db.collection::<PasswordEntries>("password_entries");
     let user_collection: Collection<User> = db.collection("users");
 
@@ -376,11 +374,11 @@ pub async fn get_password_stats(
     state: State<'_, MongoClientState>,
     ui: String, // User ID
 ) -> Result<serde_json::Value, String> {
-    if !state.is_connected() {
+    if !(state.is_connected().await) {
         return Err("Database not connected. Cannot retrieve password statistics.".to_string());
     }
 
-    let db = state.get_database("password_manager")?;
+    let db = state.get_database("password_manager").await?;
     let passwords_collection = db.collection::<PasswordEntries>("password_entries");
 
     let filter = doc! { "ui": &ui };

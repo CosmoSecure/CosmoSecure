@@ -1,4 +1,4 @@
-import { Intro, Login } from './auth';
+import { Login } from './auth';
 import AppLayout from './AppLayout';
 
 import Decor from './Decor';
@@ -12,7 +12,6 @@ import Profile from './Profile';
 import Tools from './Tools';
 
 export {
-    Intro,
     Login,
 
 

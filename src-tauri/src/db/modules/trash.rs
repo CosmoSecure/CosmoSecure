@@ -14,11 +14,11 @@ pub async fn trash(
     state: State<'_, MongoClientState>,
     ui: String, // User ID
 ) -> Result<Vec<PasswordEntry>, String> {
-    if !state.is_connected() {
+    if !(state.is_connected().await) {
         return Err("Database not connected. Cannot retrieve trash.".to_string());
     }
 
-    let db = state.get_database("password_manager")?;
+    let db = state.get_database("password_manager").await?;
     let passwords_collection = db.collection::<PasswordEntries>("password_entries");
 
     let filter = doc! { "ui": &ui }; // Filter by user ID
@@ -54,11 +54,11 @@ pub async fn add_to_trash(
         user_id, entry_id
     );
 
-    if !state.is_connected() {
+    if !(state.is_connected().await) {
         return Err("Database not connected. Cannot move to trash.".to_string());
     }
 
-    let db = state.get_database("password_manager")?;
+    let db = state.get_database("password_manager").await?;
     let passwords_collection = db.collection::<PasswordEntries>("password_entries");
     let user_collection = db.collection::<User>("users");
 
@@ -168,11 +168,11 @@ pub async fn restore_password(
     user_id: String,
     entry_id: String,
 ) -> Result<String, String> {
-    if !state.is_connected() {
+    if !(state.is_connected().await) {
         return Err("Database not connected. Cannot restore password.".to_string());
     }
 
-    let db = state.get_database("password_manager")?;
+    let db = state.get_database("password_manager").await?;
     let passwords_collection = db.collection::<PasswordEntries>("password_entries");
     let user_collection = db.collection::<User>("users");
 
@@ -221,11 +221,11 @@ pub async fn restore_password(
 
 #[tauri::command]
 pub async fn clean_old_trash(state: State<'_, MongoClientState>) -> Result<usize, String> {
-    if !state.is_connected() {
+    if !(state.is_connected().await) {
         return Err("Database not connected. Cannot clean trash.".to_string());
     }
 
-    let db = state.get_database("password_manager")?;
+    let db = state.get_database("password_manager").await?;
     let passwords_collection = db.collection::<PasswordEntries>("password_entries");
 
     let now = Utc::now();
