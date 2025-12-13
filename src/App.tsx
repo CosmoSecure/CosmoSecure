@@ -5,7 +5,7 @@ import RoutesConf from "./routes/RoutesConf";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useState } from "react";
 import Auth_page from "./components/auth/Auth_page";
-import { Intro, Login } from "./components";
+import { Login } from "./components";
 import { invoke } from "@tauri-apps/api/core";
 import { decryptToken, decryptUser } from "./components/auth/token_secure";
 import { applyTheme, themes, ThemeKeys, CosmicLoader } from "./themes/"; // Import applyTheme and themes
@@ -13,7 +13,7 @@ import { Toaster } from 'sonner'; // Import Toaster from sonner
 import { NavigationProvider, NotificationProvider, UserProvider, UpdateProvider, DatabaseProvider } from './contexts/';
 import { PlatformUtils } from './utils/platformUtils'; // Import platform utils
 
-const TEST_MODE = false;  // Set to false in production
+const TEST_MODE = true;  // Set to false in production
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -36,11 +36,11 @@ function App() {
         // Fast authentication check with timeout to prevent hanging
         const authPromise = invoke<[string, string]>('load_token_command');
         const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => reject(new Error('Authentication check timeout')), 3000);
+          setTimeout(() => reject(new Error('Authentication check timeout')), 1000);
         });
-        
+
         const [encryptedToken, encryptedUser] = await Promise.race([authPromise, timeoutPromise]);
-        
+
         if (encryptedToken && encryptedUser) {
           sessionStorage.setItem('token', encryptedToken);
           sessionStorage.setItem('user', encryptedUser);
@@ -87,7 +87,7 @@ function App() {
 
   if (isAuthenticated === null) {
     return <div className="flex justify-center items-center h-screen bg-transparent">
-      <CosmicLoader />;
+      <CosmicLoader />
     </div>
   }
 
@@ -106,9 +106,7 @@ function App() {
                   ) : (
                     <>
                       <Route path="/" element={<Auth_page />}>
-                        <Route index element={<Intro />} />
-                        <Route path="login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
-
+                        <Route index element={<Login setIsAuthenticated={setIsAuthenticated} />} />
                       </Route>
                     </>
                   )}

@@ -73,24 +73,8 @@ pub async fn run() {
         .about("\nCosmoSecure: A secure password manager built with Tauri and Rust.\nAuthor: akash2061 <aakash.soni8781@gmail.com>")
         .get_matches();
 
-    // Initialize the Tauri application
-    let client_state = match db::db_connect::connect_rust_db().await {
-        Ok(state) => {
-            if state.is_connected() {
-                println!("Application started with database connection");
-            } else {
-                println!(
-                    "Application started without database connection - running in offline mode"
-                );
-            }
-            state
-        }
-        Err(e) => {
-            eprintln!("Failed to initialize database connection: {}", e);
-            // Still start the app, but without database functionality
-            db::db_connect::MongoClientState::new(None).await
-        }
-    };
+    // Start with disconnected state - connect in background after window shows
+    let client_state = db::db_connect::MongoClientState::new(None).await;
 
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
@@ -146,15 +130,38 @@ pub async fn run() {
             ping_database,
             attempt_database_reconnection,
         ])
-        // .setup(|_app| {
-        // // Use an asynchronous runtime to run the database connection
-        // tauri::async_runtime::spawn(async {
-        //     if let Err(e) = db::db_connect::connect_rust_db().await {
-        //         eprintln!("Failed to connect to the database: {}", e);
-        //     }
-        // });
-        // Ok(())
-        // })
+        .setup(|app| {
+            // Get the client state from app and clone for background task
+            let state = app.state::<db::db_connect::MongoClientState>();
+            let state_clone = state.inner().clone();
+
+            // Connect to database in background - window shows immediately
+            tauri::async_runtime::spawn(async move {
+                println!("Starting background database connection...");
+                match db::db_connect::connect_rust_db().await {
+                    Ok(connected_state) => {
+                        if connected_state.is_connected().await {
+                            // Transfer the connected client to the app state
+                            let client_lock = connected_state.client.read().await;
+                            if let Some(client) = client_lock.clone() {
+                                drop(client_lock);
+                                state_clone.set_client(client).await;
+                                println!("✓ Connected to MongoDB securely!");
+                                println!("✓ Database connected successfully in background");
+                            }
+                        } else {
+                            println!(
+                                "✗ Database connection not available - running in offline mode"
+                            );
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("✗ Failed to connect to database in background: {}", e);
+                    }
+                }
+            });
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

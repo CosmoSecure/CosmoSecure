@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { VisibilityOffTwoToneIcon, VisibilityTwoToneIcon } from './passCSS';
 import { token_secure } from "./token_secure";
 import { Background, Logo } from "../../assets";
-import { motion } from 'framer-motion';
 import { useNotificationMiddleware, useQuickNotifications } from '../../utils/notifications';
 import { useUser } from '../../contexts/UserContext';
 
@@ -132,13 +131,7 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0, x: 300 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -300 }}
-            transition={{ duration: 0.6 }}
-            className="w-full h-full flex justify-center items-center bg-theme-background text-theme-text rounded-md"
-        >
+        <div className="w-full h-full flex justify-center items-center bg-theme-background text-theme-text rounded-md">
             <div className="max-w-4xl w-full h-5/6 m-2 mx-auto border border-theme-secondary-transparent rounded-lg shadow-lg bg-theme-primary-transparent grid grid-cols-[3fr,4fr]">
                 <div>
                     <img
@@ -216,7 +209,7 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
                     </div>
                 </div>
             </div>
-        </motion.div>
+        </div>
     );
 };
 

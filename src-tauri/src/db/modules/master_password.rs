@@ -12,11 +12,11 @@ pub async fn setup_master_password(
     encrypted_canary: String, // Encrypted canary from client (NOT a hash!)
     salt: String,
 ) -> Result<String, String> {
-    if !state.is_connected() {
+    if !(state.is_connected().await) {
         return Err("Database not connected. Cannot setup master password.".to_string());
     }
 
-    let db = state.get_database("password_manager")?;
+    let db = state.get_database("password_manager").await?;
     let user_collection = db.collection::<User>("users");
 
     let zkp_auth = ZKPAuth {
@@ -46,11 +46,11 @@ pub async fn update_user_session(
     user_id: String,
     token_data: String, // Token data from the client
 ) -> Result<serde_json::Value, String> {
-    if !state.is_connected() {
+    if !(state.is_connected().await) {
         return Err("Database not connected. Cannot update user session.".to_string());
     }
 
-    let db = state.get_database("password_manager")?;
+    let db = state.get_database("password_manager").await?;
     let user_collection = db.collection::<User>("users");
 
     let filter = doc! { "ui": &user_id };
@@ -79,11 +79,11 @@ pub async fn get_zkp_verification_data(
     state: State<'_, MongoClientState>,
     user_id: String,
 ) -> Result<serde_json::Value, String> {
-    if !state.is_connected() {
+    if !(state.is_connected().await) {
         return Err("Database not connected. Cannot get ZKP verification data.".to_string());
     }
 
-    let db = state.get_database("password_manager")?;
+    let db = state.get_database("password_manager").await?;
     let user_collection = db.collection::<User>("users");
 
     let user_filter = doc! { "ui": &user_id };
@@ -112,11 +112,11 @@ pub async fn get_master_salt(
     state: State<'_, MongoClientState>,
     user_id: String,
 ) -> Result<String, String> {
-    if !state.is_connected() {
+    if !(state.is_connected().await) {
         return Err("Database not connected. Cannot retrieve master salt.".to_string());
     }
 
-    let db = state.get_database("password_manager")?;
+    let db = state.get_database("password_manager").await?;
     let user_collection = db.collection::<User>("users");
 
     let user_filter = doc! { "ui": &user_id };
