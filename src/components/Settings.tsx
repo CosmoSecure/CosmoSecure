@@ -778,7 +778,7 @@ const Settings = () => {
                         </div>
                     </div>
                     <div
-                        className={`transition-[max-height] duration-500 ease-in-out overflow-hidden ${activeDropdown === "aboutUs" ? "max-h-[160px]" : "max-h-0"
+                        className={`transition-[max-height] duration-500 ease-in-out overflow-hidden ${activeDropdown === "aboutUs" ? "max-h-[280px]" : "max-h-0"
                             }`}
                         onClick={stopPropagation}
                     >
@@ -789,17 +789,19 @@ const Settings = () => {
                                         Hi, I am <span className="font-bold text-theme-accent">Akash</span> (GitHub:&nbsp;
                                         <a
                                             href="#"
-                                            className="text-theme-accent hover:text-theme-secondary underline decoration-2 underline-offset-2 font-semibold transition-colors"
+                                            className="text-theme-accent hover:text-theme-accent-transparent underline decoration-2 underline-offset-2 font-semibold transition-colors"
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 handleExternalLink('https://github.com/akash2061');
                                             }}
                                         >
                                             akash2061
-                                        </a>), a passionate Full Stack Developer and Rustacean. <br /><br />I specialize in building secure, scalable, and efficient software solutions. Feel free to explore my&nbsp;
+                                        </a>), a passionate Full Stack Developer and Rustacean. <br /><br />
+                                        <span className="font-bold text-theme-accent">CosmoSecure</span> is built with cutting-edge technologies like Rust and React, featuring Zero-Knowledge Password (ZKP) authentication and military-grade encryption to ensure your data remains private and secure. <br /><br />
+                                        I specialize in building secure, scalable, and efficient software solutions. Feel free to explore my&nbsp;
                                         <a
                                             href="#"
-                                            className="text-theme-accent hover:text-theme-secondary underline decoration-2 underline-offset-2 font-semibold transition-colors"
+                                            className="text-theme-accent hover:text-theme-accent-transparent underline decoration-2 underline-offset-2 font-semibold transition-colors"
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 handleExternalLink('https://github.com/akash2061/Code_Canvas');
@@ -809,7 +811,7 @@ const Settings = () => {
                                         </a> and reach out for collaborations &nbsp;
                                         <a
                                             href="#"
-                                            className="text-theme-accent hover:text-theme-secondary underline decoration-2 underline-offset-2 font-semibold transition-colors"
+                                            className="text-theme-accent hover:text-theme-accent-transparent underline decoration-2 underline-offset-2 font-semibold transition-colors"
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 handleExternalLink('https://www.linkedin.com/in/akash-soni-01475924b/');
@@ -818,6 +820,17 @@ const Settings = () => {
                                             connection
                                         </a>.
                                     </p>
+                                    <div className="flex justify-end pt-2">
+                                        <button
+                                            className="px-4 py-2 bg-theme-accent hover:bg-theme-accent-transparent text-theme-text hover:text-theme-text-transparent border-2 border-theme-accent rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handleExternalLink('https://cosmosecure.vercel.app/about');
+                                            }}
+                                        >
+                                            Read More
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         )}
