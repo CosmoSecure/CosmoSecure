@@ -191,6 +191,20 @@ pub async fn update_user_password(
         return Err("Database not connected. Cannot update password.".to_string());
     }
 
+    // Validate empty strings
+    if current_password.trim().is_empty() {
+        return Err("Current password cannot be empty.".to_string());
+    }
+
+    if new_password.trim().is_empty() {
+        return Err("New password cannot be empty.".to_string());
+    }
+
+    // Validate minimum password length
+    if new_password.len() < 8 {
+        return Err("New password must be at least 8 characters long.".to_string());
+    }
+
     let db = state.get_database("password_manager").await?;
     let users_collection = db.collection::<User>("users");
 
@@ -214,8 +228,7 @@ pub async fn update_user_password(
                 Err(e) => return Err(format!("Error hashing new password: {}", e)),
             };
 
-            // Update the password in the database
-            let update = doc! { "$set": { "hp.0.ph": hashed_password } };
+            let update = doc! { "$set": { "ep.ph": hashed_password } };
             match users_collection.update_one(filter, update).await {
                 Ok(_) => Ok(()),
                 Err(e) => Err(format!("Error updating password: {}", e)),
