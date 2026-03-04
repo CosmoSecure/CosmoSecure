@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
+import { GITHUB_URLS, SOCIAL_URLS, WEBSITE_URLS } from '../constants/urls';
 // Additional icons for better UI
 import PersonIcon from '@mui/icons-material/Person';
 import LockIcon from '@mui/icons-material/Lock';
@@ -792,7 +793,7 @@ const Settings = () => {
                                             className="text-theme-accent hover:text-theme-accent-transparent underline decoration-2 underline-offset-2 font-semibold transition-colors"
                                             onClick={(e) => {
                                                 e.preventDefault();
-                                                handleExternalLink('https://github.com/akash2061');
+                                                handleExternalLink(GITHUB_URLS.PROFILE);
                                             }}
                                         >
                                             akash2061
@@ -804,7 +805,7 @@ const Settings = () => {
                                             className="text-theme-accent hover:text-theme-accent-transparent underline decoration-2 underline-offset-2 font-semibold transition-colors"
                                             onClick={(e) => {
                                                 e.preventDefault();
-                                                handleExternalLink('https://github.com/akash2061/Code_Canvas');
+                                                handleExternalLink(GITHUB_URLS.CODE_CANVAS);
                                             }}
                                         >
                                             projects
@@ -814,7 +815,7 @@ const Settings = () => {
                                             className="text-theme-accent hover:text-theme-accent-transparent underline decoration-2 underline-offset-2 font-semibold transition-colors"
                                             onClick={(e) => {
                                                 e.preventDefault();
-                                                handleExternalLink('https://www.linkedin.com/in/akash-soni-01475924b/');
+                                                handleExternalLink(SOCIAL_URLS.LINKEDIN);
                                             }}
                                         >
                                             connection
@@ -825,7 +826,7 @@ const Settings = () => {
                                             className="px-4 py-2 bg-theme-accent hover:bg-theme-accent-transparent text-theme-text hover:text-theme-text-transparent border-2 border-theme-accent rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
                                             onClick={(e) => {
                                                 e.preventDefault();
-                                                handleExternalLink('https://cosmosecure.vercel.app/about');
+                                                handleExternalLink(WEBSITE_URLS.ABOUT);
                                             }}
                                         >
                                             Read More

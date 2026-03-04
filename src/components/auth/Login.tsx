@@ -6,6 +6,7 @@ import { token_secure } from "./token_secure";
 import { Background, Logo } from "../../assets";
 import { useNotificationMiddleware, useQuickNotifications } from '../../utils/notifications';
 import { useUser } from '../../contexts/UserContext';
+import { WEBSITE_URLS } from '../../constants/urls';
 
 interface User {
     id: number;
@@ -114,19 +115,19 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
 
     const handleSignupRedirect = async () => {
         try {
-            await invoke('open_url', { url: 'https://cosmosecure.vercel.app/signup' });
+            await invoke('open_url', { url: WEBSITE_URLS.SIGNUP });
         } catch (error) {
             console.error('Failed to open signup URL:', error);
-            quick.error('Error', 'Failed to open signup page. Please visit https://cosmosecure.vercel.app/signup manually.');
+            quick.error('Error', `Failed to open signup page. Please visit ${WEBSITE_URLS.SIGNUP} manually.`);
         }
     };
 
     const handleForgotPasswordRedirect = async () => {
         try {
-            await invoke('open_url', { url: 'https://cosmosecure.vercel.app/forgot-password' });
+            await invoke('open_url', { url: WEBSITE_URLS.FORGOT_PASSWORD });
         } catch (error) {
             console.error('Failed to open forgot password URL:', error);
-            quick.error('Error', 'Failed to open forgot password page. Please visit https://cosmosecure.vercel.app/forgot-password manually.');
+            quick.error('Error', `Failed to open forgot password page. Please visit ${WEBSITE_URLS.FORGOT_PASSWORD} manually.`);
         }
     };
 

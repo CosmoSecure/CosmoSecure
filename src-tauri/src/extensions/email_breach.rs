@@ -1,11 +1,9 @@
+use crate::urls::api;
 use serde_json::Value;
 
 #[tauri::command]
 pub async fn fetch_email_breach_info(email: String) -> Result<Value, String> {
-    let url = format!(
-        "https://api.xposedornot.com/v1/breach-analytics?email={}",
-        email
-    );
+    let url = api::build_email_breach_url(&email);
 
     // Send GET request to the API
     match reqwest::get(&url).await {

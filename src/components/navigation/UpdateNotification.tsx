@@ -177,7 +177,7 @@ const UpdateNotification: React.FC<UpdateNotificationProps> = ({
                         transition-all duration-200 flex-1
                         ${isDownloading
                             ? 'bg-yellow-500/20 text-yellow-400 cursor-not-allowed'
-                            : 'bg-green-500 hover:bg-green-600 text-white active:scale-95'
+                            : 'bg-green-500 hover:bg-green-600 text-theme-text active:scale-95'
                         }`}
                 >
                     {isDownloading ? (

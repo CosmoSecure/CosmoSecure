@@ -24,8 +24,9 @@ use crate::extensions::{
     pass_strength::check_password_strength,
     process_capture::get_system_and_process_usage,
     updater::{
-        check_for_updates, download_and_install_update, force_check_updates, get_platform_info,
-        get_release_info,
+        check_for_updates, clear_update_tracker, download_and_install_update, force_check_updates,
+        get_platform_info, get_release_info, get_update_tracker_info, should_force_update,
+        store_update_detection_date,
     },
 };
 use crate::version::get_version::get_version;
@@ -43,6 +44,7 @@ mod openurl;
 mod password_crypto;
 mod secure;
 mod tests;
+mod urls;
 mod version;
 
 #[tauri::command]
@@ -126,6 +128,10 @@ pub async fn run() {
             force_check_updates,
             get_release_info,
             get_platform_info,
+            store_update_detection_date,
+            should_force_update,
+            get_update_tracker_info,
+            clear_update_tracker,
             check_database_connection,
             ping_database,
             attempt_database_reconnection,
