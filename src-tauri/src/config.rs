@@ -15,6 +15,14 @@ pub fn get_config_file_path() -> PathBuf {
     config_path
 }
 
+pub fn get_update_tracker_path() -> PathBuf {
+    let mut config_path = config_dir().expect("Failed to get config directory");
+    config_path.push("CosmoSecure");
+    fs::create_dir_all(&config_path).expect("Failed to create config directory");
+    config_path.push("update_tracker.json");
+    config_path
+}
+
 pub fn save_to_config(encrypted_token: &str, encrypted_user: &str) {
     let config_path = get_config_file_path();
     let config_data = json!({

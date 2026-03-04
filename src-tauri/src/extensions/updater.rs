@@ -1,17 +1,34 @@
+use crate::config::get_update_tracker_path;
 use crate::extensions::schema::updater_data::{GitHubAsset, GitHubRelease, UpdateRelease};
+use crate::urls::{github, user_agent};
 use anyhow::{anyhow, Result};
+use chrono::{DateTime, Utc};
 use reqwest::Client;
 use semver::Version;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::env;
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
+use std::sync::Mutex;
+use tauri::Emitter;
 use tauri::{command, AppHandle, Runtime};
 use tempfile::TempDir;
 
-// const GITHUB_REPO: &str = "akash2061/CosmoSecure";
-const GITHUB_RELEASES_URL: &str = "https://api.github.com/repos/akash2061/NoteBook-App/releases";
+// Storage key for update detection date
+const FORCED_UPDATE_DAYS: i64 = 0; // Set to 0 for immediate testing (change back to 30 for production)
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UpdateTracker {
+    pub first_detected_at: String,
+    pub version: String,
+}
+
+// Global state to track updates
+lazy_static::lazy_static! {
+    static ref UPDATE_TRACKER: Mutex<Option<UpdateTracker>> = Mutex::new(None);
+}
 
 /// Check for updates by comparing current version with latest GitHub release
 #[command]
@@ -30,8 +47,8 @@ async fn check_for_updates_internal(current_version: &str) -> Result<Option<Upda
 
     // Get latest release from GitHub API
     let response = client
-        .get(GITHUB_RELEASES_URL)
-        .header("User-Agent", "CosmoSecure-App")
+        .get(github::RELEASES_API)
+        .header("User-Agent", user_agent::COSMOSECURE_APP)
         .send()
         .await?;
 
@@ -173,8 +190,8 @@ async fn download_and_install_internal<R: Runtime>(
                 let progress = (downloaded * 100 / total_size) as u32;
                 println!("Download progress: {}%", progress);
 
-                // Emit progress event (you can implement this later with Tauri events)
-                // app_handle.emit_all("download_progress", progress).ok();
+                // Emit progress event to frontend
+                app_handle.emit("download_progress", progress).ok();
             }
         }
 
@@ -499,15 +516,11 @@ pub async fn get_release_info(version: String) -> Result<Option<UpdateRelease>, 
 
 async fn get_release_info_internal(version: &str) -> Result<Option<UpdateRelease>> {
     let client = Client::new();
-    let url = format!(
-        "{}/tags/{}",
-        GITHUB_RELEASES_URL.trim_end_matches("/releases"),
-        version
-    );
+    let url = github::build_api_url(&format!("/releases/tags/{}", version));
 
     let response = client
         .get(&url)
-        .header("User-Agent", "CosmoSecure-App")
+        .header("User-Agent", user_agent::COSMOSECURE_APP)
         .send()
         .await?;
 
@@ -570,4 +583,193 @@ pub fn get_platform_info() -> String {
         "Platform identifiers: {:?}\nFallback patterns: {:?}",
         identifiers, fallback_patterns
     )
+}
+
+/// Store when an update was first detected
+#[command]
+pub fn store_update_detection_date<R: Runtime>(
+    app_handle: AppHandle<R>,
+    version: String,
+) -> Result<(), String> {
+    match store_update_detection_date_internal(app_handle, &version) {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            eprintln!("Error storing update detection date: {}", e);
+            Err(format!("Failed to store update detection date: {}", e))
+        }
+    }
+}
+
+fn store_update_detection_date_internal<R: Runtime>(
+    _app_handle: AppHandle<R>,
+    version: &str,
+) -> Result<()> {
+    // Get update tracker path from config
+    let tracker_path = get_update_tracker_path();
+
+    // Check if tracker already exists and is for the same version
+    if tracker_path.exists() {
+        if let Ok(json_data) = fs::read_to_string(&tracker_path) {
+            if let Ok(existing_tracker) = serde_json::from_str::<UpdateTracker>(&json_data) {
+                if existing_tracker.version == version {
+                    println!(
+                        "Update tracker already exists for version {}, keeping original date",
+                        version
+                    );
+                    return Ok(());
+                }
+            }
+        }
+    }
+
+    let now = Utc::now();
+    let tracker = UpdateTracker {
+        first_detected_at: now.to_rfc3339(),
+        version: version.to_string(),
+    };
+
+    let json_data = serde_json::to_string(&tracker)?;
+    fs::write(tracker_path, json_data)?;
+
+    // Update global state
+    let mut global_tracker = UPDATE_TRACKER.lock().unwrap();
+    *global_tracker = Some(tracker);
+
+    println!("Stored update detection date for version {}", version);
+    Ok(())
+}
+
+/// Check if forced update is required (30 days passed since first detection)
+#[command]
+pub fn should_force_update<R: Runtime>(
+    app_handle: AppHandle<R>,
+    current_version: String,
+) -> Result<bool, String> {
+    match should_force_update_internal(app_handle, &current_version) {
+        Ok(result) => Ok(result),
+        Err(e) => {
+            eprintln!("Error checking forced update status: {}", e);
+            Ok(false) // Don't force update if there's an error
+        }
+    }
+}
+
+fn should_force_update_internal<R: Runtime>(
+    _app_handle: AppHandle<R>,
+    current_version: &str,
+) -> Result<bool> {
+    println!(
+        "[DEBUG] Checking forced update for current version: {}",
+        current_version
+    );
+
+    // Get update tracker path from config
+    let tracker_path = get_update_tracker_path();
+    println!("[DEBUG] Tracker path: {:?}", tracker_path);
+
+    if !tracker_path.exists() {
+        println!("[DEBUG] No update tracker found at {:?}", tracker_path);
+        return Ok(false);
+    }
+
+    let json_data = fs::read_to_string(&tracker_path)?;
+    println!("[DEBUG] Tracker content: {}", json_data);
+
+    let tracker: UpdateTracker = serde_json::from_str(&json_data)?;
+    println!(
+        "[DEBUG] Tracker version: {}, detected at: {}",
+        tracker.version, tracker.first_detected_at
+    );
+
+    // Check if the tracked version is different from current (update was installed)
+    let current_ver = Version::parse(&clean_version(current_version))?;
+    let tracked_ver = Version::parse(&clean_version(&tracker.version))?;
+    println!(
+        "[DEBUG] Current version parsed: {}, Tracked version parsed: {}",
+        current_ver, tracked_ver
+    );
+
+    if current_ver >= tracked_ver {
+        println!("[DEBUG] Current version is up to date or newer, clearing tracker");
+        // User updated, clear the tracker
+        fs::remove_file(&tracker_path).ok();
+        return Ok(false);
+    }
+
+    // Parse the detection date
+    let detected_at = DateTime::parse_from_rfc3339(&tracker.first_detected_at)?;
+    let now = Utc::now();
+    let days_passed = now.signed_duration_since(detected_at).num_days();
+
+    println!(
+        "[DEBUG] Update detected {} days ago for version {}",
+        days_passed, tracker.version
+    );
+    println!(
+        "[DEBUG] FORCED_UPDATE_DAYS threshold: {}",
+        FORCED_UPDATE_DAYS
+    );
+    println!(
+        "[DEBUG] Should force update: {}",
+        days_passed >= FORCED_UPDATE_DAYS
+    );
+
+    // Force update if threshold days have passed
+    Ok(days_passed >= FORCED_UPDATE_DAYS)
+}
+
+/// Get update tracker info for debugging
+#[command]
+pub fn get_update_tracker_info<R: Runtime>(
+    app_handle: AppHandle<R>,
+) -> Result<Option<UpdateTracker>, String> {
+    match get_update_tracker_info_internal(app_handle) {
+        Ok(tracker) => Ok(tracker),
+        Err(e) => {
+            eprintln!("Error getting update tracker info: {}", e);
+            Ok(None)
+        }
+    }
+}
+
+fn get_update_tracker_info_internal<R: Runtime>(
+    _app_handle: AppHandle<R>,
+) -> Result<Option<UpdateTracker>> {
+    let tracker_path = get_update_tracker_path();
+
+    if !tracker_path.exists() {
+        return Ok(None);
+    }
+
+    let json_data = fs::read_to_string(&tracker_path)?;
+    let tracker: UpdateTracker = serde_json::from_str(&json_data)?;
+
+    Ok(Some(tracker))
+}
+
+/// Clear update tracker (for testing or when user updates)
+#[command]
+pub fn clear_update_tracker<R: Runtime>(app_handle: AppHandle<R>) -> Result<(), String> {
+    match clear_update_tracker_internal(app_handle) {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            eprintln!("Error clearing update tracker: {}", e);
+            Err(format!("Failed to clear update tracker: {}", e))
+        }
+    }
+}
+
+fn clear_update_tracker_internal<R: Runtime>(_app_handle: AppHandle<R>) -> Result<()> {
+    let tracker_path = get_update_tracker_path();
+
+    if tracker_path.exists() {
+        fs::remove_file(&tracker_path)?;
+        println!("Cleared update tracker");
+    }
+
+    // Clear global state
+    let mut global_tracker = UPDATE_TRACKER.lock().unwrap();
+    *global_tracker = None;
+
+    Ok(())
 }

@@ -25,6 +25,7 @@ interface UpdateContextType {
     error: string | null;
     hasCheckedOnStartup: boolean;
     isWindows: boolean;
+    isForcedUpdate: boolean;
 
     // Actions
     checkForUpdates: () => Promise<void>;
@@ -32,6 +33,7 @@ interface UpdateContextType {
     dismissUpdate: (permanent?: boolean) => void;
     resetError: () => void;
     clearDismissedUpdates: () => void;
+    checkForcedUpdate: () => Promise<void>;
 }
 
 // Create the context
@@ -48,6 +50,7 @@ export const UpdateProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const [error, setError] = useState<string | null>(null);
     const [hasCheckedOnStartup, setHasCheckedOnStartup] = useState(false);
     const [isWindows, setIsWindows] = useState(false);
+    const [isForcedUpdate, setIsForcedUpdate] = useState(false);
 
     // Get current version on mount
     useEffect(() => {
@@ -73,10 +76,45 @@ export const UpdateProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     // Check for updates once on app startup
     useEffect(() => {
         if (currentVersion && !hasCheckedOnStartup) {
-            checkForUpdates();
+            const checkUpdates = async () => {
+                console.log('[DEBUG] Starting update check sequence...');
+                await checkForUpdates();
+                console.log('[DEBUG] checkForUpdates completed, waiting before forced update check...');
+                // Wait for tracker to be saved, then check forced update
+                setTimeout(async () => {
+                    console.log('[DEBUG] Now checking forced update...');
+                    await checkForcedUpdate();
+                    console.log('[DEBUG] Forced update check completed');
+                }, 500);
+            };
+            checkUpdates();
             setHasCheckedOnStartup(true);
         }
     }, [currentVersion, hasCheckedOnStartup]);
+
+    // Function to check if forced update is required
+    const checkForcedUpdate = async () => {
+        if (!currentVersion) return;
+
+        console.log('[DEBUG] Checking forced update for version:', currentVersion);
+
+        try {
+            const shouldForce = await invoke<boolean>('should_force_update', {
+                currentVersion
+            });
+
+            console.log('[DEBUG] Should force update result:', shouldForce);
+            setIsForcedUpdate(shouldForce);
+
+            if (shouldForce) {
+                console.log('🔴 FORCED UPDATE REQUIRED - 30 days have passed');
+            } else {
+                console.log('✓ No forced update required');
+            }
+        } catch (err) {
+            console.error('Failed to check forced update status:', err);
+        }
+    };
 
     // Function to check for updates
     const checkForUpdates = async () => {
@@ -93,9 +131,26 @@ export const UpdateProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             if (release) {
                 setLatestRelease(release);
                 setIsUpdateAvailable(true);
+
+                // Store the detection date if this is a new update
+                try {
+                    await invoke('store_update_detection_date', {
+                        version: release.version
+                    });
+                    console.log('Stored update detection date for version:', release.version);
+                } catch (err) {
+                    console.error('Failed to store update detection date:', err);
+                }
             } else {
                 setIsUpdateAvailable(false);
                 setLatestRelease(null);
+
+                // Clear tracker if no update is available
+                try {
+                    await invoke('clear_update_tracker');
+                } catch (err) {
+                    console.error('Failed to clear update tracker:', err);
+                }
             }
         } catch (err) {
             console.error('Failed to check for updates:', err);
@@ -128,28 +183,29 @@ export const UpdateProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 return;
             }
 
-            // Linux: Show progress and handle installation
-            const progressInterval = setInterval(() => {
-                setDownloadProgress(prev => {
-                    if (prev >= 95) {
-                        clearInterval(progressInterval);
-                        return 95; // Stop at 95% until actual completion
-                    }
-                    const newProgress = prev + Math.random() * 10;
-                    return Math.round(newProgress * 100) / 100; // Round to 2 decimal places
-                });
-            }, 500);
+            // Linux: Listen for real-time download progress events from backend
+            const { getCurrentWindow } = await import('@tauri-apps/api/window');
+            const window = getCurrentWindow();
 
-            // Start download with progress updates
-            await invoke<void>('download_and_install_update', {
-                downloadUrl: latestRelease.download_url,
-                version: latestRelease.version,
-                sha256Digest: latestRelease.sha256_digest
+            const unlisten = await window.listen<number>('download_progress', (event) => {
+                setDownloadProgress(event.payload);
+                console.log('Download progress:', event.payload + '%');
             });
 
-            // Clear interval and set to 100% on completion
-            clearInterval(progressInterval);
-            setDownloadProgress(100);
+            try {
+                // Start download with real progress updates from backend
+                await invoke<void>('download_and_install_update', {
+                    downloadUrl: latestRelease.download_url,
+                    version: latestRelease.version,
+                    sha256Digest: latestRelease.sha256_digest
+                });
+
+                // Set to 100% on completion
+                setDownloadProgress(100);
+            } finally {
+                // Clean up event listener
+                unlisten();
+            }
 
             // Small delay to show completion before app restarts
             setTimeout(() => {
@@ -206,11 +262,13 @@ export const UpdateProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         error,
         hasCheckedOnStartup,
         isWindows,
+        isForcedUpdate,
         checkForUpdates,
         downloadAndInstallUpdate,
         dismissUpdate,
         resetError,
         clearDismissedUpdates,
+        checkForcedUpdate,
     };
 
     return (

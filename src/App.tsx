@@ -12,6 +12,7 @@ import { applyTheme, themes, ThemeKeys, CosmicLoader } from "./themes/"; // Impo
 import { Toaster } from 'sonner'; // Import Toaster from sonner
 import { NavigationProvider, NotificationProvider, UserProvider, UpdateProvider, DatabaseProvider } from './contexts/';
 import { PlatformUtils } from './utils/platformUtils'; // Import platform utils
+import { ForcedUpdateWrapper } from './components/navigation'; // Import ForcedUpdateWrapper
 
 const TEST_MODE = true;  // Set to false in production
 
@@ -97,34 +98,36 @@ function App() {
         <DatabaseProvider>
           <NavigationProvider>
             <UpdateProvider>
-              <Router>
-                <Routes>
-                  {isAuthenticated ? (
-                    <>
-                      <Route path="/*" element={<RoutesConf setIsAuthenticated={setIsAuthenticated} />} />
-                    </>
-                  ) : (
-                    <>
-                      <Route path="/" element={<Auth_page />}>
-                        <Route index element={<Login setIsAuthenticated={setIsAuthenticated} />} />
-                      </Route>
-                    </>
-                  )}
-                </Routes>
-                <Toaster richColors position="top-center" theme="dark"
-                  toastOptions={{
-                    style: {
-                      fontSize: '1rem',
-                      padding: '1rem',
-                      marginTop: '1rem',
-                      color: '#f7fafc',
-                      borderRadius: '0.5rem',
-                      boxShadow: '0 0 0.5rem rgba(0, 0, 0, 0.1)',
-                      zIndex: 9999
-                    }
-                  }}
-                />
-              </Router>
+              <ForcedUpdateWrapper>
+                <Router>
+                  <Routes>
+                    {isAuthenticated ? (
+                      <>
+                        <Route path="/*" element={<RoutesConf setIsAuthenticated={setIsAuthenticated} />} />
+                      </>
+                    ) : (
+                      <>
+                        <Route path="/" element={<Auth_page />}>
+                          <Route index element={<Login setIsAuthenticated={setIsAuthenticated} />} />
+                        </Route>
+                      </>
+                    )}
+                  </Routes>
+                  <Toaster richColors position="top-center" theme="dark"
+                    toastOptions={{
+                      style: {
+                        fontSize: '1rem',
+                        padding: '1rem',
+                        marginTop: '1rem',
+                        color: '#f7fafc',
+                        borderRadius: '0.5rem',
+                        boxShadow: '0 0 0.5rem rgba(0, 0, 0, 0.1)',
+                        zIndex: 9999
+                      }
+                    }}
+                  />
+                </Router>
+              </ForcedUpdateWrapper>
             </UpdateProvider>
           </NavigationProvider>
         </DatabaseProvider>
