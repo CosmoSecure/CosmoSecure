@@ -34,7 +34,7 @@ dotenvy = "0.15.7"
 dotenvy_macro = "0.15.7"
 # Encripting
 bcrypt = "0.16.0"
-jsonwebtoken = "9.3.0"
+jsonwebtoken = "10.3.0"
 # warp = "0.3"
 aes-gcm = "0.10.3"
 base64 = "0.22.1"
